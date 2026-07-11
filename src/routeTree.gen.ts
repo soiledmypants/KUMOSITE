@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TransmissionsRouteImport } from './routes/transmissions'
 import { Route as LoreRouteImport } from './routes/lore'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TransmissionsRoute = TransmissionsRouteImport.update({
+  id: '/transmissions',
+  path: '/transmissions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoreRoute = LoreRouteImport.update({
   id: '/lore',
   path: '/lore',
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/jobs': typeof JobsRoute
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
+  '/transmissions': typeof TransmissionsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/jobs': typeof JobsRoute
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
+  '/transmissions': typeof TransmissionsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,27 @@ export interface FileRoutesById {
   '/jobs': typeof JobsRoute
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
+  '/transmissions': typeof TransmissionsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/archive' | '/jobs' | '/library' | '/lore'
+  fullPaths:
+    | '/'
+    | '/archive'
+    | '/jobs'
+    | '/library'
+    | '/lore'
+    | '/transmissions'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/archive' | '/jobs' | '/library' | '/lore'
-  id: '__root__' | '/' | '/archive' | '/jobs' | '/library' | '/lore'
+  to: '/' | '/archive' | '/jobs' | '/library' | '/lore' | '/transmissions'
+  id:
+    | '__root__'
+    | '/'
+    | '/archive'
+    | '/jobs'
+    | '/library'
+    | '/lore'
+    | '/transmissions'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,10 +99,18 @@ export interface RootRouteChildren {
   JobsRoute: typeof JobsRoute
   LibraryRoute: typeof LibraryRoute
   LoreRoute: typeof LoreRoute
+  TransmissionsRoute: typeof TransmissionsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/transmissions': {
+      id: '/transmissions'
+      path: '/transmissions'
+      fullPath: '/transmissions'
+      preLoaderRoute: typeof TransmissionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lore': {
       id: '/lore'
       path: '/lore'
@@ -125,6 +155,7 @@ const rootRouteChildren: RootRouteChildren = {
   JobsRoute: JobsRoute,
   LibraryRoute: LibraryRoute,
   LoreRoute: LoreRoute,
+  TransmissionsRoute: TransmissionsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
