@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoreRouteImport } from './routes/lore'
+import { Route as LibraryRouteImport } from './routes/library'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
@@ -17,6 +18,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const LoreRoute = LoreRouteImport.update({
   id: '/lore',
   path: '/lore',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryRoute = LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JobsRoute = JobsRouteImport.update({
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
   '/jobs': typeof JobsRoute
+  '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
   '/jobs': typeof JobsRoute
+  '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
   '/jobs': typeof JobsRoute
+  '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/archive' | '/jobs' | '/lore'
+  fullPaths: '/' | '/archive' | '/jobs' | '/library' | '/lore'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/archive' | '/jobs' | '/lore'
-  id: '__root__' | '/' | '/archive' | '/jobs' | '/lore'
+  to: '/' | '/archive' | '/jobs' | '/library' | '/lore'
+  id: '__root__' | '/' | '/archive' | '/jobs' | '/library' | '/lore'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ArchiveRoute: typeof ArchiveRoute
   JobsRoute: typeof JobsRoute
+  LibraryRoute: typeof LibraryRoute
   LoreRoute: typeof LoreRoute
 }
 
@@ -76,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/lore'
       fullPath: '/lore'
       preLoaderRoute: typeof LoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof LibraryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/jobs': {
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ArchiveRoute: ArchiveRoute,
   JobsRoute: JobsRoute,
+  LibraryRoute: LibraryRoute,
   LoreRoute: LoreRoute,
 }
 export const routeTree = rootRouteImport
