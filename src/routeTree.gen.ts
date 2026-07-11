@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoreRouteImport } from './routes/lore'
+import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
 
 const LoreRoute = LoreRouteImport.update({
   id: '/lore',
   path: '/lore',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsRoute = JobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArchiveRoute = ArchiveRouteImport.update({
@@ -32,30 +38,34 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
+  '/jobs': typeof JobsRoute
   '/lore': typeof LoreRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
+  '/jobs': typeof JobsRoute
   '/lore': typeof LoreRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
+  '/jobs': typeof JobsRoute
   '/lore': typeof LoreRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/archive' | '/lore'
+  fullPaths: '/' | '/archive' | '/jobs' | '/lore'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/archive' | '/lore'
-  id: '__root__' | '/' | '/archive' | '/lore'
+  to: '/' | '/archive' | '/jobs' | '/lore'
+  id: '__root__' | '/' | '/archive' | '/jobs' | '/lore'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ArchiveRoute: typeof ArchiveRoute
+  JobsRoute: typeof JobsRoute
   LoreRoute: typeof LoreRoute
 }
 
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/lore'
       fullPath: '/lore'
       preLoaderRoute: typeof LoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs': {
+      id: '/jobs'
+      path: '/jobs'
+      fullPath: '/jobs'
+      preLoaderRoute: typeof JobsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/archive': {
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ArchiveRoute: ArchiveRoute,
+  JobsRoute: JobsRoute,
   LoreRoute: LoreRoute,
 }
 export const routeTree = rootRouteImport
