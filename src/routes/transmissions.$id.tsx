@@ -43,7 +43,9 @@ function Typewriter({ text }: { text: string }) {
 
 function Detail() {
   const t = Route.useLoaderData();
-  const [first, ...rest] = t.body.split("\n\n");
+  const parts: string[] = t.body.split("\n\n");
+  const first = parts[0] ?? "";
+  const rest = parts.slice(1);
   return (
     <>
       <Box title={`${t.type} ${t.n}`} meta={t.date}>
@@ -56,7 +58,7 @@ function Detail() {
           <span>● live</span>
         </div>
         <p className="lowercase leading-relaxed whitespace-pre-line"><Typewriter text={first} /></p>
-        {rest.map((p, i) => (
+        {rest.map((p: string, i: number) => (
           <p key={i} className="lowercase leading-relaxed whitespace-pre-line mt-3">{p}</p>
         ))}
       </div>
