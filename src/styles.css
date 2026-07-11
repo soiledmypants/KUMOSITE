@@ -68,22 +68,22 @@
   --radius: 0;
   --moss: #ccff00;
   --moss-bright: #dfff33;
-  --background: #000000;
-  --foreground: #ccff00;
-  --card: #000000;
-  --card-foreground: #ccff00;
-  --popover: #000000;
-  --popover-foreground: #ccff00;
-  --primary: #ccff00;
-  --primary-foreground: #000000;
-  --secondary: #000000;
-  --secondary-foreground: #ccff00;
-  --muted: #000000;
-  --muted-foreground: rgba(204, 255, 0, 0.55);
-  --accent: #ccff00;
-  --accent-foreground: #000000;
-  --destructive: #ccff00;
-  --destructive-foreground: #000000;
+  --background: #ccff00;
+  --foreground: #000000;
+  --card: #ccff00;
+  --card-foreground: #000000;
+  --popover: #ccff00;
+  --popover-foreground: #000000;
+  --primary: #000000;
+  --primary-foreground: #ccff00;
+  --secondary: #ccff00;
+  --secondary-foreground: #000000;
+  --muted: #ccff00;
+  --muted-foreground: rgba(0, 0, 0, 0.55);
+  --accent: #000000;
+  --accent-foreground: #ccff00;
+  --destructive: #000000;
+  --destructive-foreground: #ccff00;
   --border: #ccff00;
   --input: #ccff00;
   --ring: #ccff00;
@@ -92,19 +92,19 @@
   --chart-3: #ccff00;
   --chart-4: #ccff00;
   --chart-5: #ccff00;
-  --sidebar: #000000;
-  --sidebar-foreground: #ccff00;
-  --sidebar-primary: #ccff00;
-  --sidebar-primary-foreground: #000000;
-  --sidebar-accent: #000000;
-  --sidebar-accent-foreground: #ccff00;
+  --sidebar: #ccff00;
+  --sidebar-foreground: #000000;
+  --sidebar-primary: #000000;
+  --sidebar-primary-foreground: #ccff00;
+  --sidebar-accent: #ccff00;
+  --sidebar-accent-foreground: #000000;
   --sidebar-border: #ccff00;
   --sidebar-ring: #ccff00;
 }
 
 .dark {
-  --background: #000000;
-  --foreground: #ccff00;
+  --background: #ccff00;
+  --foreground: #000000;
 }
 
 @layer base {
@@ -158,16 +158,16 @@
 }
 
 @utility box {
-  border: 1px solid var(--moss);
+  border: 1px solid #000;
 }
 
 @utility box-inv {
-  background: var(--moss);
-  color: #000;
+  background: #000;
+  color: var(--moss);
 }
 
 @utility dim {
-  color: rgba(204, 255, 0, 0.55);
+  color: rgba(0, 0, 0, 0.6);
 }
 
 @utility link-moss {
