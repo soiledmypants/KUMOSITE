@@ -1,0 +1,163 @@
+import { Link, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState, type ReactNode } from "react";
+
+const NAV: { to: string; label: string }[] = [
+  { to: "/", label: "home" },
+  { to: "/archive", label: "the archive" },
+  { to: "/lore", label: "lore" },
+  { to: "/jobs", label: "jobs" },
+  { to: "/library", label: "library" },
+  { to: "/transmissions", label: "transmissions" },
+  { to: "/terminal", label: "terminal" },
+  { to: "/congregation", label: "the congregation" },
+  { to: "/rent", label: "the rent" },
+  { to: "/ascii-gallery", label: "ascii gallery" },
+  { to: "/protocol", label: "protocol" },
+];
+
+function useUptime() {
+  const [t, setT] = useState(0);
+  useEffect(() => {
+    const start = Date.now();
+    const id = setInterval(() => setT(Math.floor((Date.now() - start) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, []);
+  // Fake giant uptime baseline: years running
+  const base = 60 * 60 * 24 * 365 * 11 + 60 * 60 * 24 * 42; // 11 years + 42 days
+  const total = base + t;
+  const d = Math.floor(total / 86400);
+  const h = Math.floor((total % 86400) / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return `${d}d ${String(h).padStart(2, "0")}h ${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`;
+}
+
+function useFaction() {
+  const [f, setF] = useState<string | null>(null);
+  useEffect(() => {
+    setF(localStorage.getItem("moss:faction"));
+    const on = () => setF(localStorage.getItem("moss:faction"));
+    window.addEventListener("storage", on);
+    window.addEventListener("moss:faction-change", on);
+    return () => {
+      window.removeEventListener("storage", on);
+      window.removeEventListener("moss:faction-change", on);
+    };
+  }, []);
+  return f;
+}
+
+export function SiteChrome({ children }: { children: ReactNode }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [menuOpen, setMenuOpen] = useState(false);
+  const uptime = useUptime();
+  const faction = useFaction();
+
+  return (
+    <div className="min-h-screen bg-[#000] text-[#ccff00] font-mono">
+      {/* Top status bar */}
+      <div className="box-inv text-[10px] sm:text-xs px-3 py-1 flex flex-wrap gap-x-4 gap-y-1 justify-between uppercase tracking-widest">
+        <span>● signal: stable</span>
+        <span>node: greenroom-04</span>
+        <span>v0.9.7-unstable</span>
+        <span className="hidden sm:inline">uptime: {uptime}</span>
+      </div>
+
+      <div className="max-w-3xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
+        {/* header */}
+        <header className="box p-3 sm:p-4 mb-4 flicker">
+          <div className="flex justify-between items-start gap-3">
+            <div className="min-w-0">
+              <Link to="/" className="block">
+                <div className="text-xs dim lowercase">welcome to</div>
+                <div className="uppercase tracking-[0.3em] text-lg sm:text-2xl jitter">the green room</div>
+                <div className="text-xs italic lowercase dim mt-1">sweeping the wires since before you logged on</div>
+              </Link>
+            </div>
+            <div className="text-right text-[10px] leading-tight shrink-0">
+              <div className="dim">visitor #</div>
+              <div>04-{Math.floor((Date.now() / 1000) % 100000).toString().padStart(5, "0")}</div>
+              {faction ? <div className="box-inv mt-1 px-1">tag: {faction}</div> : null}
+            </div>
+          </div>
+          <button
+            className="sm:hidden mt-3 box w-full py-1 hover:box-inv uppercase tracking-widest text-xs"
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            [ {menuOpen ? "close" : "menu"} ]
+          </button>
+        </header>
+
+        {/* nav — stacked boxes */}
+        <nav className={`mb-4 space-y-[-1px] ${menuOpen ? "block" : "hidden"} sm:block`}>
+          {NAV.map((n) => {
+            const active = n.to === "/" ? pathname === "/" : pathname.startsWith(n.to);
+            return (
+              <Link
+                key={n.to}
+                to={n.to}
+                onClick={() => setMenuOpen(false)}
+                className={`box block px-3 py-2 lowercase tracking-wide ${active ? "box-inv" : "hover:box-inv"}`}
+              >
+                <span className="dim mr-2">›</span>
+                {n.label}
+                {active ? <span className="ml-2">◀</span> : null}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <main className="space-y-4">{children}</main>
+
+        <footer className="mt-8 box p-3 text-[10px] sm:text-xs dim lowercase">
+          <div className="flex flex-wrap justify-between gap-2">
+            <span>© the green room, est. long before it was safe</span>
+            <span>uptime {uptime}</span>
+          </div>
+          <div className="mt-1">no cookies. no trackers. moss doesn't like them. moss eats them.</div>
+          <div className="mt-1">!! do not read file 009 !!</div>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+export function Box({
+  title,
+  meta,
+  children,
+  className = "",
+}: {
+  title?: string;
+  meta?: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`box ${className}`}>
+      {title ? (
+        <div className="box-inv px-3 py-1 flex justify-between items-center uppercase tracking-widest text-xs">
+          <span>{title}</span>
+          {meta ? <span className="opacity-70">{meta}</span> : null}
+        </div>
+      ) : null}
+      <div className="p-3 sm:p-4">{children}</div>
+    </section>
+  );
+}
+
+export function Divider({ char = "═" }: { char?: string }) {
+  return (
+    <div className="dim overflow-hidden whitespace-nowrap select-none py-1" aria-hidden>
+      {char.repeat(200)}
+    </div>
+  );
+}
+
+export function Tag({ children, tone = "on" }: { children: ReactNode; tone?: "on" | "off" }) {
+  return (
+    <span className={tone === "on" ? "box-inv px-1 uppercase tracking-widest text-[10px]" : "box px-1 uppercase tracking-widest text-[10px]"}>
+      {children}
+    </span>
+  );
+}
