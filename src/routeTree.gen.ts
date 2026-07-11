@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TransmissionsRouteImport } from './routes/transmissions'
 import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as RentRouteImport } from './routes/rent'
+import { Route as ProtocolRouteImport } from './routes/protocol'
 import { Route as LoreRouteImport } from './routes/lore'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as JobsRouteImport } from './routes/jobs'
@@ -35,6 +36,11 @@ const TerminalRoute = TerminalRouteImport.update({
 const RentRoute = RentRouteImport.update({
   id: '/rent',
   path: '/rent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProtocolRoute = ProtocolRouteImport.update({
+  id: '/protocol',
+  path: '/protocol',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoreRoute = LoreRouteImport.update({
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/jobs': typeof JobsRoute
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
+  '/protocol': typeof ProtocolRoute
   '/rent': typeof RentRoute
   '/terminal': typeof TerminalRoute
   '/transmissions': typeof TransmissionsRouteWithChildren
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/jobs': typeof JobsRoute
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
+  '/protocol': typeof ProtocolRoute
   '/rent': typeof RentRoute
   '/terminal': typeof TerminalRoute
   '/transmissions/$id': typeof TransmissionsIdRoute
@@ -119,6 +127,7 @@ export interface FileRoutesById {
   '/jobs': typeof JobsRoute
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
+  '/protocol': typeof ProtocolRoute
   '/rent': typeof RentRoute
   '/terminal': typeof TerminalRoute
   '/transmissions': typeof TransmissionsRouteWithChildren
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/library'
     | '/lore'
+    | '/protocol'
     | '/rent'
     | '/terminal'
     | '/transmissions'
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/library'
     | '/lore'
+    | '/protocol'
     | '/rent'
     | '/terminal'
     | '/transmissions/$id'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/library'
     | '/lore'
+    | '/protocol'
     | '/rent'
     | '/terminal'
     | '/transmissions'
@@ -177,6 +189,7 @@ export interface RootRouteChildren {
   JobsRoute: typeof JobsRoute
   LibraryRoute: typeof LibraryRoute
   LoreRoute: typeof LoreRoute
+  ProtocolRoute: typeof ProtocolRoute
   RentRoute: typeof RentRoute
   TerminalRoute: typeof TerminalRoute
   TransmissionsRoute: typeof TransmissionsRouteWithChildren
@@ -203,6 +216,13 @@ declare module '@tanstack/react-router' {
       path: '/rent'
       fullPath: '/rent'
       preLoaderRoute: typeof RentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/protocol': {
+      id: '/protocol'
+      path: '/protocol'
+      fullPath: '/protocol'
+      preLoaderRoute: typeof ProtocolRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lore': {
@@ -293,6 +313,7 @@ const rootRouteChildren: RootRouteChildren = {
   JobsRoute: JobsRoute,
   LibraryRoute: LibraryRoute,
   LoreRoute: LoreRoute,
+  ProtocolRoute: ProtocolRoute,
   RentRoute: RentRoute,
   TerminalRoute: TerminalRoute,
   TransmissionsRoute: TransmissionsRouteWithChildren,
