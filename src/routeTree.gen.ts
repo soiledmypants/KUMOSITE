@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TransmissionsRouteImport } from './routes/transmissions'
 import { Route as TerminalRouteImport } from './routes/terminal'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RentRouteImport } from './routes/rent'
 import { Route as ProtocolRouteImport } from './routes/protocol'
 import { Route as LoreRouteImport } from './routes/lore'
@@ -31,6 +32,11 @@ const TransmissionsRoute = TransmissionsRouteImport.update({
 const TerminalRoute = TerminalRouteImport.update({
   id: '/terminal',
   path: '/terminal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RentRoute = RentRouteImport.update({
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/lore': typeof LoreRoute
   '/protocol': typeof ProtocolRoute
   '/rent': typeof RentRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terminal': typeof TerminalRoute
   '/transmissions': typeof TransmissionsRouteWithChildren
   '/transmissions/$id': typeof TransmissionsIdRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/lore': typeof LoreRoute
   '/protocol': typeof ProtocolRoute
   '/rent': typeof RentRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terminal': typeof TerminalRoute
   '/transmissions/$id': typeof TransmissionsIdRoute
   '/transmissions': typeof TransmissionsIndexRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/lore': typeof LoreRoute
   '/protocol': typeof ProtocolRoute
   '/rent': typeof RentRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terminal': typeof TerminalRoute
   '/transmissions': typeof TransmissionsRouteWithChildren
   '/transmissions/$id': typeof TransmissionsIdRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/lore'
     | '/protocol'
     | '/rent'
+    | '/sitemap.xml'
     | '/terminal'
     | '/transmissions'
     | '/transmissions/$id'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/lore'
     | '/protocol'
     | '/rent'
+    | '/sitemap.xml'
     | '/terminal'
     | '/transmissions/$id'
     | '/transmissions'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/lore'
     | '/protocol'
     | '/rent'
+    | '/sitemap.xml'
     | '/terminal'
     | '/transmissions'
     | '/transmissions/$id'
@@ -191,6 +203,7 @@ export interface RootRouteChildren {
   LoreRoute: typeof LoreRoute
   ProtocolRoute: typeof ProtocolRoute
   RentRoute: typeof RentRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TerminalRoute: typeof TerminalRoute
   TransmissionsRoute: typeof TransmissionsRouteWithChildren
 }
@@ -209,6 +222,13 @@ declare module '@tanstack/react-router' {
       path: '/terminal'
       fullPath: '/terminal'
       preLoaderRoute: typeof TerminalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rent': {
@@ -315,6 +335,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoreRoute: LoreRoute,
   ProtocolRoute: ProtocolRoute,
   RentRoute: RentRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TerminalRoute: TerminalRoute,
   TransmissionsRoute: TransmissionsRouteWithChildren,
 }
