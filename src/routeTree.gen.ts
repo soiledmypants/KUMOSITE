@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TransmissionsRouteImport } from './routes/transmissions'
+import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as LoreRouteImport } from './routes/lore'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as JobsRouteImport } from './routes/jobs'
@@ -21,6 +22,11 @@ import { Route as TransmissionsIdRouteImport } from './routes/transmissions.$id'
 const TransmissionsRoute = TransmissionsRouteImport.update({
   id: '/transmissions',
   path: '/transmissions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TerminalRoute = TerminalRouteImport.update({
+  id: '/terminal',
+  path: '/terminal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoreRoute = LoreRouteImport.update({
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/jobs': typeof JobsRoute
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
+  '/terminal': typeof TerminalRoute
   '/transmissions': typeof TransmissionsRouteWithChildren
   '/transmissions/$id': typeof TransmissionsIdRoute
   '/transmissions/': typeof TransmissionsIndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/jobs': typeof JobsRoute
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
+  '/terminal': typeof TerminalRoute
   '/transmissions/$id': typeof TransmissionsIdRoute
   '/transmissions': typeof TransmissionsIndexRoute
 }
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/jobs': typeof JobsRoute
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
+  '/terminal': typeof TerminalRoute
   '/transmissions': typeof TransmissionsRouteWithChildren
   '/transmissions/$id': typeof TransmissionsIdRoute
   '/transmissions/': typeof TransmissionsIndexRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/library'
     | '/lore'
+    | '/terminal'
     | '/transmissions'
     | '/transmissions/$id'
     | '/transmissions/'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/library'
     | '/lore'
+    | '/terminal'
     | '/transmissions/$id'
     | '/transmissions'
   id:
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/library'
     | '/lore'
+    | '/terminal'
     | '/transmissions'
     | '/transmissions/$id'
     | '/transmissions/'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   JobsRoute: typeof JobsRoute
   LibraryRoute: typeof LibraryRoute
   LoreRoute: typeof LoreRoute
+  TerminalRoute: typeof TerminalRoute
   TransmissionsRoute: typeof TransmissionsRouteWithChildren
 }
 
@@ -137,6 +150,13 @@ declare module '@tanstack/react-router' {
       path: '/transmissions'
       fullPath: '/transmissions'
       preLoaderRoute: typeof TransmissionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terminal': {
+      id: '/terminal'
+      path: '/terminal'
+      fullPath: '/terminal'
+      preLoaderRoute: typeof TerminalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lore': {
@@ -211,6 +231,7 @@ const rootRouteChildren: RootRouteChildren = {
   JobsRoute: JobsRoute,
   LibraryRoute: LibraryRoute,
   LoreRoute: LoreRoute,
+  TerminalRoute: TerminalRoute,
   TransmissionsRoute: TransmissionsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
