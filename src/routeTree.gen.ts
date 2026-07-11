@@ -14,6 +14,7 @@ import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as LoreRouteImport } from './routes/lore'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as JobsRouteImport } from './routes/jobs'
+import { Route as CongregationRouteImport } from './routes/congregation'
 import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TransmissionsIndexRouteImport } from './routes/transmissions.index'
@@ -44,6 +45,11 @@ const JobsRoute = JobsRouteImport.update({
   path: '/jobs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CongregationRoute = CongregationRouteImport.update({
+  id: '/congregation',
+  path: '/congregation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ArchiveRoute = ArchiveRouteImport.update({
   id: '/archive',
   path: '/archive',
@@ -68,6 +74,7 @@ const TransmissionsIdRoute = TransmissionsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
+  '/congregation': typeof CongregationRoute
   '/jobs': typeof JobsRoute
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
+  '/congregation': typeof CongregationRoute
   '/jobs': typeof JobsRoute
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
@@ -90,6 +98,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
+  '/congregation': typeof CongregationRoute
   '/jobs': typeof JobsRoute
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/archive'
+    | '/congregation'
     | '/jobs'
     | '/library'
     | '/lore'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/archive'
+    | '/congregation'
     | '/jobs'
     | '/library'
     | '/lore'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/archive'
+    | '/congregation'
     | '/jobs'
     | '/library'
     | '/lore'
@@ -136,6 +148,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ArchiveRoute: typeof ArchiveRoute
+  CongregationRoute: typeof CongregationRoute
   JobsRoute: typeof JobsRoute
   LibraryRoute: typeof LibraryRoute
   LoreRoute: typeof LoreRoute
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs'
       fullPath: '/jobs'
       preLoaderRoute: typeof JobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/congregation': {
+      id: '/congregation'
+      path: '/congregation'
+      fullPath: '/congregation'
+      preLoaderRoute: typeof CongregationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/archive': {
@@ -228,6 +248,7 @@ const TransmissionsRouteWithChildren = TransmissionsRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ArchiveRoute: ArchiveRoute,
+  CongregationRoute: CongregationRoute,
   JobsRoute: JobsRoute,
   LibraryRoute: LibraryRoute,
   LoreRoute: LoreRoute,
