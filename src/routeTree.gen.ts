@@ -16,6 +16,7 @@ import { Route as LoreRouteImport } from './routes/lore'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as CongregationRouteImport } from './routes/congregation'
+import { Route as AsciiGalleryRouteImport } from './routes/ascii-gallery'
 import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TransmissionsIndexRouteImport } from './routes/transmissions.index'
@@ -56,6 +57,11 @@ const CongregationRoute = CongregationRouteImport.update({
   path: '/congregation',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AsciiGalleryRoute = AsciiGalleryRouteImport.update({
+  id: '/ascii-gallery',
+  path: '/ascii-gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ArchiveRoute = ArchiveRouteImport.update({
   id: '/archive',
   path: '/archive',
@@ -80,6 +86,7 @@ const TransmissionsIdRoute = TransmissionsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
+  '/ascii-gallery': typeof AsciiGalleryRoute
   '/congregation': typeof CongregationRoute
   '/jobs': typeof JobsRoute
   '/library': typeof LibraryRoute
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
+  '/ascii-gallery': typeof AsciiGalleryRoute
   '/congregation': typeof CongregationRoute
   '/jobs': typeof JobsRoute
   '/library': typeof LibraryRoute
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
+  '/ascii-gallery': typeof AsciiGalleryRoute
   '/congregation': typeof CongregationRoute
   '/jobs': typeof JobsRoute
   '/library': typeof LibraryRoute
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/archive'
+    | '/ascii-gallery'
     | '/congregation'
     | '/jobs'
     | '/library'
@@ -134,6 +144,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/archive'
+    | '/ascii-gallery'
     | '/congregation'
     | '/jobs'
     | '/library'
@@ -146,6 +157,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/archive'
+    | '/ascii-gallery'
     | '/congregation'
     | '/jobs'
     | '/library'
@@ -160,6 +172,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ArchiveRoute: typeof ArchiveRoute
+  AsciiGalleryRoute: typeof AsciiGalleryRoute
   CongregationRoute: typeof CongregationRoute
   JobsRoute: typeof JobsRoute
   LibraryRoute: typeof LibraryRoute
@@ -220,6 +233,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CongregationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ascii-gallery': {
+      id: '/ascii-gallery'
+      path: '/ascii-gallery'
+      fullPath: '/ascii-gallery'
+      preLoaderRoute: typeof AsciiGalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/archive': {
       id: '/archive'
       path: '/archive'
@@ -268,6 +288,7 @@ const TransmissionsRouteWithChildren = TransmissionsRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ArchiveRoute: ArchiveRoute,
+  AsciiGalleryRoute: AsciiGalleryRoute,
   CongregationRoute: CongregationRoute,
   JobsRoute: JobsRoute,
   LibraryRoute: LibraryRoute,
