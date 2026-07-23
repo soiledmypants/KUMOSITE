@@ -54,7 +54,7 @@ export function SiteChrome({ children }: { children: ReactNode }) {
   const faction = useFaction();
 
   return (
-    <div className="min-h-screen bg-[#000] text-[#ccff00] font-mono">
+    <div className="min-h-screen bg-[#ccff00] text-black font-mono">
       {/* Top status bar */}
       <div className="box-inv text-[10px] sm:text-xs px-3 py-1 flex flex-wrap gap-x-4 gap-y-1 justify-between uppercase tracking-widest">
         <span>● signal: stable</span>
