@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: kumo-agent
+    runtime: node
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: node dist/index.js
+    healthCheckPath: /status
+    envVars:
+      - key: PRIVATE_KEY
+        sync: false # hot wallet key — set in the render dashboard, never in git
+      - key: KUMO_ADMIN_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false # neon postgres url (recommended); omit to fall back to sqlite
+      - key: ANTHROPIC_API_KEY
+        sync: false # optional: upgrades /chat from rule-based to claude
+      - key: PUBLIC_URL
+        value: https://kumo-agent.onrender.com # update to the actual service url
+      - key: RPC_URL
+        value: https://rpc.mainnet.chain.robinhood.com
+      - key: KUMO_MOCK
+        value: "false"
+      - key: TRADING_ENABLED
+        value: "false"
+      - key: TRADE_MAX_ETH
+        value: "0.05"
+      - key: TRADE_DAILY_MAX_ETH
+        value: "0.25"
+      - key: KUMO_TOKEN
+        sync: false # $KUMO CA once launched
+      - key: STAKING_ADDRESS
+        sync: false # KumoMultiStaking CA once deployed
+      - key: KUMO_EPOCH_STOCK
+        value: auto
+      - key: MIN_FUND_ETH
+        value: "0.05"
+      - key: GAS_RESERVE_ETH
+        value: "0.02"
+      - key: CORS_ORIGINS
+        value: "*"
