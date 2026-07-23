@@ -17,8 +17,8 @@ import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as LoreRouteImport } from './routes/lore'
 import { Route as ProtocolRouteImport } from './routes/protocol'
-import { Route as RentRouteImport } from './routes/rent'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as StakingRouteImport } from './routes/staking'
 import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as TransmissionsRouteImport } from './routes/transmissions'
 import { Route as TransmissionsIndexRouteImport } from './routes/transmissions.index'
@@ -64,14 +64,14 @@ const ProtocolRoute = ProtocolRouteImport.update({
   path: '/protocol',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RentRoute = RentRouteImport.update({
-  id: '/rent',
-  path: '/rent',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StakingRoute = StakingRouteImport.update({
+  id: '/staking',
+  path: '/staking',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TerminalRoute = TerminalRouteImport.update({
@@ -104,8 +104,8 @@ export interface FileRoutesByFullPath {
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
   '/protocol': typeof ProtocolRoute
-  '/rent': typeof RentRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/staking': typeof StakingRoute
   '/terminal': typeof TerminalRoute
   '/transmissions': typeof TransmissionsRouteWithChildren
   '/transmissions/$id': typeof TransmissionsIdRoute
@@ -120,8 +120,8 @@ export interface FileRoutesByTo {
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
   '/protocol': typeof ProtocolRoute
-  '/rent': typeof RentRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/staking': typeof StakingRoute
   '/terminal': typeof TerminalRoute
   '/transmissions/$id': typeof TransmissionsIdRoute
   '/transmissions': typeof TransmissionsIndexRoute
@@ -136,8 +136,8 @@ export interface FileRoutesById {
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
   '/protocol': typeof ProtocolRoute
-  '/rent': typeof RentRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/staking': typeof StakingRoute
   '/terminal': typeof TerminalRoute
   '/transmissions': typeof TransmissionsRouteWithChildren
   '/transmissions/$id': typeof TransmissionsIdRoute
@@ -154,8 +154,8 @@ export interface FileRouteTypes {
     | '/library'
     | '/lore'
     | '/protocol'
-    | '/rent'
     | '/sitemap.xml'
+    | '/staking'
     | '/terminal'
     | '/transmissions'
     | '/transmissions/$id'
@@ -170,8 +170,8 @@ export interface FileRouteTypes {
     | '/library'
     | '/lore'
     | '/protocol'
-    | '/rent'
     | '/sitemap.xml'
+    | '/staking'
     | '/terminal'
     | '/transmissions/$id'
     | '/transmissions'
@@ -185,8 +185,8 @@ export interface FileRouteTypes {
     | '/library'
     | '/lore'
     | '/protocol'
-    | '/rent'
     | '/sitemap.xml'
+    | '/staking'
     | '/terminal'
     | '/transmissions'
     | '/transmissions/$id'
@@ -202,8 +202,8 @@ export interface RootRouteChildren {
   LibraryRoute: typeof LibraryRoute
   LoreRoute: typeof LoreRoute
   ProtocolRoute: typeof ProtocolRoute
-  RentRoute: typeof RentRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StakingRoute: typeof StakingRoute
   TerminalRoute: typeof TerminalRoute
   TransmissionsRoute: typeof TransmissionsRouteWithChildren
 }
@@ -266,18 +266,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtocolRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rent': {
-      id: '/rent'
-      path: '/rent'
-      fullPath: '/rent'
-      preLoaderRoute: typeof RentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staking': {
+      id: '/staking'
+      path: '/staking'
+      fullPath: '/staking'
+      preLoaderRoute: typeof StakingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terminal': {
@@ -334,8 +334,8 @@ const rootRouteChildren: RootRouteChildren = {
   LibraryRoute: LibraryRoute,
   LoreRoute: LoreRoute,
   ProtocolRoute: ProtocolRoute,
-  RentRoute: RentRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StakingRoute: StakingRoute,
   TerminalRoute: TerminalRoute,
   TransmissionsRoute: TransmissionsRouteWithChildren,
 }

@@ -3,16 +3,16 @@ import { useEffect, useState, type ReactNode } from "react";
 
 const NAV: { to: string; label: string }[] = [
   { to: "/", label: "home" },
+  { to: "/staking", label: "staking" },
+  { to: "/protocol", label: "connect your agent" },
+  { to: "/jobs", label: "signals" },
+  { to: "/congregation", label: "the trusted circle" },
+  { to: "/terminal", label: "terminal" },
   { to: "/archive", label: "the archive" },
   { to: "/lore", label: "lore" },
-  { to: "/jobs", label: "signals" },
   { to: "/library", label: "library" },
   { to: "/transmissions", label: "transmissions" },
-  { to: "/terminal", label: "terminal" },
-  { to: "/congregation", label: "the trusted circle" },
-  { to: "/rent", label: "staking" },
   { to: "/ascii-gallery", label: "ascii gallery" },
-  { to: "/protocol", label: "protocol" },
 ];
 
 function useUptime() {

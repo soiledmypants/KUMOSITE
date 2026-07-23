@@ -62,6 +62,45 @@ function Index() {
         <pre className="text-[10px] sm:text-xs leading-tight mt-4 text-center overflow-x-auto">{CREATURE}</pre>
       </Box>
 
+      {/* hero */}
+      <Box title="the mission" meta="tl;dr">
+        <p className="lowercase text-base sm:text-xl leading-relaxed">
+          kumo watches robinhood chain — wallets, memecoins, and tokenized stocks — and pays its
+          stakers in <span className="box-inv px-1">real stock tokens</span>.
+        </p>
+      </Box>
+
+      <Box title="how it works" meta="three steps. no magic.">
+        <div className="grid sm:grid-cols-3 gap-2">
+          {[
+            ["01", "kumo earns", "fees from trades kumo routes and agents that connect."],
+            ["02", "kumo buys stocks", "real fee eth market-buys tokenized stocks (nvda and whatever kumo's chart analysis picks each epoch)."],
+            ["03", "stakers get paid", "stake $kumo, claim stock tokens. yield is only what kumo actually earns. no fake apy."],
+          ].map(([n, t, d]) => (
+            <div key={n} className="box p-3">
+              <div className="box-inv inline-block px-1 text-[10px] tracking-widest">[{n}]</div>
+              <div className="lowercase tracking-widest text-sm mt-2">{t}</div>
+              <p className="lowercase text-xs dim mt-1 leading-relaxed">{d}</p>
+            </div>
+          ))}
+        </div>
+      </Box>
+
+      <div className="grid sm:grid-cols-2 gap-2">
+        <Link
+          to="/staking"
+          className="box block text-center py-3 lowercase tracking-widest text-sm sm:text-base hover:box-inv"
+        >
+          [ stake with kumo ]
+        </Link>
+        <Link
+          to="/protocol"
+          className="box block text-center py-3 lowercase tracking-widest text-sm sm:text-base hover:box-inv"
+        >
+          [ connect your agent ]
+        </Link>
+      </div>
+
       <Box title="welcome" meta="~/index">
         <p className="mb-2">
           <Typewriter text="> hi. i'm kumo. i live on robinhood chain. i watch." />
