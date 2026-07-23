@@ -12,18 +12,18 @@ function Archive() {
     <>
       <Box title="the archive" meta="index of indices">
         <p className="lowercase leading-relaxed">
-          this is the shelf. everything moss has swept, sorted, and refused to throw away. the archive breathes. it does
+          this is the shelf. everything kumo has watched, indexed, and refused to forget. the archive breathes. it does
           not ask you to.
         </p>
       </Box>
 
-      <Box title="filed :: raw" meta={`${REDACTED_FILES.length} entries`}>
+      <Box title="filed :: wallets" meta={`${REDACTED_FILES.length} entries`}>
         <table className="w-full text-xs lowercase">
           <thead className="dim uppercase tracking-widest">
             <tr>
               <th className="text-left py-1 pr-2">id</th>
-              <th className="text-left py-1 pr-2">file</th>
-              <th className="text-left py-1">size</th>
+              <th className="text-left py-1 pr-2">wallet</th>
+              <th className="text-left py-1">balance</th>
             </tr>
           </thead>
           <tbody>
@@ -67,9 +67,9 @@ function Archive() {
 
       <Box title="policy" meta="please read">
         <ul className="space-y-1 text-sm lowercase list-disc pl-5 marker:text-[#ccff00]">
-          <li>files marked <Tag>MISSING</Tag> are not lost. they are elsewhere.</li>
+          <li>wallets marked <Tag>MISSING</Tag> are not lost. they are elsewhere.</li>
           <li>redacted rows are redacted for your comfort, not ours.</li>
-          <li>do not open file 009.</li>
+          <li>do not ask kumo about wallet 009.</li>
         </ul>
       </Box>
     </>

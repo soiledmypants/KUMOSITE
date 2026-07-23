@@ -11,15 +11,15 @@ export const Route = createFileRoute("/terminal")({
 const HELP = [
   "available commands:",
   "  help       list commands",
-  "  about      about the green room",
+  "  about      about kumo",
   "  clear      clear the screen",
   "  ascii      print a creature from the archive",
-  "  lore       print a random mystery",
+  "  lore       print a random chain mystery",
   "  jobs       list open jobs",
-  "  signal     print a recent signal",
-  "  whoami     ask the room",
+  "  signal     print a recent chain event",
+  "  whoami     ask the chain",
   "  archive    stats from the archive",
-  "  fortune    an internet fortune",
+  "  fortune    an on-chain fortune",
   "",
   "there is one command i am not listing.",
 ];
@@ -37,7 +37,7 @@ function run(cmd: string): string {
     case "help":
       return HELP.join("\n");
     case "about":
-      return "the green room :: v0.9.7-unstable\nmaintained by moss. do not open file 009.";
+      return "kumo :: v0.9.7-unstable\na tiny on-chain companion on robinhood chain. do not ask about wallet 009.";
     case "ascii":
       return pick(CREATURES);
     case "lore": {
@@ -51,24 +51,24 @@ function run(cmd: string): string {
     case "signal":
       return pick(SIGNALS);
     case "whoami":
-      return "you are a guest of the green room. we've been expecting you (affectionately).";
+      return "you are a guest of kumo's terminal. the chain has been expecting you (affectionately).";
     case "archive":
-      return `mysteries: ${MYSTERIES.length}\nopen jobs: ${JOBS.filter((j) => j.status === "open").length}\nbrooms: 3 (winston, other, and the one we don't talk about)`;
+      return `mysteries: ${MYSTERIES.length}\nopen jobs: ${JOBS.filter((j) => j.status === "open").length}\ncold wallets: 3 (winston, other, and the one we don't talk about)`;
     case "fortune":
       return pick(FORTUNES);
-    case "sweep":
-      return "* moss looks up *\n\nyou found the undocumented command. take this: a small green flame,\nkept in the ledger under your visitor number. you are, quietly, in the book.\n\ntell no one. or do. it's fine either way.";
+    case "watch":
+      return "* kumo looks up *\n\nyou found the undocumented command. take this: a small green flame,\nkept in the ledger under your block number. you are, quietly, in the book.\n\ntell no one. or do. it's fine either way. kumo saw.";
     case "clear":
       return "__CLEAR__";
     default:
-      return `zsh: command not found: ${c}. try 'help'. or don't. moss is chill.`;
+      return `zsh: command not found: ${c}. try 'help'. or don't. kumo is chill.`;
   }
 }
 
 function Terminal() {
   const [lines, setLines] = useState<Line[]>([
-    { kind: "out", text: "the green room terminal v0.9.7-unstable" },
-    { kind: "out", text: "type 'help' to see what's listed. some things aren't." },
+    { kind: "out", text: "kumo's terminal v0.9.7-unstable" },
+    { kind: "out", text: "kumo is awake. type 'help' to see what's listed. some things aren't." },
     { kind: "out", text: "" },
   ]);
   const [input, setInput] = useState("");

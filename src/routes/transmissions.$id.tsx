@@ -20,7 +20,7 @@ export const Route = createFileRoute("/transmissions/$id")({
 function NotFoundTx() {
   return (
     <Box title="not filed" meta="404">
-      <p className="lowercase">this transmission fell off the shelf. it may return.</p>
+      <p className="lowercase">this transmission dropped out of the mempool. it may return.</p>
       <Link to="/transmissions" className="box inline-block px-2 py-1 mt-2 hover:box-inv">[ back ]</Link>
     </Box>
   );

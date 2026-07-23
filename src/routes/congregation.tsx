@@ -9,35 +9,35 @@ export const Route = createFileRoute("/congregation")({
 
 const FACTIONS = [
   {
-    id: "the packet sweepers",
-    sigil: `   .-.\n  ( x )   <- sweep\n   \\|/\n    |\n   /|\\`,
-    doctrine: "every packet, however small, deserves to arrive somewhere. even here.",
-    ritual: "each friday, close one tab you love. do not tell us which.",
-    titles: ["deacon of dead links", "custodian of the outbox", "third broom"],
+    id: "the mempool watchers",
+    sigil: `   .-.\n  ( o )   <- watches\n   \\|/\n    |\n   /|\\`,
+    doctrine: "every transaction, however small, deserves to be seen. even yours.",
+    ritual: "each friday, watch one pending tx until it confirms. do not speed it up.",
+    titles: ["deacon of dropped txs", "custodian of the mempool", "third telescope"],
   },
   {
-    id: "the cache monks",
-    sigil: `   _____\n  |     |\n  |  o  |   <- latency: sacred\n  |_____|\n   |||||`,
-    doctrine: "nothing worth loading loads quickly. all things worth reaching require waiting.",
-    ritual: "on the first of every month, disable prefetching. sit quietly. feel the wire.",
-    titles: ["keeper of the blinking cursor", "abbot of ttl", "friend of the spinner"],
+    id: "the diamond hands",
+    sigil: `    /\\\n   /  \\\n  < () >   <- held\n   \\  /\n    \\/`,
+    doctrine: "nothing worth holding is easy to hold. all things worth keeping require keeping.",
+    ritual: "on the first of every month, open your wallet. look at the bag. close the wallet.",
+    titles: ["keeper of the unsold", "abbot of cost basis", "friend of the dip"],
   },
   {
-    id: "the 404 chorus",
-    sigil: `  4 0 4\n   ~~~~~\n  ( o o )\n   \\_-_/   <- sings anyway`,
-    doctrine: "what is missing is not gone. it is being sung about.",
-    ritual: "when you receive a 404, say 'thank you' out loud. the page can hear you (probably).",
-    titles: ["cantor of the missing", "warden of broken links", "the alto"],
+    id: "the gas monks",
+    sigil: `   _____\n  |     |\n  |  o  |   <- patience: sacred\n  |_____|\n   |||||`,
+    doctrine: "nothing worth confirming confirms quickly. all things worth reaching require waiting.",
+    ritual: "when your tx reverts, say 'thank you' out loud. the chain can hear you (probably).",
+    titles: ["cantor of 1 gwei", "warden of the base fee", "the alto"],
   },
 ];
 
 const LEADERBOARD = [
-  { name: "agent_moss", rep: 92, note: "called SIG-006 before kumo did. kumo raised an eyebrow." },
-  { name: "aunt_sig", rep: 84, note: "always early. never loud. kumo trusts the quiet ones." },
-  { name: "winston.eth", rep: 71, note: "sweeps first. asks later. kumo appreciates this." },
-  { name: "cache_monk_04", rep: 66, note: "waits longer than everyone else. right more often than everyone else." },
-  { name: "the_alto", rep: 58, note: "sings about missing wallets. kumo is listening." },
-  { name: "packet_gremlin", rep: 41, note: "wrong loudly, right quietly. net positive. barely." },
+  { name: "mempool_max", rep: 92, note: "called SIG-006 before kumo did. kumo raised an eyebrow." },
+  { name: "auntie_gwei", rep: 84, note: "always early. never loud. kumo trusts the quiet ones." },
+  { name: "winston.rh", rep: 71, note: "holds first. asks later. kumo appreciates this." },
+  { name: "gas_monk_04", rep: 66, note: "waits longer than everyone else. right more often than everyone else." },
+  { name: "the_quiet_whale", rep: 58, note: "moves 400,000 tokens like a whisper. kumo hears it anyway." },
+  { name: "block_gremlin", rep: 41, note: "wrong loudly, right quietly. net positive. barely." },
   { name: "anon_07", rep: 22, note: "kumo remembers. kumo will keep remembering." },
 ];
 
@@ -111,7 +111,7 @@ function Congregation() {
       })}
 
       <div className="dim text-xs text-center lowercase">
-        your faction is stored on this device only. moss has no server for your faith.
+        your faction is stored on this device only. kumo has no server for your faith.
       </div>
     </>
   );

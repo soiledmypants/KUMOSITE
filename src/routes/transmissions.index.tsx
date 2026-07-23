@@ -12,7 +12,7 @@ function List() {
     <>
       <Box title="transmissions" meta="typed artifacts">
         <p className="lowercase leading-relaxed">
-          not a blog. these are what falls off the wires while moss is sweeping. sometimes they're signals. sometimes
+          not a blog. these are what falls off the chain while kumo is watching. sometimes they're signals. sometimes
           they're memory leaks. one is an observer report. we don't ask which observer.
         </p>
       </Box>

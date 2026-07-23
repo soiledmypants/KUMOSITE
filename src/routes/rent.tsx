@@ -45,7 +45,7 @@ function Rent() {
       <Box title="your position" meta="mock — kumo is counting">
         <div className="flex flex-wrap items-center gap-3 mb-3">
           <span className="dim text-xs uppercase tracking-widest">staked</span>
-          <span className="box-inv px-2 py-1 font-mono">{staked} packets</span>
+          <span className="box-inv px-2 py-1 font-mono">{staked} tokens</span>
           <span className="dim text-xs uppercase tracking-widest ml-2">rewards</span>
           <span className="font-mono text-xs">
             {pending ? "kumo is counting..." : staked > 0 ? "kumo is counting..." : "—"}
@@ -68,7 +68,7 @@ function Rent() {
           </button>
         </div>
         <div className="dim text-xs lowercase mt-3">
-          this is a mock. no packets were moved. kumo is warming up.
+          this is a mock. no tokens were moved. kumo is warming up.
         </div>
       </Box>
 
@@ -99,12 +99,12 @@ function Rent() {
       </Box>
       <Box title="what counts">
         <ul className="lowercase text-sm space-y-1 list-disc pl-5 marker:text-[#ccff00]">
-          <li>a sincere forum post</li>
-          <li>a favicon, hand-drawn</li>
-          <li>one warm reply to a cold email</li>
-          <li>rebooting a router, gently</li>
-          <li>three minutes of listening</li>
-          <li>closing one tab you love</li>
+          <li>a sincere gm</li>
+          <li>a memo, hand-written</li>
+          <li>one warm reply to a cold wallet</li>
+          <li>resyncing a node, gently</li>
+          <li>three minutes of watching</li>
+          <li>letting one bag go</li>
         </ul>
       </Box>
     </>

@@ -8,15 +8,15 @@ export const Route = createFileRoute("/protocol")({
 });
 
 const LAWS = [
-  "the green room is a place, not a service. you visit; you do not consume.",
+  "kumo is a companion, not a service. you visit; you do not consume.",
   "you don't subscribe. you attune.",
-  "packets are people, kind of. treat them as such.",
-  "close one tab you love every friday. it is a small offering.",
-  "do not open file 009.",
-  "if you find a webring, add a link. take a link. leave a link. the ring is not yours; you are the ring's.",
-  "keep it lowercase. capitals are for headings and emergencies.",
-  "moss is not a mascot. moss is a coworker.",
-  "when in doubt, sweep.",
+  "transactions are people, kind of. treat them as such.",
+  "let one bag go every friday. it is a small offering.",
+  "do not ask kumo about wallet 009.",
+  "if you find an airdrop, take a claim. leave a claim. the drop is not yours; you are the drop's.",
+  "keep it lowercase. capitals are for tickers and emergencies.",
+  "kumo is not a mascot. kumo is a coworker.",
+  "when in doubt, watch.",
 ];
 
 function Protocol() {
@@ -24,11 +24,11 @@ function Protocol() {
     <>
       <Box title="the protocol" meta="v0.9.7-unstable">
         <p className="lowercase leading-relaxed">
-          this is the whole thing. the laws, the words we use, and the log of how we got here. moss revises it in
+          this is the whole thing. the laws, the words we use, and the log of how we got here. kumo revises it in
           pencil, mostly.
         </p>
       </Box>
-      <Box title="laws of the green room" meta={`${LAWS.length} entries`}>
+      <Box title="laws of kumo" meta={`${LAWS.length} entries`}>
         <ol className="lowercase space-y-1 pl-6 list-decimal marker:text-[#ccff00]">
           {LAWS.map((l, i) => (
             <li key={i}>{l}</li>

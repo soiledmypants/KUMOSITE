@@ -9,69 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TransmissionsRouteImport } from './routes/transmissions'
-import { Route as TerminalRouteImport } from './routes/terminal'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as RentRouteImport } from './routes/rent'
-import { Route as ProtocolRouteImport } from './routes/protocol'
-import { Route as LoreRouteImport } from './routes/lore'
-import { Route as LibraryRouteImport } from './routes/library'
-import { Route as JobsRouteImport } from './routes/jobs'
-import { Route as CongregationRouteImport } from './routes/congregation'
-import { Route as AsciiGalleryRouteImport } from './routes/ascii-gallery'
-import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ArchiveRouteImport } from './routes/archive'
+import { Route as AsciiGalleryRouteImport } from './routes/ascii-gallery'
+import { Route as CongregationRouteImport } from './routes/congregation'
+import { Route as JobsRouteImport } from './routes/jobs'
+import { Route as LibraryRouteImport } from './routes/library'
+import { Route as LoreRouteImport } from './routes/lore'
+import { Route as ProtocolRouteImport } from './routes/protocol'
+import { Route as RentRouteImport } from './routes/rent'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TerminalRouteImport } from './routes/terminal'
+import { Route as TransmissionsRouteImport } from './routes/transmissions'
 import { Route as TransmissionsIndexRouteImport } from './routes/transmissions.index'
 import { Route as TransmissionsIdRouteImport } from './routes/transmissions.$id'
 
-const TransmissionsRoute = TransmissionsRouteImport.update({
-  id: '/transmissions',
-  path: '/transmissions',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TerminalRoute = TerminalRouteImport.update({
-  id: '/terminal',
-  path: '/terminal',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RentRoute = RentRouteImport.update({
-  id: '/rent',
-  path: '/rent',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProtocolRoute = ProtocolRouteImport.update({
-  id: '/protocol',
-  path: '/protocol',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoreRoute = LoreRouteImport.update({
-  id: '/lore',
-  path: '/lore',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LibraryRoute = LibraryRouteImport.update({
-  id: '/library',
-  path: '/library',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const JobsRoute = JobsRouteImport.update({
-  id: '/jobs',
-  path: '/jobs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CongregationRoute = CongregationRouteImport.update({
-  id: '/congregation',
-  path: '/congregation',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AsciiGalleryRoute = AsciiGalleryRouteImport.update({
-  id: '/ascii-gallery',
-  path: '/ascii-gallery',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArchiveRoute = ArchiveRouteImport.update({
@@ -79,9 +34,54 @@ const ArchiveRoute = ArchiveRouteImport.update({
   path: '/archive',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AsciiGalleryRoute = AsciiGalleryRouteImport.update({
+  id: '/ascii-gallery',
+  path: '/ascii-gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CongregationRoute = CongregationRouteImport.update({
+  id: '/congregation',
+  path: '/congregation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsRoute = JobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryRoute = LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoreRoute = LoreRouteImport.update({
+  id: '/lore',
+  path: '/lore',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProtocolRoute = ProtocolRouteImport.update({
+  id: '/protocol',
+  path: '/protocol',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RentRoute = RentRouteImport.update({
+  id: '/rent',
+  path: '/rent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TerminalRoute = TerminalRouteImport.update({
+  id: '/terminal',
+  path: '/terminal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransmissionsRoute = TransmissionsRouteImport.update({
+  id: '/transmissions',
+  path: '/transmissions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TransmissionsIndexRoute = TransmissionsIndexRouteImport.update({
@@ -210,74 +210,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/transmissions': {
-      id: '/transmissions'
-      path: '/transmissions'
-      fullPath: '/transmissions'
-      preLoaderRoute: typeof TransmissionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terminal': {
-      id: '/terminal'
-      path: '/terminal'
-      fullPath: '/terminal'
-      preLoaderRoute: typeof TerminalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rent': {
-      id: '/rent'
-      path: '/rent'
-      fullPath: '/rent'
-      preLoaderRoute: typeof RentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/protocol': {
-      id: '/protocol'
-      path: '/protocol'
-      fullPath: '/protocol'
-      preLoaderRoute: typeof ProtocolRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lore': {
-      id: '/lore'
-      path: '/lore'
-      fullPath: '/lore'
-      preLoaderRoute: typeof LoreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/library': {
-      id: '/library'
-      path: '/library'
-      fullPath: '/library'
-      preLoaderRoute: typeof LibraryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/jobs': {
-      id: '/jobs'
-      path: '/jobs'
-      fullPath: '/jobs'
-      preLoaderRoute: typeof JobsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/congregation': {
-      id: '/congregation'
-      path: '/congregation'
-      fullPath: '/congregation'
-      preLoaderRoute: typeof CongregationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ascii-gallery': {
-      id: '/ascii-gallery'
-      path: '/ascii-gallery'
-      fullPath: '/ascii-gallery'
-      preLoaderRoute: typeof AsciiGalleryRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/archive': {
@@ -287,11 +224,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArchiveRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/ascii-gallery': {
+      id: '/ascii-gallery'
+      path: '/ascii-gallery'
+      fullPath: '/ascii-gallery'
+      preLoaderRoute: typeof AsciiGalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/congregation': {
+      id: '/congregation'
+      path: '/congregation'
+      fullPath: '/congregation'
+      preLoaderRoute: typeof CongregationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs': {
+      id: '/jobs'
+      path: '/jobs'
+      fullPath: '/jobs'
+      preLoaderRoute: typeof JobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof LibraryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lore': {
+      id: '/lore'
+      path: '/lore'
+      fullPath: '/lore'
+      preLoaderRoute: typeof LoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/protocol': {
+      id: '/protocol'
+      path: '/protocol'
+      fullPath: '/protocol'
+      preLoaderRoute: typeof ProtocolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rent': {
+      id: '/rent'
+      path: '/rent'
+      fullPath: '/rent'
+      preLoaderRoute: typeof RentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terminal': {
+      id: '/terminal'
+      path: '/terminal'
+      fullPath: '/terminal'
+      preLoaderRoute: typeof TerminalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transmissions': {
+      id: '/transmissions'
+      path: '/transmissions'
+      fullPath: '/transmissions'
+      preLoaderRoute: typeof TransmissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/transmissions/': {
@@ -342,3 +342,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

@@ -27,7 +27,7 @@ function Library() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="dead protocols, ghost forums, brooms..."
+            placeholder="dead chains, rugged projects, wallet 009..."
             className="bg-transparent outline-none flex-1 lowercase placeholder:opacity-40"
           />
           <span className="cursor-blink">█</span>

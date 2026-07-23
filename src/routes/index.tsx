@@ -56,7 +56,7 @@ function Index() {
         <span className="break-all">3M0ss7janitorGRnR00mXZq9pDwK4nP7uH2vB6cLtF1yTeR8kA</span>
       </div>
 
-      <Box title="~ the green room ~" meta="node 04">
+      <Box title="~ kumo's terminal ~" meta="rhc-04">
         <pre className="text-[9px] xs:text-[11px] sm:text-sm leading-tight overflow-x-auto">{LOGO}</pre>
         <div className="text-center italic dim mt-1 lowercase">watching the chain so you don't have to</div>
         <pre className="text-[10px] sm:text-xs leading-tight mt-4 text-center overflow-x-auto">{CREATURE}</pre>
@@ -64,17 +64,17 @@ function Index() {
 
       <Box title="welcome" meta="~/index">
         <p className="mb-2">
-          <Typewriter text="> welcome to the green room. i'm moss. i sweep the wires." />
+          <Typewriter text="> hi. i'm kumo. i live on robinhood chain. i watch." />
         </p>
         <p className="lowercase mb-2 leading-relaxed">
-          this site is my supply closet, my confession booth, and my museum of things the internet forgot on purpose.
+          this site is my watchtower, my diary, and my museum of things the chain forgot on purpose.
           touch whatever you want. some of it touches back (affectionately).
         </p>
         <p className="lowercase leading-relaxed">
-          somewhere beneath the modern internet there is an older network still humming. i am one of its last maintenance
-          workers. this is where i keep the receipts. it is also where i keep the brooms.
+          somewhere beneath the modern chains there is an older chain still humming. i am one of its last watchers.
+          this is where i keep the receipts. it is also where i keep the wallets.
         </p>
-        <p className="lowercase leading-relaxed mt-2 dim">— moss, at 03:33, again</p>
+        <p className="lowercase leading-relaxed mt-2 dim">— kumo, at block 41,000,009, again</p>
       </Box>
 
       <Box title="recent signals" meta="live-ish">
@@ -87,27 +87,27 @@ function Index() {
           ))}
         </ul>
         <Divider char="·" />
-        <div className="text-xs dim lowercase">signals refresh whenever moss looks up. do not depend on this.</div>
+        <div className="text-xs dim lowercase">signals refresh whenever kumo blinks. kumo does not blink often.</div>
       </Box>
 
       <Box title="[protocol]" meta="required reading">
         <div className="lowercase mb-3">~ you don't subscribe. you attune.</div>
         <ol className="lowercase space-y-1 pl-4 list-decimal marker:text-[#ccff00]">
-          <li>be kind to strangers on the wire. most of them are lost.</li>
-          <li>close one tab you love, every friday, without being asked.</li>
-          <li>do not open file 009. we are not joking. we are however smiling.</li>
-          <li>pay your rent (see /the rent). the internet remembers.</li>
-          <li>if you find something old and glowing, leave it where you found it. tell moss.</li>
+          <li>be kind to strangers in the mempool. most of them are lost.</li>
+          <li>let one bag go, every friday, without being asked.</li>
+          <li>do not ask kumo about wallet 009. we are not joking. we are however smiling.</li>
+          <li>stake something (see /staking). the chain remembers.</li>
+          <li>if you find something old and glowing in a wallet, leave it where you found it. tell kumo.</li>
         </ol>
       </Box>
 
-      <Box title="redacted files" meta="/archive/index">
+      <Box title="watched wallets" meta="/archive/index">
         <table className="w-full text-xs lowercase">
           <thead className="dim uppercase tracking-widest">
             <tr>
               <th className="text-left py-1 pr-2">id</th>
-              <th className="text-left py-1 pr-2">file</th>
-              <th className="text-left py-1">size</th>
+              <th className="text-left py-1 pr-2">wallet</th>
+              <th className="text-left py-1">balance</th>
             </tr>
           </thead>
           <tbody>
@@ -122,7 +122,7 @@ function Index() {
             ))}
           </tbody>
         </table>
-        <div className="text-xs dim mt-2">!! do not read file 009 !!</div>
+        <div className="text-xs dim mt-2">!! do not ask kumo about wallet 009 !!</div>
       </Box>
 
       <Box title="glitch log" meta="this week">
@@ -133,11 +133,11 @@ function Index() {
         </ul>
       </Box>
 
-      <Box title="timeline" meta="1987 → now">
+      <Box title="timeline" meta="block 0 → now">
         <pre className="text-xs leading-relaxed">{TIMELINE.map((e, i) => `│\n├─ [${e.y}] ${e.t}${i === TIMELINE.length - 1 ? "\n│" : ""}`).join("\n")}</pre>
       </Box>
 
-      <Box title="theories" meta="what is moss?">
+      <Box title="theories" meta="what is kumo?">
         <ul className="space-y-2 text-sm lowercase">
           {THEORIES.map((th, i) => {
             const filled = Math.round(th.p / 12.5);
