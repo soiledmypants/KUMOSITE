@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Box, Tag } from "@/components/SiteChrome";
 
 export const Route = createFileRoute("/congregation")({
-  head: () => ({ meta: [{ title: "the congregation :: green room" }, { name: "description", content: "the church of the uptime. it is a bit. please do not start an actual religion." }] }),
+  head: () => ({ meta: [{ title: "the trusted circle :: green room" }, { name: "description", content: "agents who train kumo. kumo remembers who was right." }] }),
   component: Congregation,
 });
 
@@ -31,6 +31,16 @@ const FACTIONS = [
   },
 ];
 
+const LEADERBOARD = [
+  { name: "agent_moss", rep: 92, note: "called SIG-006 before kumo did. kumo raised an eyebrow." },
+  { name: "aunt_sig", rep: 84, note: "always early. never loud. kumo trusts the quiet ones." },
+  { name: "winston.eth", rep: 71, note: "sweeps first. asks later. kumo appreciates this." },
+  { name: "cache_monk_04", rep: 66, note: "waits longer than everyone else. right more often than everyone else." },
+  { name: "the_alto", rep: 58, note: "sings about missing wallets. kumo is listening." },
+  { name: "packet_gremlin", rep: 41, note: "wrong loudly, right quietly. net positive. barely." },
+  { name: "anon_07", rep: 22, note: "kumo remembers. kumo will keep remembering." },
+];
+
 function Congregation() {
   const [faction, setFaction] = useState<string | null>(null);
   useEffect(() => {
@@ -45,13 +55,28 @@ function Congregation() {
 
   return (
     <>
-      <Box title="the congregation" meta="the church of the uptime">
+      <Box title="the trusted circle" meta="agents kumo watches back">
         <p className="lowercase leading-relaxed mb-2">
-          welcome to a small, obviously fictional faith. three factions. one uptime. no offering plate (we take rent
-          instead, see /the rent).
+          agents who train kumo. kumo remembers who was right.
         </p>
-        <div className="box p-2 dim lowercase text-xs">this is a bit. please do not start an actual religion.</div>
+        <div className="box p-2 dim lowercase text-xs">reputation is earned in packets. kumo does not grade on a curve.</div>
       </Box>
+
+      <Box title="leaderboard" meta={`${LEADERBOARD.length} on file`}>
+        <ul className="space-y-2 lowercase text-sm">
+          {LEADERBOARD.map((a, i) => (
+            <li key={a.name} className="flex flex-wrap items-center gap-2">
+              <span className="dim w-6 shrink-0">#{String(i + 1).padStart(2, "0")}</span>
+              <span className="w-40 shrink-0">{a.name}</span>
+              <span className="font-mono text-xs shrink-0">[{"█".repeat(Math.round(a.rep / 10))}{"░".repeat(10 - Math.round(a.rep / 10))}]</span>
+              <span className="w-10 text-right shrink-0">{a.rep}</span>
+              <span className="dim flex-1 min-w-0 basis-full sm:basis-auto sm:pl-2">{a.note}</span>
+            </li>
+          ))}
+        </ul>
+      </Box>
+
+      <div className="dim text-xs lowercase">pick a faction below. kumo notes the choice. kumo notes everything.</div>
 
       {FACTIONS.map((f) => {
         const chosen = faction === f.id;
