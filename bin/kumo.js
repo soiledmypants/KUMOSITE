@@ -71,9 +71,25 @@ program
   .description("stock-token watch")
   .action(async () => {
     const list = await api("GET", "/stocks");
-    for (const s of list) {
-      const chg = s.change_24h === null ? "" : ` (${s.change_24h >= 0 ? "+" : ""}${s.change_24h.toFixed(1)}%)`;
-      console.log(`${s.symbol}: ${s.price_usd ? "$" + s.price_usd : "unpriced"}${chg} — market ${s.market}`);
+    for (const s of list.slice(0, 25)) {
+      const chg = s.change_24h === null || s.change_24h === undefined ? "" : ` (${s.change_24h >= 0 ? "+" : ""}${s.change_24h.toFixed(1)}%)`;
+      const ta = s.ta_score === null || s.ta_score === undefined ? "" : `  ta ${(s.ta_score * 100).toFixed(0)}`;
+      console.log(`${s.symbol}: ${s.price_usd ? "$" + s.price_usd : "unpriced"}${chg}${ta} — market ${s.market}`);
+    }
+    if (list.length > 25) console.log(`...and ${list.length - 25} more. kumo watches them all.`);
+  });
+
+program
+  .command("ranking")
+  .description("kumo's live ta rankings")
+  .action(async () => {
+    const list = await api("GET", "/stocks/ranking");
+    if (list.length === 0) return console.log("kumo hasn't scored anything yet. give it a cycle.");
+    for (const m of list.slice(0, 15)) {
+      const mom = m.short_momentum_pct === null ? "?" : `${m.short_momentum_pct >= 0 ? "+" : ""}${m.short_momentum_pct}%`;
+      console.log(
+        `${String(m.symbol).padEnd(6)} ta ${(m.ta_score * 100).toFixed(0).padStart(3)}  1h ${mom}  volx ${m.volume_spike}  liq $${Math.round(m.liquidity_usd / 1000)}k`,
+      );
     }
   });
 

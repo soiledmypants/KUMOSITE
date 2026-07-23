@@ -72,7 +72,8 @@ export const CONFIG = {
 
   // scanners
   walletScanMs: envNum("WALLET_SCAN_MS", 30_000),
-  stockScanMs: envNum("STOCK_SCAN_MS", 60_000),
+  stockScanMs: envNum("STOCK_SCAN_MS", 300_000), // ta cycle: every 5 min
+  stockDiscoveryMs: envNum("STOCK_DISCOVERY_MS", 6 * 3600 * 1000),
   memecoinScanMs: envNum("MEMECOIN_SCAN_MS", 45_000),
   scanChunkBlocks: envNum("SCAN_CHUNK_BLOCKS", 2000),
   scanMaxChunksPerCycle: envNum("SCAN_MAX_CHUNKS_PER_CYCLE", 25),

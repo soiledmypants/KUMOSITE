@@ -4,6 +4,7 @@ import { encodePacked, parseAbi, type Address } from "viem";
 import { CONFIG } from "../config.js";
 import { publicClient } from "../clients.js";
 import { withRetry } from "../rpc.js";
+import { stockBySymbol } from "../scanner/discovery.js";
 
 export const quoterAbi = parseAbi([
   "function quoteExactInputSingle((address tokenIn, address tokenOut, uint256 amountIn, uint24 fee, uint160 sqrtPriceLimitX96) params) returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)",
@@ -30,6 +31,8 @@ export function resolveToken(sym: string): Address {
   const upper = s.toUpperCase();
   if (upper === "ETH" || upper === "WETH") return CONFIG.weth;
   if (upper === "USDG") return CONFIG.usdg;
+  const discovered = stockBySymbol(upper);
+  if (discovered) return discovered.address;
   const stock = CONFIG.stockTokens.find((t) => t.symbol === upper);
   if (stock) return stock.address;
   throw new Error(`unknown token: ${sym}`);

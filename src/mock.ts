@@ -54,11 +54,26 @@ let nvdaPrice = 191.42;
 export const mockStocks = () => {
   nvdaPrice += (Math.random() - 0.5) * 0.4;
   return [
-    { address: "0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec", symbol: "NVDA", price_usd: Number(nvdaPrice.toFixed(2)), ui_multiplier: 1, market: "open" as const, change_24h: 2.3 },
-    { address: "0x5555555555555555555555555555555555555555", symbol: "TSLA", price_usd: 402.11, ui_multiplier: 1, market: "open" as const, change_24h: -1.1 },
-    { address: "0x6666666666666666666666666666666666666666", symbol: "SPY", price_usd: 689.5, ui_multiplier: 1, market: "open" as const, change_24h: 0.4 },
+    { address: "0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec", symbol: "NVDA", name: "NVIDIA", price_usd: Number(nvdaPrice.toFixed(2)), ta_score: 0.81, ui_multiplier: 1, market: "open" as const, change_24h: 2.3, liquidity_usd: 631162 },
+    { address: "0x5555555555555555555555555555555555555555", symbol: "MSTR", name: "Strategy", price_usd: 402.11, ta_score: 0.74, ui_multiplier: 1, market: "open" as const, change_24h: 4.9, liquidity_usd: 312000 },
+    { address: "0x6666666666666666666666666666666666666666", symbol: "TSLA", name: "Tesla", price_usd: 411.02, ta_score: 0.62, ui_multiplier: 1, market: "open" as const, change_24h: -1.1, liquidity_usd: 118000 },
+    { address: "0x7777777777777777777777777777777777777779", symbol: "SPY", name: "SPDR S&P 500", price_usd: 689.5, ta_score: 0.55, ui_multiplier: 1, market: "open" as const, change_24h: 0.4, liquidity_usd: 92000 },
   ];
 };
+
+export const mockRanking = () =>
+  mockStocks().map((s, i) => ({
+    symbol: s.symbol,
+    address: s.address,
+    price_usd: s.price_usd,
+    ta_score: s.ta_score,
+    short_momentum_pct: [0.9, 1.4, -0.3, 0.1][i] ?? 0,
+    long_momentum_pct: s.change_24h,
+    volume_spike: [2.1, 3.4, 0.8, 1.0][i] ?? 1,
+    volatility_pct: [0.4, 0.9, 0.5, 0.2][i] ?? 0.3,
+    liquidity_usd: s.liquidity_usd,
+    scored_at: Date.now() - 120_000,
+  }));
 
 export const mockSignals = () => [
   {

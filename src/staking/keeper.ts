@@ -11,10 +11,12 @@ import { encodePath, quoterAbi } from "../trade/quote.js";
 import { routerAbi } from "../trade/execute.js";
 import { brandTx, sendGuardedTx } from "../trade/guard.js";
 import { epochStock } from "./epoch.js";
+import { stockByAddress } from "../scanner/discovery.js";
 
 const stakingAbi = parseAbi([
   "function totalSupply() view returns (uint256)",
   "function notifyRewardAmount(address token, uint256 amount, uint256 ethSpentWei)",
+  "function rewardTokens() view returns (address[])",
   "function rewardData(address token) view returns (address distributor, uint256 rewardsDuration, uint256 periodFinish, uint256 rewardRate, uint256 lastUpdateTime, uint256 rewardPerTokenStored, uint256 minNotifyAmount, uint256 notifyCap, uint256 notifiedTotal, uint256 claimedTotal, uint256 ethSpentTotal)",
 ]);
 const erc20Abi = parseAbi([
@@ -51,6 +53,7 @@ export async function keeperCycleOnce(): Promise<void> {
     keeperState.epochSymbol = pick.symbol;
     keeperState.screenNote = pick.screenNote;
     if (!pick.passesScreen) keeperState.alerts.push(`liquidity screen not passing: ${pick.screenNote}`);
+    if (pick.pendingWinner) keeperState.alerts.push(pick.pendingWinner.note);
 
     const totalStaked = await withRetry(
       () => publicClient.readContract({ address: staking, abi: stakingAbi, functionName: "totalSupply" }),
@@ -162,13 +165,15 @@ export async function stakingStats(): Promise<Record<string, unknown>> {
     try {
       const staking = CONFIG.stakingAddress as Address;
       const totalStaked = await publicClient.readContract({ address: staking, abi: stakingAbi, functionName: "totalSupply" });
+      const registered = await publicClient.readContract({ address: staking, abi: stakingAbi, functionName: "rewardTokens" });
       const perToken: Record<string, unknown>[] = [];
-      for (const t of CONFIG.stockTokens) {
+      for (const token of registered) {
         try {
-          const r = await publicClient.readContract({ address: staking, abi: stakingAbi, functionName: "rewardData", args: [t.address] });
+          const r = await publicClient.readContract({ address: staking, abi: stakingAbi, functionName: "rewardData", args: [token] });
+          const known = stockByAddress(token);
           perToken.push({
-            symbol: t.symbol,
-            token: t.address,
+            symbol: known?.symbol ?? (CONFIG.kumoToken && token.toLowerCase() === CONFIG.kumoToken.toLowerCase() ? "KUMO" : token.slice(0, 8)),
+            token,
             rewardRateScaled: r[3].toString(),
             periodFinish: Number(r[2]),
             notifiedTotal: r[8].toString(),
@@ -176,7 +181,7 @@ export async function stakingStats(): Promise<Record<string, unknown>> {
             ethSpentTotal: r[10].toString(),
           });
         } catch {
-          // token not registered as a reward yet
+          // transient rpc failure on this token
         }
       }
       onchain = { totalStaked: totalStaked.toString(), rewards: perToken };

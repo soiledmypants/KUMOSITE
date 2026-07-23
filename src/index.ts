@@ -5,7 +5,8 @@ import { initDb, db } from "./db.js";
 import { setFeedPersist } from "./feed.js";
 import { say, lines } from "./voice.js";
 import { buildServer } from "./server.js";
-import { seedStockTokens, scanStocksOnce } from "./scanner/stocks.js";
+import { initStocks, scanStocksOnce } from "./scanner/stocks.js";
+import { discoverStocks } from "./scanner/discovery.js";
 import { scanWalletsOnce, walletCount } from "./scanner/wallets.js";
 import { scanMemecoinsOnce } from "./scanner/memecoins.js";
 import { scoreIntelOnce } from "./agents/reputation.js";
@@ -48,11 +49,12 @@ async function main(): Promise<void> {
     return;
   }
 
-  await seedStockTokens();
+  await initStocks();
   say("watch", lines.watching(await walletCount()));
 
   loop("wallets", scanWalletsOnce, CONFIG.walletScanMs);
   loop("stocks", scanStocksOnce, CONFIG.stockScanMs);
+  loop("discovery", discoverStocks, CONFIG.stockDiscoveryMs);
   loop("memecoins", scanMemecoinsOnce, CONFIG.memecoinScanMs);
   loop("rep-scorer", scoreIntelOnce, CONFIG.repScoreIntervalMs);
   if (CONFIG.stakingAddress) {

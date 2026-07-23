@@ -5,6 +5,7 @@ import { CONFIG } from "../config.js";
 import { publicClient } from "../clients.js";
 import { requireWallet } from "../clients.js";
 import { withRetry } from "../rpc.js";
+import { allStocks } from "../scanner/discovery.js";
 
 export interface KumoTx {
   to: Address;
@@ -26,6 +27,7 @@ function allowlist(): Set<string> {
     CONFIG.erc8004Registry.toLowerCase(),
   ]);
   for (const t of CONFIG.stockTokens) set.add(t.address.toLowerCase());
+  for (const s of allStocks()) set.add(s.address.toLowerCase()); // discovered stocks: approve/swap targets
   if (CONFIG.kumoToken) set.add(CONFIG.kumoToken.toLowerCase());
   if (CONFIG.stakingAddress) set.add(CONFIG.stakingAddress.toLowerCase());
   return set;

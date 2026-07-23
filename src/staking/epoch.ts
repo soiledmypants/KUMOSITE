@@ -1,24 +1,33 @@
-// which stock does kumo pay out this epoch? env override, else sticky auto-pick
-// behind a liquidity screen (geckoterminal with on-chain fallback).
-import { parseAbi, type Address } from "viem";
+// which stock does kumo pay out this epoch? weekly ta-based pick:
+// highest composite score among stocks passing the liquidity screen
+// (reserve >= $250k, 24h vol >= $500k). if the winner isn't a registered
+// reward token yet, kumo alerts and keeps the current stock until the
+// cold-key addReward ceremony. KUMO_EPOCH_STOCK env still overrides.
+import { parseAbi, type Address, getAddress } from "viem";
 import { CONFIG } from "../config.js";
 import { publicClient } from "../clients.js";
 import { withRetry } from "../rpc.js";
 import { getMeta, setMeta } from "../db.js";
+import { say } from "../voice.js";
+import { stockByAddress, allStocks } from "../scanner/discovery.js";
+import { rankingFromDb } from "../scanner/ta.js";
 
 const MIN_RESERVE_USD = 250_000;
 const MIN_VOLUME_USD = 500_000;
+const EPOCH_PERIOD_MS = Number(process.env.EPOCH_PERIOD_MS ?? 7 * 86_400_000);
 
 const erc20Abi = parseAbi(["function balanceOf(address) view returns (uint256)"]);
+const stakingAbi = parseAbi(["function isRewardToken(address) view returns (bool)"]);
 
 export interface EpochPick {
   symbol: string;
   address: Address;
   passesScreen: boolean;
   screenNote: string;
+  pendingWinner?: { symbol: string; address: string; note: string };
 }
 
-async function geckoScreen(pool: string): Promise<{ reserve: number; volume: number } | null> {
+async function geckoPool(pool: string): Promise<{ reserve: number; volume: number } | null> {
   try {
     const res = await fetch(`https://api.geckoterminal.com/api/v2/networks/robinhood/pools/${pool}`, {
       headers: { accept: "application/json" },
@@ -36,15 +45,54 @@ async function geckoScreen(pool: string): Promise<{ reserve: number; volume: num
   }
 }
 
-async function onchainReserveUsd(pool: Address): Promise<number | null> {
-  // fallback: usdg side of the pool ≈ half the reserve, usdg ≈ $1
+async function onchainReserveUsd(pool: Address, base: Address): Promise<number | null> {
   try {
-    const usdgBal = await withRetry(
-      () => publicClient.readContract({ address: CONFIG.usdg, abi: erc20Abi, functionName: "balanceOf", args: [pool] }),
-      "usdg.balanceOf(pool)",
+    const baseBal = await withRetry(
+      () => publicClient.readContract({ address: base, abi: erc20Abi, functionName: "balanceOf", args: [pool] }),
+      "epoch.reserve",
       { retries: 1 },
     );
-    return (Number(usdgBal) / 1e18) * 2;
+    // usdg ≈ $1; weth pools are screened by discovery's liquidity estimate anyway
+    return base.toLowerCase() === CONFIG.usdg.toLowerCase() ? (Number(baseBal) / 1e18) * 2 : null;
+  } catch {
+    return null;
+  }
+}
+
+/** liquidity screen: on-chain/discovery reserve + geckoterminal 24h volume */
+async function screen(address: string): Promise<{ passes: boolean; note: string }> {
+  const stock = stockByAddress(address);
+  if (!stock?.pool || !stock.poolBase) return { passes: false, note: "no pool discovered" };
+
+  const gecko = await geckoPool(stock.pool);
+  if (gecko) {
+    const passes = gecko.reserve >= MIN_RESERVE_USD && gecko.volume >= MIN_VOLUME_USD;
+    return {
+      passes,
+      note: `geckoterminal: reserve $${Math.round(gecko.reserve).toLocaleString()}, 24h vol $${Math.round(gecko.volume).toLocaleString()}`,
+    };
+  }
+  const reserve = (await onchainReserveUsd(stock.pool, stock.poolBase)) ?? stock.liquidityUsd;
+  return {
+    passes: reserve >= MIN_RESERVE_USD, // volume unverifiable offline — reserve-only fallback
+    note: `on-chain fallback: reserve ≈ $${Math.round(reserve).toLocaleString()} (volume unverified)`,
+  };
+}
+
+async function isRegisteredReward(address: string): Promise<boolean | null> {
+  if (!CONFIG.stakingAddress) return null; // staking not deployed yet
+  try {
+    return await withRetry(
+      () =>
+        publicClient.readContract({
+          address: CONFIG.stakingAddress as Address,
+          abi: stakingAbi,
+          functionName: "isRewardToken",
+          args: [getAddress(address)],
+        }),
+      "epoch.isRewardToken",
+      { retries: 1 },
+    );
   } catch {
     return null;
   }
@@ -53,32 +101,76 @@ async function onchainReserveUsd(pool: Address): Promise<number | null> {
 export async function epochStock(): Promise<EpochPick> {
   // manual override
   if (CONFIG.epochStock !== "auto" && /^0x[0-9a-fA-F]{40}$/.test(CONFIG.epochStock)) {
-    const known = CONFIG.stockTokens.find((t) => t.address.toLowerCase() === CONFIG.epochStock.toLowerCase());
+    const known = stockByAddress(CONFIG.epochStock);
     return {
       symbol: known?.symbol ?? "STOCK",
-      address: CONFIG.epochStock as Address,
+      address: getAddress(CONFIG.epochStock),
       passesScreen: true,
       screenNote: "manual override via KUMO_EPOCH_STOCK",
     };
   }
 
-  // sticky: keep the current epoch stock while it still passes
-  const current = (await getMeta("epoch_stock")) ?? CONFIG.stockTokens[0]?.address ?? "";
-  const pick = CONFIG.stockTokens.find((t) => t.address.toLowerCase() === current.toLowerCase()) ?? CONFIG.stockTokens[0];
-  if (!pick) throw new Error("no stock tokens configured");
+  const currentAddr = (await getMeta("epoch_stock")) ?? "";
+  const pickedAt = Number((await getMeta("epoch_picked_at")) ?? 0);
+  const current = stockByAddress(currentAddr) ?? allStocks().find((s) => s.symbol === "NVDA") ?? allStocks()[0];
+  if (!current) throw new Error("no stock tokens discovered yet");
 
-  let passes = false;
-  let note = "";
-  const gecko = await geckoScreen(CONFIG.nvdaUsdgPool);
-  if (gecko) {
-    passes = gecko.reserve >= MIN_RESERVE_USD && gecko.volume >= MIN_VOLUME_USD;
-    note = `geckoterminal: reserve $${Math.round(gecko.reserve).toLocaleString()}, 24h vol $${Math.round(gecko.volume).toLocaleString()}`;
-  } else {
-    const reserve = await onchainReserveUsd(CONFIG.nvdaUsdgPool);
-    passes = reserve !== null && reserve >= MIN_RESERVE_USD;
-    note = reserve !== null ? `on-chain fallback: reserve ≈ $${Math.round(reserve).toLocaleString()}` : "screen unavailable";
+  // within the weekly epoch: sticky — just re-verify the screen
+  if (currentAddr && Date.now() - pickedAt < EPOCH_PERIOD_MS) {
+    const s = await screen(current.address);
+    return { symbol: current.symbol, address: current.address, passesScreen: s.passes, screenNote: s.note };
   }
 
-  await setMeta("epoch_stock", pick.address.toLowerCase());
-  return { symbol: pick.symbol, address: pick.address, passesScreen: passes, screenNote: note };
+  // weekly re-pick: best ta score among screen-passing stocks (check top 5 candidates)
+  const ranked = await rankingFromDb();
+  let winner: { symbol: string; address: string; note: string } | null = null;
+  for (const candidate of ranked.slice(0, 5)) {
+    if ((stockByAddress(candidate.address)?.liquidityUsd ?? 0) < MIN_RESERVE_USD) continue;
+    const s = await screen(candidate.address);
+    if (s.passes) {
+      winner = { symbol: candidate.symbol, address: candidate.address, note: s.note };
+      break;
+    }
+  }
+
+  if (!winner) {
+    // nothing passes (or ta hasn't warmed up) — stay on current, note it
+    const s = await screen(current.address);
+    await setMeta("epoch_picked_at", String(Date.now()));
+    return {
+      symbol: current.symbol,
+      address: current.address,
+      passesScreen: s.passes,
+      screenNote: `no ta winner passed the screen this week; staying with ${current.symbol}. ${s.note}`,
+    };
+  }
+
+  const sameAsCurrent = winner.address.toLowerCase() === current.address.toLowerCase();
+  if (sameAsCurrent) {
+    await setMeta("epoch_stock", current.address.toLowerCase());
+    await setMeta("epoch_picked_at", String(Date.now()));
+    return { symbol: current.symbol, address: current.address, passesScreen: true, screenNote: winner.note };
+  }
+
+  // ta wants a different stock — only switch if it's a registered reward token
+  const registered = await isRegisteredReward(winner.address);
+  if (registered === false) {
+    const s = await screen(current.address);
+    return {
+      symbol: current.symbol,
+      address: current.address,
+      passesScreen: s.passes,
+      screenNote: s.note,
+      pendingWinner: {
+        ...winner,
+        note: `ta winner ${winner.symbol} is not a registered reward token — run the cold-key addReward ceremony to switch. ${winner.note}`,
+      },
+    };
+  }
+
+  // registered (or staking not deployed yet — free to switch for display)
+  await setMeta("epoch_stock", winner.address.toLowerCase());
+  await setMeta("epoch_picked_at", String(Date.now()));
+  say("stake", `new epoch. kumo pays out in ${winner.symbol} this week. kumo liked the chart.`);
+  return { symbol: winner.symbol, address: getAddress(winner.address), passesScreen: true, screenNote: winner.note };
 }

@@ -4,6 +4,7 @@ import { CONFIG } from "../config.js";
 import { publicClient } from "../clients.js";
 import { withRetry } from "../rpc.js";
 import { db } from "../db.js";
+import { stockByAddress } from "./discovery.js";
 
 const factoryAbi = parseAbi([
   "function getPool(address, address, uint24) view returns (address)",
@@ -73,7 +74,7 @@ async function tokenDecimals(token: Address): Promise<number> {
 }
 
 /** spot price of `token` denominated in `base` units, from a v3 pool's slot0 */
-async function poolSpot(token: Address, pool: Address, base: Address): Promise<number | null> {
+export async function poolSpot(token: Address, pool: Address, base: Address): Promise<number | null> {
   try {
     const [slot0, token0] = await Promise.all([
       withRetry(() => publicClient.readContract({ address: pool, abi: poolAbi, functionName: "slot0" }), "slot0", { retries: 1 }),
@@ -115,10 +116,11 @@ export async function priceUsd(token: Address, symbol?: string): Promise<PriceRe
     return { price: cached.price, source: "pool", stale: cached.stale ?? false };
   }
 
-  // chainlink feed if configured for this symbol
-  const feed = symbol
-    ? CONFIG.chainlinkFeeds.find((f) => f.symbol === symbol.toUpperCase())?.address
-    : undefined;
+  // discovered stock? use its resolved chainlink feed / deepest pool
+  const discovered = stockByAddress(key);
+  const feed =
+    discovered?.chainlinkFeed ??
+    (symbol ? CONFIG.chainlinkFeeds.find((f) => f.symbol === symbol.toUpperCase())?.address : undefined);
   if (feed) {
     try {
       const [round, dec] = await Promise.all([
@@ -142,7 +144,14 @@ export async function priceUsd(token: Address, symbol?: string): Promise<PriceRe
     }
   }
 
-  const found = await findPool(token);
+  // dust/scam pools produce garbage spots — refuse to price a discovered stock
+  // from a pool with negligible liquidity when no feed exists
+  if (discovered && discovered.liquidityUsd < 500) return null;
+
+  const found =
+    discovered?.pool && discovered.poolBase
+      ? { pool: discovered.pool, base: discovered.poolBase }
+      : await findPool(token);
   if (!found) return null;
   const inBase = await poolSpot(token, found.pool, found.base);
   if (inBase === null) return null;
@@ -152,6 +161,7 @@ export async function priceUsd(token: Address, symbol?: string): Promise<PriceRe
     if (eu === null) return null;
     usd = inBase * eu;
   }
+  if (!Number.isFinite(usd) || usd <= 0 || usd > 1e7) return null; // sanity clamp
   priceCache.set(key, { price: usd, ts: Date.now() });
   return { price: usd, source: "pool", stale: false };
 }

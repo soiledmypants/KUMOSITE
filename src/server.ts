@@ -8,6 +8,7 @@ import { botAddress } from "./clients.js";
 import { attachSseClient } from "./feed.js";
 import { addWallet, removeWallet, walletCount, walletViews } from "./scanner/wallets.js";
 import { stocksView } from "./scanner/stocks.js";
+import { rankingFromDb } from "./scanner/ta.js";
 import { activeSignals, signalsToday } from "./scanner/signals.js";
 import { bestQuote, resolveToken } from "./trade/quote.js";
 import { executeEthSwap } from "./trade/execute.js";
@@ -108,6 +109,14 @@ export function buildServer(): express.Express {
 
   app.get("/stocks", wrap(async (_req, res) => {
     res.json(CONFIG.mock ? mock.mockStocks() : await stocksView());
+  }));
+
+  app.get("/stocks/ranking", wrap(async (_req, res) => {
+    if (CONFIG.mock) {
+      res.json(mock.mockRanking());
+      return;
+    }
+    res.json(await rankingFromDb());
   }));
 
   app.get("/signals", wrap(async (req, res) => {

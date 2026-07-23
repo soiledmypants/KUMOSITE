@@ -66,11 +66,34 @@ body `{ "address": "0x...", "label": "whale-chan" }` → `{ "ok": true, "wallet"
 
 ## GET /stocks
 
+every stock token on chain 4663, auto-discovered from the asset registry (~96 assets), sorted by kumo's ta score:
+
 ```json
-[{ "address": "0xd0601ce1...", "symbol": "NVDA", "price_usd": 207.19, "ui_multiplier": 1, "market": "closed", "change_24h": 2.3 }]
+[{ "address": "0xd0601ce1...", "symbol": "NVDA", "name": "NVIDIA", "price_usd": 207.59, "ta_score": 0.52, "ui_multiplier": 1, "market": "closed", "change_24h": 2.3, "liquidity_usd": 312000 }]
 ```
 
-prices come from chainlink feeds when configured, uniswap v3 pools otherwise. `ui_multiplier` is the ERC-8056 display multiplier — displayed amounts are `raw × ui_multiplier`.
+prices come from each asset's chainlink feed when one exists, its deepest uniswap v3 pool otherwise; `price_usd` is `null` for assets whose pools are too shallow to price honestly. `ui_multiplier` is the ERC-8056 display multiplier — displayed amounts are `raw × ui_multiplier`.
+
+## GET /stocks/ranking
+
+kumo's live ta rankings — every scored stock, best first, with the sub-metrics behind the composite:
+
+```json
+[{
+  "symbol": "NVDA",
+  "address": "0xd0601ce1...",
+  "price_usd": 207.59,
+  "ta_score": 0.52,                 // 0..1 composite
+  "short_momentum_pct": 0.9,        // ~1h price change (null until history warms up)
+  "long_momentum_pct": 2.3,         // ~24h price change
+  "volume_spike": 2.1,              // pool swaps this cycle vs rolling average (1 = normal)
+  "volatility_pct": 0.4,            // stddev of 5-min returns over 24h
+  "liquidity_usd": 312000,          // both-sides valuation of its deepest pool
+  "scored_at": 1784850000000
+}]
+```
+
+scores refresh every stock scan cycle (5 min). the composite blends momentum, volume, liquidity, and a volatility penalty; it also drives kumo's stock signals ("kumo ran the numbers on MSTR. kumo likes what it sees.") and the weekly staking epoch pick.
 
 ## GET /signals
 

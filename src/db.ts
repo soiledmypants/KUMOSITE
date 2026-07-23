@@ -117,6 +117,22 @@ const SCHEMA = [
     amount_out TEXT NOT NULL,
     tx_hash TEXT NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS price_history (
+    id %AUTOPK%,
+    token TEXT NOT NULL,
+    ts BIGINT NOT NULL,
+    price DOUBLE PRECISION NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_price_history ON price_history(token, ts)`,
+];
+
+// additive column migrations (ALTER fails harmlessly when the column exists)
+const TOKEN_COLUMNS = [
+  "ALTER TABLE tokens ADD COLUMN name TEXT",
+  "ALTER TABLE tokens ADD COLUMN pool_base TEXT",
+  "ALTER TABLE tokens ADD COLUMN liquidity_usd DOUBLE PRECISION",
+  "ALTER TABLE tokens ADD COLUMN ta_score DOUBLE PRECISION",
+  "ALTER TABLE tokens ADD COLUMN ta_json TEXT",
 ];
 
 function toPgPlaceholders(sql: string): string {
@@ -143,6 +159,13 @@ async function initPostgres(url: string): Promise<Db> {
   };
   for (const stmt of SCHEMA) {
     await d.run(stmt.replace("%AUTOPK%", "BIGSERIAL PRIMARY KEY"));
+  }
+  for (const stmt of TOKEN_COLUMNS) {
+    try {
+      await d.run(stmt);
+    } catch {
+      // column already exists
+    }
   }
   return d;
 }
@@ -172,6 +195,13 @@ async function initSqlite(): Promise<Db> {
         .replace(/DOUBLE PRECISION/g, "REAL")
         .replace(/BIGSERIAL/g, "INTEGER"),
     );
+  }
+  for (const stmt of TOKEN_COLUMNS) {
+    try {
+      await d.run(stmt.replace(/DOUBLE PRECISION/g, "REAL"));
+    } catch {
+      // column already exists
+    }
   }
   return d;
 }
