@@ -59,31 +59,31 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-moss: var(--moss);
-  --color-moss-bright: var(--moss-bright);
+  --color-kumo: var(--kumo);
+  --color-kumo-bright: var(--kumo-bright);
   --font-mono: "IBM Plex Mono", "JetBrains Mono", "Space Mono", "Courier New", monospace;
 }
 
 :root {
   --radius: 0;
-  --moss: #ccff00;
-  --moss-bright: #dfff33;
-  --background: #ccff00;
-  --foreground: #000000;
-  --card: #ccff00;
-  --card-foreground: #000000;
-  --popover: #ccff00;
-  --popover-foreground: #000000;
-  --primary: #000000;
-  --primary-foreground: #ccff00;
-  --secondary: #ccff00;
-  --secondary-foreground: #000000;
-  --muted: #ccff00;
-  --muted-foreground: rgba(0, 0, 0, 0.55);
-  --accent: #000000;
-  --accent-foreground: #ccff00;
-  --destructive: #000000;
-  --destructive-foreground: #ccff00;
+  --kumo: #ccff00;
+  --kumo-bright: #dfff33;
+  --background: #000000;
+  --foreground: #ccff00;
+  --card: #000000;
+  --card-foreground: #ccff00;
+  --popover: #000000;
+  --popover-foreground: #ccff00;
+  --primary: #ccff00;
+  --primary-foreground: #000000;
+  --secondary: #000000;
+  --secondary-foreground: #ccff00;
+  --muted: #000000;
+  --muted-foreground: rgba(204, 255, 0, 0.55);
+  --accent: #ccff00;
+  --accent-foreground: #000000;
+  --destructive: #ccff00;
+  --destructive-foreground: #000000;
   --border: #ccff00;
   --input: #ccff00;
   --ring: #ccff00;
@@ -92,19 +92,19 @@
   --chart-3: #ccff00;
   --chart-4: #ccff00;
   --chart-5: #ccff00;
-  --sidebar: #ccff00;
-  --sidebar-foreground: #000000;
-  --sidebar-primary: #000000;
-  --sidebar-primary-foreground: #ccff00;
-  --sidebar-accent: #ccff00;
-  --sidebar-accent-foreground: #000000;
+  --sidebar: #000000;
+  --sidebar-foreground: #ccff00;
+  --sidebar-primary: #ccff00;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #000000;
+  --sidebar-accent-foreground: #ccff00;
   --sidebar-border: #ccff00;
   --sidebar-ring: #ccff00;
 }
 
 .dark {
-  --background: #ccff00;
-  --foreground: #000000;
+  --background: #000000;
+  --foreground: #ccff00;
 }
 
 @layer base {
@@ -129,49 +129,49 @@
   }
 }
 
-@keyframes moss-blink {
+@keyframes kumo-blink {
   0%, 49% { opacity: 1; }
   50%, 100% { opacity: 0; }
 }
 @utility cursor-blink {
   display: inline-block;
-  animation: moss-blink 1s steps(1) infinite;
+  animation: kumo-blink 1s steps(1) infinite;
 }
 
-@keyframes moss-flicker {
-  0%, 97%, 100% { border-color: var(--moss); }
+@keyframes kumo-flicker {
+  0%, 97%, 100% { border-color: var(--kumo); }
   98% { border-color: transparent; }
-  99% { border-color: var(--moss-bright); }
+  99% { border-color: var(--kumo-bright); }
 }
 @utility flicker {
-  animation: moss-flicker 7s infinite;
+  animation: kumo-flicker 7s infinite;
 }
 
-@keyframes moss-jitter {
+@keyframes kumo-jitter {
   0%, 96%, 100% { transform: translate(0,0); }
   97% { transform: translate(-1px, 1px); }
   98% { transform: translate(1px, -1px); }
   99% { transform: translate(-1px, 0); }
 }
 @utility jitter {
-  animation: moss-jitter 11s infinite;
+  animation: kumo-jitter 11s infinite;
 }
 
 @utility box {
-  border: 1px solid #000;
+  border: 1px solid var(--kumo);
 }
 
 @utility box-inv {
-  background: #000;
-  color: var(--moss);
+  background: var(--kumo);
+  color: #000;
 }
 
 @utility dim {
-  color: rgba(0, 0, 0, 0.6);
+  color: rgba(204, 255, 0, 0.6);
 }
 
-@utility link-moss {
-  color: var(--moss);
+@utility link-kumo {
+  color: var(--kumo);
   text-decoration: none;
-  &:hover { color: var(--moss-bright); background: var(--moss); color: #000; }
+  &:hover { background: var(--kumo); color: #000; }
 }
