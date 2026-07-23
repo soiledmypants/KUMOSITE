@@ -95,14 +95,7 @@ function Rent() {
             </tbody>
           </table>
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <button onClick={pay} className="box px-3 py-1 hover:box-inv uppercase tracking-widest text-xs">
-            [ pay rent ]
-          </button>
-          <span className="text-xs lowercase">
-            you've paid rent <span className="box-inv px-1">{count}</span> times this session. thank you. the wires felt it.
-          </span>
-        </div>
+        <div className="mt-3 text-xs lowercase dim">historical ledger — kept for the archive. staking replaces this.</div>
       </Box>
       <Box title="what counts">
         <ul className="lowercase text-sm space-y-1 list-disc pl-5 marker:text-[#ccff00]">
