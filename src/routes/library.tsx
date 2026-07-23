@@ -4,7 +4,7 @@ import { Box } from "@/components/SiteChrome";
 import { LIBRARY } from "@/lib/greenroom-data";
 
 export const Route = createFileRoute("/library")({
-  head: () => ({ meta: [{ title: "library :: green room" }, { name: "description", content: "an index of forgotten websites, dead protocols, and digital folklore." }] }),
+  head: () => ({ meta: [{ title: "library :: kumo" }, { name: "description", content: "an index of dead chains, rugged projects, and on-chain folklore." }] }),
   component: Library,
 });
 

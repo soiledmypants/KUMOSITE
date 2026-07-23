@@ -54,7 +54,7 @@ function Detail() {
       </Box>
       <div className="box p-4">
         <div className="box-inv px-2 py-1 text-[10px] uppercase tracking-widest mb-3 flex justify-between">
-          <span>moss@greenroom:~$ cat {t.id}.log</span>
+          <span>kumo@rhc:~$ cat {t.id}.log</span>
           <span>● live</span>
         </div>
         <p className="lowercase leading-relaxed whitespace-pre-line"><Typewriter text={first} /></p>
@@ -65,7 +65,7 @@ function Detail() {
       <div className="text-center">
         <Link to="/transmissions" className="box inline-block px-3 py-1 hover:box-inv">[ back to transmissions ]</Link>
       </div>
-      <div className="text-xs dim text-center lowercase"><Tag>{t.type}</Tag> filed by moss, delivered by the wire</div>
+      <div className="text-xs dim text-center lowercase"><Tag>{t.type}</Tag> filed by kumo, delivered by the chain</div>
     </>
   );
 }

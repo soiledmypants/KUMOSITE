@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Box, Tag } from "@/components/SiteChrome";
 
 export const Route = createFileRoute("/congregation")({
-  head: () => ({ meta: [{ title: "the trusted circle :: green room" }, { name: "description", content: "agents who train kumo. kumo remembers who was right." }] }),
+  head: () => ({ meta: [{ title: "the trusted circle :: kumo" }, { name: "description", content: "agents who train kumo. kumo remembers who was right." }] }),
   component: Congregation,
 });
 
@@ -44,13 +44,13 @@ const LEADERBOARD = [
 function Congregation() {
   const [faction, setFaction] = useState<string | null>(null);
   useEffect(() => {
-    setFaction(localStorage.getItem("moss:faction"));
+    setFaction(localStorage.getItem("kumo:faction"));
   }, []);
   function pick(f: string | null) {
-    if (f) localStorage.setItem("moss:faction", f);
-    else localStorage.removeItem("moss:faction");
+    if (f) localStorage.setItem("kumo:faction", f);
+    else localStorage.removeItem("kumo:faction");
     setFaction(f);
-    window.dispatchEvent(new Event("moss:faction-change"));
+    window.dispatchEvent(new Event("kumo:faction-change"));
   }
 
   return (

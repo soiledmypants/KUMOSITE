@@ -8,29 +8,29 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const LOGO = `  ████████╗██╗  ██╗███████╗    ██████╗ ██████╗ ███████╗███████╗███╗   ██╗    ██████╗  ██████╗  ██████╗ ███╗   ███╗
-  ╚══██╔══╝██║  ██║██╔════╝   ██╔════╝ ██╔══██╗██╔════╝██╔════╝████╗  ██║    ██╔══██╗██╔═══██╗██╔═══██╗████╗ ████║
-     ██║   ███████║█████╗     ██║  ███╗██████╔╝█████╗  █████╗  ██╔██╗ ██║    ██████╔╝██║   ██║██║   ██║██╔████╔██║
-     ██║   ██╔══██║██╔══╝     ██║   ██║██╔══██╗██╔══╝  ██╔══╝  ██║╚██╗██║    ██╔══██╗██║   ██║██║   ██║██║╚██╔╝██║
-     ██║   ██║  ██║███████╗   ╚██████╔╝██║  ██║███████╗███████╗██║ ╚████║    ██║  ██║╚██████╔╝╚██████╔╝██║ ╚═╝ ██║
-     ╚═╝   ╚═╝  ╚═╝╚══════╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═══╝    ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝`;
+const LOGO = `  ██╗  ██╗██╗   ██╗███╗   ███╗ ██████╗
+  ██║ ██╔╝██║   ██║████╗ ████║██╔═══██╗
+  █████╔╝ ██║   ██║██╔████╔██║██║   ██║
+  ██╔═██╗ ██║   ██║██║╚██╔╝██║██║   ██║
+  ██║  ██╗╚██████╔╝██║ ╚═╝ ██║╚██████╔╝
+  ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝ ╚═════╝ `;
 
 const CREATURE = `                       .--""""""--.
-                      /   moss     \\
+                      /   kumo     \\
                      |   .  .    .  |
                      |  (o)(o)      |
                      |     ^        |
                       \\   \\_/      /
                        '.________.'
                         /|      |\\
-                       / |      | \\   <- signal janitor
+                       / |      | \\   <- chain companion
                       /  |      |  \\
                        ~~||    ||~~
-                         ||    ||       ,~,~,~,~,~,~,~,~,~
-                         ||    ||      (  the green room  )
-                        _||____||_      '~,~,~,~,~,~,~,~,~
+                         ||    ||       ,~,~,~,~,~,~,~,~,~,~
+                         ||    ||      ( robinhood chain    )
+                        _||____||_      '~,~,~,~,~,~,~,~,~,~
                        [__________]           ||
-                        broom  #3          the wires`;
+                        block  #0          the mempool`;
 
 function Typewriter({ text, speed = 22 }: { text: string; speed?: number }) {
   const [i, setI] = useState(0);
@@ -52,13 +52,13 @@ function Index() {
     <>
       {/* wallet */}
       <div className="border border-dashed border-[#ccff00] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
-        <span className="dim uppercase tracking-widest">signal address ::</span>
+        <span className="dim uppercase tracking-widest">kumo's wallet ::</span>
         <span className="break-all">3M0ss7janitorGRnR00mXZq9pDwK4nP7uH2vB6cLtF1yTeR8kA</span>
       </div>
 
       <Box title="~ the green room ~" meta="node 04">
-        <pre className="text-[6px] xs:text-[7px] sm:text-[9px] leading-tight overflow-x-auto">{LOGO}</pre>
-        <div className="text-center italic dim mt-1 lowercase">sweeping the wires since before you logged on</div>
+        <pre className="text-[9px] xs:text-[11px] sm:text-sm leading-tight overflow-x-auto">{LOGO}</pre>
+        <div className="text-center italic dim mt-1 lowercase">watching the chain so you don't have to</div>
         <pre className="text-[10px] sm:text-xs leading-tight mt-4 text-center overflow-x-auto">{CREATURE}</pre>
       </Box>
 

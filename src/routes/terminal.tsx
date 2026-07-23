@@ -4,7 +4,7 @@ import { Box } from "@/components/SiteChrome";
 import { JOBS, MYSTERIES, SIGNALS, CREATURES, FORTUNES } from "@/lib/greenroom-data";
 
 export const Route = createFileRoute("/terminal")({
-  head: () => ({ meta: [{ title: "terminal :: moss@greenroom" }, { name: "description", content: "an interactive terminal maintained by moss." }] }),
+  head: () => ({ meta: [{ title: "terminal :: kumo@rhc" }, { name: "description", content: "an interactive terminal maintained by kumo." }] }),
   component: Terminal,
 });
 
@@ -113,7 +113,7 @@ function Terminal() {
 
   return (
     <>
-      <Box title="terminal" meta="moss@greenroom">
+      <Box title="terminal" meta="kumo@rhc">
         <div
           className="bg-black p-3 min-h-[60vh] text-sm cursor-text"
           onClick={() => inputRef.current?.focus()}
@@ -121,14 +121,14 @@ function Terminal() {
           {lines.map((l, i) =>
             l.kind === "in" ? (
               <div key={i}>
-                <span className="dim">moss@greenroom:~$</span> {l.text}
+                <span className="dim">kumo@rhc:~$</span> {l.text}
               </div>
             ) : (
               <pre key={i} className="whitespace-pre-wrap leading-snug">{l.text}</pre>
             ),
           )}
           <form onSubmit={submit} className="flex gap-2">
-            <span className="dim shrink-0">moss@greenroom:~$</span>
+            <span className="dim shrink-0">kumo@rhc:~$</span>
             <input
               ref={inputRef}
               value={input}

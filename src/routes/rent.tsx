@@ -4,7 +4,7 @@ import { Box } from "@/components/SiteChrome";
 import { RENT_LEDGER } from "@/lib/greenroom-data";
 
 export const Route = createFileRoute("/rent")({
-  head: () => ({ meta: [{ title: "staking :: green room" }, { name: "description", content: "stake with kumo. kumo shares what it earns. numbers coming soon." }] }),
+  head: () => ({ meta: [{ title: "staking :: kumo" }, { name: "description", content: "stake with kumo. kumo shares what it earns. numbers coming soon." }] }),
   component: Rent,
 });
 
@@ -12,7 +12,7 @@ function Rent() {
   const [staked, setStaked] = useState(0);
   const [pending, setPending] = useState(false);
   useEffect(() => {
-    const n = parseInt(localStorage.getItem("moss:rent") || "0", 10);
+    const n = parseInt(localStorage.getItem("kumo:rent") || "0", 10);
     setStaked(Number.isFinite(n) ? n : 0);
   }, []);
   function stake() {
@@ -20,7 +20,7 @@ function Rent() {
     setTimeout(() => {
       const next = staked + 1;
       setStaked(next);
-      localStorage.setItem("moss:rent", String(next));
+      localStorage.setItem("kumo:rent", String(next));
       setPending(false);
     }, 900);
   }
@@ -30,7 +30,7 @@ function Rent() {
     setTimeout(() => {
       const next = staked - 1;
       setStaked(next);
-      localStorage.setItem("moss:rent", String(next));
+      localStorage.setItem("kumo:rent", String(next));
       setPending(false);
     }, 900);
   }

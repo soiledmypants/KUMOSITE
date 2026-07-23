@@ -35,13 +35,13 @@ function useUptime() {
 function useFaction() {
   const [f, setF] = useState<string | null>(null);
   useEffect(() => {
-    setF(localStorage.getItem("moss:faction"));
-    const on = () => setF(localStorage.getItem("moss:faction"));
+    setF(localStorage.getItem("kumo:faction"));
+    const on = () => setF(localStorage.getItem("kumo:faction"));
     window.addEventListener("storage", on);
-    window.addEventListener("moss:faction-change", on);
+    window.addEventListener("kumo:faction-change", on);
     return () => {
       window.removeEventListener("storage", on);
-      window.removeEventListener("moss:faction-change", on);
+      window.removeEventListener("kumo:faction-change", on);
     };
   }, []);
   return f;
@@ -57,8 +57,8 @@ export function SiteChrome({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-black text-[#ccff00] font-mono">
       {/* Top status bar */}
       <div className="box-inv text-[10px] sm:text-xs px-3 py-1 flex flex-wrap gap-x-4 gap-y-1 justify-between uppercase tracking-widest">
-        <span>● signal: stable</span>
-        <span>node: greenroom-04</span>
+        <span>● kumo is awake</span>
+        <span>node: rhc-04</span>
         <span>v0.9.7-unstable</span>
         <span className="hidden sm:inline">uptime: {uptime}</span>
       </div>
@@ -70,12 +70,12 @@ export function SiteChrome({ children }: { children: ReactNode }) {
             <div className="min-w-0">
               <Link to="/" className="block">
                 <div className="text-xs dim lowercase">welcome to</div>
-                <div className="uppercase tracking-[0.3em] text-lg sm:text-2xl jitter">the green room</div>
-                <div className="text-xs italic lowercase dim mt-1">sweeping the wires since before you logged on</div>
+                <div className="uppercase tracking-[0.3em] text-lg sm:text-2xl jitter">kumo</div>
+                <div className="text-xs italic lowercase dim mt-1">watching the chain so you don't have to</div>
               </Link>
             </div>
             <div className="text-right text-[10px] leading-tight shrink-0">
-              <div className="dim">visitor #</div>
+              <div className="dim">block #</div>
               <div>04-{Math.floor((Date.now() / 1000) % 100000).toString().padStart(5, "0")}</div>
               {faction ? <div className="box-inv mt-1 px-1">tag: {faction}</div> : null}
             </div>
@@ -111,11 +111,11 @@ export function SiteChrome({ children }: { children: ReactNode }) {
 
         <footer className="mt-8 box p-3 text-[10px] sm:text-xs dim lowercase">
           <div className="flex flex-wrap justify-between gap-2">
-            <span>© the green room, est. long before it was safe</span>
+            <span>© kumo, online since block 0</span>
             <span>uptime {uptime}</span>
           </div>
-          <div className="mt-1">no cookies. no trackers. moss doesn't like them. moss eats them.</div>
-          <div className="mt-1">!! do not read file 009 !!</div>
+          <div className="mt-1">no cookies. no trackers. kumo doesn't like them. kumo eats them.</div>
+          <div className="mt-1">!! do not ask kumo about wallet 009 !!</div>
         </footer>
       </div>
     </div>

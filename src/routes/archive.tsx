@@ -3,7 +3,7 @@ import { Box, Tag } from "@/components/SiteChrome";
 import { REDACTED_FILES, TRANSMISSIONS, MYSTERIES } from "@/lib/greenroom-data";
 
 export const Route = createFileRoute("/archive")({
-  head: () => ({ meta: [{ title: "the archive :: green room" }, { name: "description", content: "an index of packets, files, and rumors kept by moss." }] }),
+  head: () => ({ meta: [{ title: "the archive :: kumo" }, { name: "description", content: "an index of wallets, blocks, and rumors kept by kumo." }] }),
   component: Archive,
 });
 

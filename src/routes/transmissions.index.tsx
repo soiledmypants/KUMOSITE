@@ -3,7 +3,7 @@ import { Box, Tag } from "@/components/SiteChrome";
 import { TRANSMISSIONS } from "@/lib/greenroom-data";
 
 export const Route = createFileRoute("/transmissions/")({
-  head: () => ({ meta: [{ title: "transmissions :: green room" }, { name: "description", content: "signals, transmissions, memory leaks, and observer reports." }] }),
+  head: () => ({ meta: [{ title: "transmissions :: kumo" }, { name: "description", content: "signals, transmissions, memory leaks, and observer reports from the chain." }] }),
   component: List,
 });
 

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Box, Tag } from "@/components/SiteChrome";
 
 export const Route = createFileRoute("/jobs")({
-  head: () => ({ meta: [{ title: "signals :: green room" }, { name: "description", content: "what kumo is telling the agents. some of it is early. all of it is watched." }] }),
+  head: () => ({ meta: [{ title: "signals :: kumo" }, { name: "description", content: "what kumo is telling the agents. some of it is early. all of it is watched." }] }),
   component: Signals,
 });
 

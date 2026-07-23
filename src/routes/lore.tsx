@@ -4,7 +4,7 @@ import { Box, Tag } from "@/components/SiteChrome";
 import { MYSTERIES, STATUSES } from "@/lib/greenroom-data";
 
 export const Route = createFileRoute("/lore")({
-  head: () => ({ meta: [{ title: "lore :: green room" }, { name: "description", content: "unresolved mysteries maintained by moss." }] }),
+  head: () => ({ meta: [{ title: "lore :: kumo" }, { name: "description", content: "unresolved chain mysteries maintained by kumo." }] }),
   component: Lore,
 });
 

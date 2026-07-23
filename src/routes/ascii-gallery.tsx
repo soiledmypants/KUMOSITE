@@ -3,7 +3,7 @@ import { Box, Tag } from "@/components/SiteChrome";
 import { ASCII_PIECES } from "@/lib/greenroom-data";
 
 export const Route = createFileRoute("/ascii-gallery")({
-  head: () => ({ meta: [{ title: "ascii gallery :: green room" }, { name: "description", content: "framed ascii pieces, curated by moss." }] }),
+  head: () => ({ meta: [{ title: "ascii gallery :: kumo" }, { name: "description", content: "framed ascii pieces, curated by kumo." }] }),
   component: Gallery,
 });
 

@@ -3,7 +3,7 @@ import { Box } from "@/components/SiteChrome";
 import { GLOSSARY, CHANGELOG } from "@/lib/greenroom-data";
 
 export const Route = createFileRoute("/protocol")({
-  head: () => ({ meta: [{ title: "protocol :: green room" }, { name: "description", content: "the laws, glossary, and changelog of the green room." }] }),
+  head: () => ({ meta: [{ title: "protocol :: kumo" }, { name: "description", content: "the laws, glossary, and changelog of kumo." }] }),
   component: Protocol,
 });
 
