@@ -1,14 +1,14 @@
-/* ops-panel — bright gray/white console. No border-radius anywhere. */
+/* ops-panel — black console, white text, big type. No border-radius anywhere. */
 
 :root {
-  --bg: #e6e6e6;
-  --panel: #ffffff;
-  --border: #999999;
-  --text: #111111;
-  --dim: #555555;
-  --accent: #0a6b34;
-  --amber: #9a6200;
-  --red: #b81f1f;
+  --bg: #000000;
+  --panel: #0d0d0d;
+  --border: #666666;
+  --text: #ffffff;
+  --dim: #a0a0a0;
+  --accent: #4dff9d;
+  --amber: #ffc04d;
+  --red: #ff6060;
 }
 
 * {
@@ -140,12 +140,12 @@ table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); }
 th { color: var(--dim); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
 td { font-size: 14px; word-break: break-all; }
-tr:hover td { background: #f0f0f0; }
+tr:hover td { background: #1a1a1a; }
 
 /* ---- live feed / console ---- */
 
 #feed {
-  background: #f7f7f7;
+  background: #050505;
   border: 2px solid var(--border);
   height: 300px;
   overflow-y: auto;
@@ -164,7 +164,7 @@ tr:hover td { background: #f0f0f0; }
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.8);
   z-index: 10;
 }
 #modal-overlay.open { display: flex; align-items: center; justify-content: center; }
