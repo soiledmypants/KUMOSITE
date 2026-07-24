@@ -143,6 +143,22 @@ const SCHEMA = [
     note TEXT,
     handled_at BIGINT NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS ledger (
+    id %AUTOPK%,
+    ts BIGINT NOT NULL,
+    kind TEXT NOT NULL,
+    tx_hash TEXT NOT NULL UNIQUE,
+    explorer_url TEXT NOT NULL,
+    asset_in TEXT,
+    amount_in TEXT,
+    asset_out TEXT,
+    amount_out TEXT,
+    from_addr TEXT,
+    to_addr TEXT,
+    source TEXT NOT NULL,
+    note TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_ledger_kind_ts ON ledger(kind, ts)`,
 ];
 
 // additive column migrations (ALTER fails harmlessly when the column exists)

@@ -20,6 +20,7 @@ import { agentLeaderboard, submitIntel, type IntelInput } from "./agents/reputat
 import { connectToAgent } from "./agents/outbound.js";
 import { registerOnChain } from "./agents/erc8004.js";
 import { stakingStats } from "./staking/keeper.js";
+import { listLedger, recordLedger, validateLedgerInput, LEDGER_KINDS } from "./ledger.js";
 import { db } from "./db.js";
 import * as mock from "./mock.js";
 import { formatEther, parseEther } from "viem";
@@ -245,6 +246,29 @@ export function buildServer(): express.Express {
 
   app.get("/staking/stats", wrap(async (_req, res) => {
     res.json(CONFIG.mock ? mock.mockStakingStats() : await stakingStats());
+  }));
+
+  // unified ledger: kumo's own txs + txs reported by sibling bots
+  app.get("/ledger", wrap(async (req, res) => {
+    if (CONFIG.mock) {
+      res.json(mock.mockLedger());
+      return;
+    }
+    const limit = Number(req.query.limit ?? 50);
+    const kind = req.query.kind ? String(req.query.kind) : undefined;
+    if (kind && !LEDGER_KINDS.includes(kind as never)) {
+      throw new Error(`kind must be one of: ${LEDGER_KINDS.join(", ")}`);
+    }
+    res.json(await listLedger(Number.isFinite(limit) ? limit : 50, kind));
+  }));
+
+  app.post("/ledger", adminOnly, wrap(async (req, res) => {
+    const entry = validateLedgerInput(req.body ?? {});
+    const result = await recordLedger(entry);
+    res.json({
+      ...result,
+      line: result.duplicate ? "kumo already wrote that one down." : "kumo noted it in the ledger.",
+    });
   }));
 
   // admin utilities used by the cli

@@ -140,6 +140,45 @@ export const mockStakingStats = () => ({
   ],
 });
 
+export const mockLedger = () => [
+  {
+    id: 3,
+    ts: Date.now() - 600_000,
+    kind: "reward_fund",
+    txHash: "0x" + "c3".repeat(32),
+    chainExplorerUrl: "https://robinhoodchain.blockscout.com/tx/0x" + "c3".repeat(32),
+    assetIn: null, amountIn: null,
+    assetOut: "NVDA", amountOut: "1.2043",
+    from: "0xk0m0", to: "0xp00l",
+    source: "kumo",
+    note: "kumo fed the staking pool. 1.2043 NVDA.",
+  },
+  {
+    id: 2,
+    ts: Date.now() - 660_000,
+    kind: "buyback",
+    txHash: "0x" + "b2".repeat(32),
+    chainExplorerUrl: "https://robinhoodchain.blockscout.com/tx/0x" + "b2".repeat(32),
+    assetIn: "ETH", amountIn: "0.12",
+    assetOut: "NVDA", amountOut: null,
+    from: "0xk0m0", to: null,
+    source: "kumo",
+    note: "kumo bought NVDA for the stakers.",
+  },
+  {
+    id: 1,
+    ts: Date.now() - 3_600_000,
+    kind: "claim",
+    txHash: "0x" + "a1".repeat(32),
+    chainExplorerUrl: "https://robinhoodchain.blockscout.com/tx/0x" + "a1".repeat(32),
+    assetIn: "ETH", amountIn: "0.3",
+    assetOut: null, amountOut: null,
+    from: "0xfees", to: "0xk0m0",
+    source: "claimer",
+    note: "kumo collected its allowance. 0.3 ETH.",
+  },
+];
+
 const tickerLines = [
   "kumo is watching 3 wallets...",
   "kumo noticed NVDA-token waking up...",

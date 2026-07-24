@@ -9,6 +9,7 @@ import { bestQuote, type Quote } from "./quote.js";
 import { brandTx, sendGuardedTx } from "./guard.js";
 import { stockByAddress } from "../scanner/discovery.js";
 import { emitKumoEvent } from "../twitter/events.js";
+import { recordLedger } from "../ledger.js";
 
 export const routerAbi = parseAbi([
   "function exactInputSingle((address tokenIn, address tokenOut, uint24 fee, address recipient, uint256 amountIn, uint256 amountOutMinimum, uint160 sqrtPriceLimitX96) params) payable returns (uint256 amountOut)",
@@ -100,5 +101,14 @@ export async function executeEthSwap(opts: {
   if (outSymbol && outSymbol !== "???") {
     emitKumoEvent({ type: "trade_found", symbol: outSymbol });
   }
+  await recordLedger({
+    kind: "trade",
+    txHash: tx,
+    assetIn: "ETH",
+    amountIn: formatEther(amountIn),
+    assetOut: outSymbol && outSymbol !== "???" ? outSymbol : opts.tokenOut.slice(0, 10),
+    from: opts.recipient,
+    source: "kumo",
+  });
   return { tx, amountIn: amountIn.toString(), minOut: minOut.toString(), route: quote.route };
 }

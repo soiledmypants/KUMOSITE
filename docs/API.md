@@ -182,6 +182,47 @@ kumo's trusted circle leaderboard:
 
 reputation detail + `recent_intel` (each with `direction`, `score`, timestamps).
 
+## GET /ledger
+
+the unified on-chain action ledger — kumo's own txs (buybacks, reward funding, trades) plus anything sibling bots report via `POST /ledger`. newest first. query params: `limit` (default 50, max 200), `kind` to filter.
+
+```json
+[{
+  "id": 3,
+  "ts": 1784900000000,
+  "kind": "reward_fund",     // claim | forward | buyback | reward_fund | trade | airdrop
+  "txHash": "0x...",
+  "chainExplorerUrl": "https://robinhoodchain.blockscout.com/tx/0x...",
+  "assetIn": "ETH",  "amountIn": "0.12",
+  "assetOut": "NVDA", "amountOut": "1.2043",
+  "from": "0x...", "to": "0x...",
+  "source": "kumo",           // kumo | claimer | ops | ...
+  "note": "kumo fed the staking pool. 1.2043 NVDA."
+}]
+```
+
+every new entry also emits its `note` on the live `/feed` stream automatically — the ledger and the feed can't drift apart.
+
+## POST /ledger  (admin — for sibling bots)
+
+`X-Kumo-Admin-Key: <key>` required. body:
+
+```json
+{
+  "kind": "claim",            // required: claim | forward | buyback | reward_fund | trade | airdrop
+  "txHash": "0x<64 hex>",     // required, deduped — reposting the same hash is a safe no-op
+  "ts": 1784900000000,         // optional, ms epoch, defaults to now
+  "chainExplorerUrl": "...",  // optional, defaults to the RHC blockscout tx url
+  "assetIn": "ETH",  "amountIn": "0.3",     // optional, amounts as strings, whole units
+  "assetOut": "NVDA", "amountOut": "1.2",   // optional
+  "from": "0x...", "to": "0x...",           // optional
+  "source": "claimer",         // optional, defaults to "external" — name your bot
+  "note": "kumo collected its allowance. 0.3 eth."  // optional kumo-voice line; auto-generated from kind if omitted
+}
+```
+
+replies `{ "recorded": true, "duplicate": false, "line": "kumo noted it in the ledger." }` (200 even on duplicates, with `"duplicate": true`). bad shapes get a 400 with the reason.
+
 ## GET /staking/stats
 
 ```json

@@ -1,7 +1,7 @@
 // fee keeper: sweep hot-wallet ETH above reserve -> two-hop buyback into the epoch
 // stock -> exact-amount approve -> pull-based notifyRewardAmount on the staking pool.
 // crash-safe: notifies the wallet's full stock balance, so a crashed prior cycle heals.
-import { encodeFunctionData, formatEther, parseAbi, parseEther, type Address } from "viem";
+import { encodeFunctionData, formatEther, formatUnits, parseAbi, parseEther, type Address } from "viem";
 import { CONFIG } from "../config.js";
 import { publicClient, botAddress } from "../clients.js";
 import { withRetry } from "../rpc.js";
@@ -14,6 +14,7 @@ import { epochStock } from "./epoch.js";
 import { stockByAddress } from "../scanner/discovery.js";
 import { ethUsd } from "../scanner/prices.js";
 import { emitKumoEvent } from "../twitter/events.js";
+import { recordLedger } from "../ledger.js";
 
 const stakingAbi = parseAbi([
   "function totalSupply() view returns (uint256)",
@@ -115,6 +116,15 @@ export async function keeperCycleOnce(): Promise<void> {
           "INSERT INTO keeper_journal (ts, eth_spent, token, amount, tx_hashes, note) VALUES (?, ?, ?, ?, ?, ?)",
           [Date.now(), distributable.toString(), pick.address.toLowerCase(), "pending", swapTx, "buyback swap"],
         );
+        await recordLedger({
+          kind: "buyback",
+          txHash: swapTx,
+          assetIn: "ETH",
+          amountIn: formatEther(distributable),
+          assetOut: pick.symbol,
+          from: wallet,
+          source: "kumo",
+        });
       }
     } else if (distributable < minFund) {
       keeperState.lastResult = `skipped: only ${formatEther(distributable)} eth distributable (< ${CONFIG.minFundEth})`;
@@ -150,6 +160,15 @@ export async function keeperCycleOnce(): Promise<void> {
       "INSERT INTO keeper_journal (ts, eth_spent, token, amount, tx_hashes, note) VALUES (?, ?, ?, ?, ?, ?)",
       [Date.now(), distributable.toString(), pick.address.toLowerCase(), stockBal.toString(), notifyTx, "notify"],
     );
+    await recordLedger({
+      kind: "reward_fund",
+      txHash: notifyTx,
+      assetOut: pick.symbol,
+      amountOut: formatUnits(stockBal, stockByAddress(pick.address)?.decimals ?? 18),
+      from: wallet,
+      to: staking,
+      source: "kumo",
+    });
     keeperState.lastResult = `notified ${stockBal} raw ${pick.symbol} to the pool`;
     say("stake", lines.staking(`${formatEther(distributable)} eth became ${pick.symbol} for stakers.`));
     const eu = await ethUsd().catch(() => null);
