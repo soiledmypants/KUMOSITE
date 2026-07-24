@@ -98,20 +98,37 @@ export async function sync(p: ProjectRuntime): Promise<{ head: bigint; scanned: 
   }
 
   console.log(`[scan:${p.id}] scanning blocks ${nextFrom}..${head}`);
+  let chunk = p.holders.scanChunkBlocks; // shrinks adaptively on busy ranges, recovers after
   while (nextFrom <= head) {
-    const toBlock =
-      nextFrom + p.holders.scanChunkBlocks - 1n < head ? nextFrom + p.holders.scanChunkBlocks - 1n : head;
+    const toBlock = nextFrom + chunk - 1n < head ? nextFrom + chunk - 1n : head;
 
-    const logs = await withRetry(
-      () =>
-        p.publicClient.getLogs({
-          address: p.tokenAddress,
-          event: TRANSFER_EVENT,
-          fromBlock: nextFrom,
-          toBlock,
-        }),
-      `holders:${p.id}.getLogs[${nextFrom}-${toBlock}]`,
-    );
+    let logs;
+    try {
+      logs = await withRetry(
+        () =>
+          p.publicClient.getLogs({
+            address: p.tokenAddress,
+            event: TRANSFER_EVENT,
+            fromBlock: nextFrom,
+            toBlock,
+          }),
+        `holders:${p.id}.getLogs[${nextFrom}-${toBlock}]`,
+        { retries: 1 },
+      );
+    } catch (err) {
+      // busy token: the range holds more logs than the rpc will return.
+      // halve the window and retry — never bail on a dense stretch.
+      if (chunk > 1n && /limit|too many|response size|exceed/i.test((err as Error).message)) {
+        chunk = chunk / 2n > 0n ? chunk / 2n : 1n;
+        console.log(`[scan:${p.id}] dense range ${nextFrom}-${toBlock}, halving chunk to ${chunk}`);
+        continue;
+      }
+      throw err;
+    }
+    // quiet again -> grow back toward the configured chunk size
+    if (chunk < p.holders.scanChunkBlocks && logs.length < 4000) {
+      chunk = chunk * 2n < p.holders.scanChunkBlocks ? chunk * 2n : p.holders.scanChunkBlocks;
+    }
 
     const touched = new Set<string>();
     for (const log of logs) {
