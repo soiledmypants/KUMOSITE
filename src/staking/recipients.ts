@@ -188,14 +188,16 @@ export async function resolveRecipients(): Promise<{ recipients: Recipient[]; mo
   }
   if (recipients.length === 0) return { recipients: [], mode: recipients.length ? mode : "none" };
 
-  // connected-agent boost within the round
-  const agents = await db.all<{ address: string }>("SELECT address FROM agents");
-  const agentSet = new Set(agents.map((a) => a.address.toLowerCase()));
-  const boostNum = BigInt(Math.round((1 + CONFIG.boostPct / 100) * 10_000));
-  for (const r of recipients) {
-    if (agentSet.has(r.address.toLowerCase())) {
-      r.weight = (r.weight * boostNum) / 10_000n;
-      r.boosted = true;
+  // connected-agent boost within the round (designed in, ships OFF until BOOST_ENABLED=true)
+  if (CONFIG.boostEnabled && CONFIG.boostPct > 0) {
+    const agents = await db.all<{ address: string }>("SELECT address FROM agents");
+    const agentSet = new Set(agents.map((a) => a.address.toLowerCase()));
+    const boostNum = BigInt(Math.round((1 + CONFIG.boostPct / 100) * 10_000));
+    for (const r of recipients) {
+      if (agentSet.has(r.address.toLowerCase())) {
+        r.weight = (r.weight * boostNum) / 10_000n;
+        r.boosted = true;
+      }
     }
   }
   return { recipients, mode };

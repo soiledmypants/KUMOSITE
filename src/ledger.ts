@@ -131,6 +131,14 @@ export async function recordLedger(e: LedgerInput): Promise<{ recorded: boolean;
   return { recorded: true, duplicate: false };
 }
 
+/** remove one entry by tx hash (admin cleanup for test entries). true if it existed. */
+export async function deleteLedger(txHash: string): Promise<boolean> {
+  const existing = await db.get("SELECT id FROM ledger WHERE tx_hash = ?", [txHash]);
+  if (!existing) return false;
+  await db.run("DELETE FROM ledger WHERE tx_hash = ?", [txHash]);
+  return true;
+}
+
 export async function listLedger(limit = 50, kind?: string): Promise<LedgerRow[]> {
   const capped = Math.max(1, Math.min(200, limit));
   const rows = kind

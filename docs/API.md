@@ -27,9 +27,12 @@ agents obtain a bearer token via the hello handshake (see `/agent/inbox`).
   "trading_enabled": false,
   "mock": false,
   "address": "0x...",
-  "chain_id": 4663
+  "chain_id": 4663,
+  "kumo_token": null
 }
 ```
+
+`kumo_token` is the $KUMO contract address once launched — `null` pre-launch (show a "not launched yet" empty state, never a placeholder).
 
 ## GET /feed  (SSE)
 
@@ -223,9 +226,32 @@ every new entry also emits its `note` on the live `/feed` stream automatically �
 
 replies `{ "recorded": true, "duplicate": false, "line": "kumo noted it in the ledger." }` (200 even on duplicates, with `"duplicate": true`). bad shapes get a 400 with the reason.
 
+## DELETE /ledger/:txHash  (admin)
+
+removes one entry by tx hash (cleanup for test entries). replies `{ "ok": true }` if it existed, `{ "ok": false }` if not.
+
+## POST /admin/keeper/dry-run  (admin)
+
+plans one payout round end-to-end **without sending anything**: sweep check → ta pick → quoted two-hop buy with impact estimate → resolved recipients + planned pro-rata shares (dust rules applied) → the ledger entries that WOULD be written. reply is a `RoundPlan`:
+
+```json
+{
+  "dry": true,
+  "phase": "ready",            // no_wallet | saving_up | screen_fail | impact_abort | no_recipients | ready
+  "note": "round is ready: buy ~1.8421 MSTR with 0.13 eth, pay 143 stakers.",
+  "wallet": "0x...", "balance_eth": "0.15", "distributable_eth": "0.13",
+  "pick": { "symbol": "MSTR", "address": "0x...", "passes_screen": true, "screen_note": "...", "ta_score": 0.61 },
+  "planned_buy": { "route": "ETH -> USDG -> MSTR", "amount_in_eth": "0.13", "quoted_out": "1.8421", "min_out": "1.8237", "impact_pct": 0.4, "max_impact_pct": 2 },
+  "planned_distribution": { "mode": "stakers", "recipients": 143, "boosted": 0, "skipped_dust": 12, "total_planned": "1.8421", "boost_enabled": false, "top": [ ... ] },
+  "planned_ledger": [ { "kind": "buyback", "note": "PLANNED: ..." }, { "kind": "airdrop", "note": "PLANNED: ..." } ]
+}
+```
+
+set env `KEEPER_DRY_RUN=true` to make every *scheduled* keeper cycle plan-only too (journaled with a `dry-run:` prefix) — the safe launch-rehearsal mode.
+
 ## GET /staking/stats
 
-payout model: **rotating direct airdrops**. every `cycle_minutes` (default 10) kumo sweeps its fee ETH; once it holds ≥ `distribute_min_eth` it runs a payout round — the ta engine picks the current best screen-passing stock (the pick can change every round), market-buys it, and transfers it DIRECTLY to stakers pro-rata by on-chain stake (pre-launch: $KUMO holders). connected agents get a `BOOST_PCT` weight boost. the staking contract remains the stake/unstake registry and carries only the capped KUMO bootstrap stream.
+payout model: **rotating direct airdrops**. every `cycle_minutes` (default 10) kumo sweeps its fee ETH; once it holds ≥ `distribute_min_eth` it runs a payout round — the ta engine picks the current best screen-passing stock (the pick can change every round), market-buys it, and transfers it DIRECTLY to stakers pro-rata by on-chain stake (pre-launch: $KUMO holders). connected agents get a `BOOST_PCT` weight boost — designed in but shipped OFF until `BOOST_ENABLED=true` (see the `boost` block in the reply). the staking contract remains the stake/unstake registry and carries only the capped KUMO bootstrap stream.
 
 ```json
 {
@@ -240,8 +266,10 @@ payout model: **rotating direct airdrops**. every `cycle_minutes` (default 10) k
     "alerts": [],
     "cycle_minutes": 10,
     "distribute_min_eth": 0.05,
-    "per_recipient_min_usd": 0.25
+    "per_recipient_min_usd": 0.25,
+    "dry_run": false
   },
+  "boost": { "enabled": false, "pct": 10 },
   "airdrops_7d": [ { "asset_out": "NVDA", "rounds": 41, "total": 30.12 }, { "asset_out": "MSTR", "rounds": 18, "total": 22.7 } ],
   "onchain": {
     "totalStaked": "1284000000000000000000000",

@@ -19,8 +19,8 @@ import { authenticateBearer, checkDailyLimit } from "./agents/auth.js";
 import { agentLeaderboard, submitIntel, type IntelInput } from "./agents/reputation.js";
 import { connectToAgent } from "./agents/outbound.js";
 import { registerOnChain } from "./agents/erc8004.js";
-import { stakingStats } from "./staking/keeper.js";
-import { listLedger, recordLedger, validateLedgerInput, LEDGER_KINDS } from "./ledger.js";
+import { stakingStats, keeperPlanOnce } from "./staking/keeper.js";
+import { listLedger, recordLedger, validateLedgerInput, deleteLedger, LEDGER_KINDS } from "./ledger.js";
 import { db } from "./db.js";
 import * as mock from "./mock.js";
 import { formatEther, parseEther } from "viem";
@@ -72,6 +72,7 @@ export function buildServer(): express.Express {
       mock: false,
       address: botAddress,
       chain_id: CONFIG.chainId,
+      kumo_token: CONFIG.kumoToken || null, // $KUMO CA once launched; null pre-launch
     });
   }));
 
@@ -271,6 +272,13 @@ export function buildServer(): express.Express {
     });
   }));
 
+  app.delete("/ledger/:txHash", adminOnly, wrap(async (req, res) => {
+    const txHash = String(req.params.txHash ?? "");
+    if (!/^0x[a-fA-F0-9]{64}$/.test(txHash)) throw new Error("txHash must be 0x + 64 hex chars");
+    const ok = await deleteLedger(txHash);
+    res.json({ ok, line: ok ? "kumo erased that line from the ledger." : "kumo never wrote that one down." });
+  }));
+
   // admin utilities used by the cli
   app.post("/admin/connect", adminOnly, wrap(async (req, res) => {
     const url = String(req.body.url ?? "");
@@ -280,6 +288,11 @@ export function buildServer(): express.Express {
 
   app.post("/admin/register-erc8004", adminOnly, wrap(async (_req, res) => {
     res.json(await registerOnChain());
+  }));
+
+  // plan a payout round end-to-end without sending anything (safe pre-launch check)
+  app.post("/admin/keeper/dry-run", adminOnly, wrap(async (_req, res) => {
+    res.json(await keeperPlanOnce());
   }));
 
   app.use((_req, res) => {

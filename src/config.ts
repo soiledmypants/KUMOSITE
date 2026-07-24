@@ -91,9 +91,11 @@ export const CONFIG = {
   cycleMinutes: envNum("CYCLE_MINUTES", 10),
   distributeMinEth: envNum("DISTRIBUTE_MIN_ETH", envNum("MIN_FUND_ETH", 0.05)),
   perRecipientMinUsd: envNum("PER_RECIPIENT_MIN_USD", 0.25),
+  boostEnabled: envBool("BOOST_ENABLED", false), // connected-agent boost is designed but ships OFF
   boostPct: envNum("BOOST_PCT", 10),
   gasReserveEth: envNum("GAS_RESERVE_ETH", 0.02),
   maxImpactPct: envNum("MAX_IMPACT_PCT", 2),
+  keeperDryRun: envBool("KEEPER_DRY_RUN", false), // true -> scheduled cycles plan only, never send
 
   // chat
   anthropicKey: process.env.ANTHROPIC_API_KEY ?? "",

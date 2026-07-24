@@ -49,8 +49,12 @@ services:
         value: "0.05"
       - key: PER_RECIPIENT_MIN_USD
         value: "0.25"
+      - key: BOOST_ENABLED
+        value: "false" # boost is designed in but ships OFF
       - key: BOOST_PCT
         value: "10"
+      - key: KEEPER_DRY_RUN
+        value: "false" # true -> keeper plans rounds but never sends (safe launch rehearsal)
       - key: GAS_RESERVE_ETH
         value: "0.02"
       - key: CORS_ORIGINS

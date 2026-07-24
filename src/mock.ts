@@ -15,6 +15,7 @@ export const mockStatus = () => ({
   mock: true,
   address: "0xk0m0000000000000000000000000000000000umo",
   chain_id: 4663,
+  kumo_token: null,
 });
 
 export const mockWallets = () => [
@@ -136,7 +137,9 @@ export const mockStakingStats = () => ({
     cycle_minutes: 10,
     distribute_min_eth: 0.05,
     per_recipient_min_usd: 0.25,
+    dry_run: false,
   },
+  boost: { enabled: false, pct: 10 },
   airdrops_7d: [
     { asset_out: "NVDA", rounds: 41, total: 30.12 },
     { asset_out: "MSTR", rounds: 18, total: 22.7 },

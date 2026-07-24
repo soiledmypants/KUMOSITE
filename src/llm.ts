@@ -16,9 +16,19 @@ export function llmProvider(): "anthropic" | "openai" {
   return (process.env.LLM_PROVIDER ?? "anthropic") === "openai" ? "openai" : "anthropic";
 }
 
-/** is a usable key configured for the active provider? */
+const DEFAULT_OPENAI_BASE = "https://api.openai.com/v1";
+
+function openaiBase(): string {
+  return (process.env.LLM_BASE_URL ?? DEFAULT_OPENAI_BASE).replace(/\/+$/, "");
+}
+
+/** is a usable endpoint configured for the active provider? a custom
+ * LLM_BASE_URL (ollama, a local proxy...) counts even without a key. */
 export function hasLlm(): boolean {
-  return llmProvider() === "openai" ? Boolean(process.env.OPENAI_API_KEY) : Boolean(CONFIG.anthropicKey);
+  if (llmProvider() === "openai") {
+    return Boolean(process.env.OPENAI_API_KEY) || openaiBase() !== DEFAULT_OPENAI_BASE;
+  }
+  return Boolean(CONFIG.anthropicKey);
 }
 
 async function anthropic(req: LlmRequest): Promise<string | null> {
@@ -44,19 +54,21 @@ async function anthropic(req: LlmRequest): Promise<string | null> {
 }
 
 async function openai(req: LlmRequest): Promise<string | null> {
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) return null;
-  const base = (process.env.LLM_BASE_URL ?? "https://api.openai.com/v1").replace(/\/+$/, "");
+  const key = process.env.OPENAI_API_KEY ?? "";
+  const base = openaiBase();
+  // keyless is fine for local/compatible endpoints, but never for openai.com itself
+  if (!key && base === DEFAULT_OPENAI_BASE) return null;
   const model = process.env.LLM_MODEL ?? "gpt-4o-mini";
+  // reasoning-model families reject max_tokens in favor of max_completion_tokens
+  const tokenParam = /^(o\d|gpt-5)/.test(model) ? "max_completion_tokens" : "max_tokens";
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (key) headers.authorization = `Bearer ${key}`;
   const res = await fetch(`${base}/chat/completions`, {
     method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${key}`,
-    },
+    headers,
     body: JSON.stringify({
       model,
-      max_tokens: req.maxTokens,
+      [tokenParam]: req.maxTokens,
       messages: [
         { role: "system", content: req.system },
         { role: "user", content: req.user },
