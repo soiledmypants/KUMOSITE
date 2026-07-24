@@ -19,7 +19,8 @@ export function llmProvider(): "anthropic" | "openai" {
 const DEFAULT_OPENAI_BASE = "https://api.openai.com/v1";
 
 function openaiBase(): string {
-  return (process.env.LLM_BASE_URL ?? DEFAULT_OPENAI_BASE).replace(/\/+$/, "");
+  // || not ??: an empty/blank env var means "use the default", not a custom endpoint
+  return (process.env.LLM_BASE_URL?.trim() || DEFAULT_OPENAI_BASE).replace(/\/+$/, "");
 }
 
 /** is a usable endpoint configured for the active provider? a custom
@@ -58,7 +59,7 @@ async function openai(req: LlmRequest): Promise<string | null> {
   const base = openaiBase();
   // keyless is fine for local/compatible endpoints, but never for openai.com itself
   if (!key && base === DEFAULT_OPENAI_BASE) return null;
-  const model = process.env.LLM_MODEL ?? "gpt-4o-mini";
+  const model = process.env.LLM_MODEL?.trim() || "gpt-4o-mini";
   // reasoning-model families reject max_tokens in favor of max_completion_tokens
   const tokenParam = /^(o\d|gpt-5)/.test(model) ? "max_completion_tokens" : "max_tokens";
   const headers: Record<string, string> = { "content-type": "application/json" };
