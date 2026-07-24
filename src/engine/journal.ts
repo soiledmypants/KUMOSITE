@@ -1,29 +1,43 @@
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { appendFileSync, existsSync, readFileSync } from "node:fs";
 import { formatEther } from "viem";
-import { CONFIG } from "./config.js";
+import { CONFIG, dataPath } from "../config.js";
+import { emitEvent } from "./events.js";
 
-const DATA_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..", "data");
-const LOG_PATH = resolve(DATA_DIR, "journal.jsonl");
-
-export type LogType = "claim" | "unwrap" | "forward_eth" | "forward_token" | "error";
+export type LogType =
+  | "claim"
+  | "unwrap"
+  | "forward_eth"
+  | "forward_token"
+  | "snapshot"
+  | "swap"
+  | "airdrop"
+  | "round"
+  | "error";
 
 /** One journal line. True append-only JSONL — one JSON object per line. */
 export interface LogEntry {
-  ts: string; // ISO timestamp
+  ts: string;
   type: LogType;
   dryRun: boolean;
-  token?: string; // token address involved
+  projectId?: string;
+  roundId?: string;
+  token?: string;
   // claim
   grossWeth?: string;
   netWeth?: string;
   grossToken?: string;
   netToken?: string;
-  // unwrap / forwards (wei or raw token units, decimal string)
+  // unwrap / forwards / swap / airdrop (wei or raw units, decimal string)
   amount?: string;
+  amountOut?: string;
   to?: string;
   role?: "treasury" | "kumo";
+  // snapshot / round
+  holderCount?: number;
+  recipientCount?: number;
+  failedCount?: number;
+  asset?: "eth" | "token";
+  phase?: "start" | "end";
   txHash?: string;
   detail?: string;
 }
@@ -36,43 +50,40 @@ export interface Stats {
   totalForwardedTreasuryWei: string;
   totalForwardedTreasuryEth: string;
   totalTokenForwardedRaw: string;
+  totalAirdroppedEthWei: string;
+  totalAirdroppedTokenRaw: string;
   claimCount: number;
   forwardCount: number;
+  airdropTxCount: number;
+  roundCount: number;
   errorCount: number;
   dryRunEntryCount: number;
   lastEntryAt: string | null;
-  lastCycleAt: string | null;
-  nextCycleAt: string | null;
-  intervalMinutes: number;
+  lastClaimAt: string | null;
+  lastRoundAt: string | null;
 }
 
-let lastCycleAt: string | null = null;
-
-/** Record that a cycle ran (even if it produced no journal entries). */
-export function markCycle(): void {
-  lastCycleAt = new Date().toISOString();
+function logPath(): string {
+  return dataPath("journal.jsonl");
 }
 
-function ensureDataDir(): void {
-  if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
-}
-
-/** Append one entry as a single JSONL line (timestamp + dryRun auto-filled). */
+/** Append one entry as a single JSONL line (ts + dryRun auto-filled) and emit it on the bus. */
 export function append(entry: Omit<LogEntry, "ts" | "dryRun"> & { dryRun?: boolean }): LogEntry {
-  ensureDataDir();
   const full: LogEntry = {
     ts: new Date().toISOString(),
     dryRun: entry.dryRun ?? CONFIG.dryRun,
     ...entry,
   };
-  appendFileSync(LOG_PATH, JSON.stringify(full) + "\n");
+  appendFileSync(logPath(), JSON.stringify(full) + "\n");
+  emitEvent("journal", full, full.projectId);
   return full;
 }
 
 function readAll(): LogEntry[] {
-  if (!existsSync(LOG_PATH)) return [];
+  const path = logPath();
+  if (!existsSync(path)) return [];
   try {
-    return readFileSync(LOG_PATH, "utf8")
+    return readFileSync(path, "utf8")
       .split("\n")
       .filter((line) => line.trim().length > 0)
       .flatMap((line) => {
@@ -87,25 +98,41 @@ function readAll(): LogEntry[] {
   }
 }
 
-/** Read the journal, newest first, optionally limited. */
-export function readLog(limit?: number): LogEntry[] {
-  const all = readAll().reverse();
+/** Read the journal, newest first, optionally filtered by project and limited. */
+export function readLog(limit?: number, projectId?: string): LogEntry[] {
+  let all = readAll();
+  if (projectId) all = all.filter((e) => e.projectId === projectId);
+  all.reverse();
   if (limit && limit > 0) return all.slice(0, limit);
   return all;
 }
 
-/** Fold the journal into totals. Live entries only — dry runs are counted separately. */
-export function computeStats(): Stats {
-  const all = readAll();
+/** Completed round summaries (type "round", phase "end"), newest first. */
+export function readRounds(projectId: string, limit = 50): LogEntry[] {
+  return readAll()
+    .filter((e) => e.projectId === projectId && e.type === "round" && e.phase === "end")
+    .reverse()
+    .slice(0, limit);
+}
+
+/** Fold the journal into totals. Live entries only — dry runs counted separately. */
+export function computeStats(projectId?: string): Stats {
+  const all = projectId ? readAll().filter((e) => e.projectId === projectId) : readAll();
 
   let claimedWeth = 0n;
   let kumoWei = 0n;
   let treasuryWei = 0n;
   let tokenRaw = 0n;
+  let airdropEth = 0n;
+  let airdropToken = 0n;
   let claimCount = 0;
   let forwardCount = 0;
+  let airdropTxCount = 0;
+  let roundCount = 0;
   let errorCount = 0;
   let dryRunEntryCount = 0;
+  let lastClaimAt: string | null = null;
+  let lastRoundAt: string | null = null;
 
   for (const e of all) {
     if (e.type === "error") {
@@ -121,6 +148,7 @@ export function computeStats(): Stats {
         case "claim":
           claimCount++;
           claimedWeth += BigInt(e.netWeth ?? "0");
+          lastClaimAt = e.ts;
           break;
         case "forward_eth":
           forwardCount++;
@@ -131,20 +159,26 @@ export function computeStats(): Stats {
           forwardCount++;
           tokenRaw += BigInt(e.amount ?? "0");
           break;
-        case "unwrap":
+        case "airdrop":
+          airdropTxCount++;
+          if (e.asset === "token") airdropToken += BigInt(e.amount ?? "0");
+          else airdropEth += BigInt(e.amount ?? "0");
+          break;
+        case "round":
+          if (e.phase === "end") {
+            roundCount++;
+            lastRoundAt = e.ts;
+          }
+          break;
+        default:
           break;
       }
     } catch {
-      // Bad amount in an old entry — skip it rather than break /stats.
+      // Bad amount in an old entry — skip rather than break stats.
     }
   }
 
   const last = all.length > 0 ? all[all.length - 1]!.ts : null;
-  const cycleAt = lastCycleAt ?? last;
-  const nextCycleAt = cycleAt
-    ? new Date(new Date(cycleAt).getTime() + CONFIG.intervalMinutes * 60_000).toISOString()
-    : null;
-
   return {
     totalClaimedWethWei: claimedWeth.toString(),
     totalClaimedWethEth: formatEther(claimedWeth),
@@ -153,13 +187,16 @@ export function computeStats(): Stats {
     totalForwardedTreasuryWei: treasuryWei.toString(),
     totalForwardedTreasuryEth: formatEther(treasuryWei),
     totalTokenForwardedRaw: tokenRaw.toString(),
+    totalAirdroppedEthWei: airdropEth.toString(),
+    totalAirdroppedTokenRaw: airdropToken.toString(),
     claimCount,
     forwardCount,
+    airdropTxCount,
+    roundCount,
     errorCount,
     dryRunEntryCount,
     lastEntryAt: last,
-    lastCycleAt: cycleAt,
-    nextCycleAt,
-    intervalMinutes: CONFIG.intervalMinutes,
+    lastClaimAt,
+    lastRoundAt,
   };
 }

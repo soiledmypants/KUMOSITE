@@ -1,17 +1,21 @@
-import type { Abi } from "viem";
-import { CONFIG, baseGasCaps, bumpGasCaps, explorerTx } from "./config.js";
-import { publicClient, walletClient, botAddress } from "./clients.js";
+import type { Abi, Account, Chain, PublicClient, Transport, WalletClient } from "viem";
+import { CONFIG, baseGasCaps, bumpGasCaps } from "./config.js";
 import { withRetry } from "./rpc.js";
 
 type GasCaps = { maxFeePerGas: bigint; maxPriorityFeePerGas: bigint };
 
-/** A contract write (ERC20 transfer, WETH withdraw, locker collectFees). */
+export type PC = PublicClient<Transport, Chain>;
+export type WC = WalletClient<Transport, Chain, Account>;
+
+/** A contract write (ERC20 transfer, WETH withdraw, collectFees, router multicall…). */
 export interface ContractSend {
   kind: "contract";
   to: `0x${string}`;
   abi: Abi;
   functionName: string;
   args: readonly unknown[];
+  /** Native ETH attached to a payable call (router swaps). */
+  value?: bigint;
 }
 
 /** A plain native-ETH transfer. */
@@ -23,101 +27,139 @@ export interface NativeSend {
 
 export type SendRequest = ContractSend | NativeSend;
 
-// ---------------------------------------------------------------------------
-// Allowlist: the ONLY addresses this bot will ever sign a transaction to.
-// Built once at boot from config + the resolved locker; everything else throws.
-// ---------------------------------------------------------------------------
-
-const allowed = new Set<string>();
-
-/** Register the complete set of permitted tx targets. Called once at boot. */
-export function initAllowlist(targets: `0x${string}`[]): void {
-  allowed.clear();
-  for (const t of targets) allowed.add(t.toLowerCase());
-  console.log(`[send] allowlist: ${targets.join(", ")}`);
+export interface SenderDeps {
+  projectId: string;
+  publicClient: PC;
+  walletClient: WC;
+  botAddress: `0x${string}`;
+  explorerTx: (hash: string) => string;
 }
 
-/** Hard gate in front of every broadcast. */
-export function assertAllowedTarget(to: `0x${string}`): void {
-  if (!allowed.has(to.toLowerCase())) {
-    throw new Error(`[send] BLOCKED: ${to} is not on the send allowlist — refusing to sign`);
+/**
+ * Per-project transaction sender.
+ *
+ * - Allowlist: the ONLY addresses this sender will ever sign a tx to. Static
+ *   targets are registered at boot (`allow`); airdrop recipients are added
+ *   ONLY for the duration of an executing round via `withExtraAllowed`.
+ * - Nonce: fetched once per cycle/round (`refreshNonce`), incremented locally
+ *   per broadcast (memedex distribute.ts convention).
+ * - Gas bump: on receipt timeout, the SAME nonce is rebroadcast with caps
+ *   bumped by gas.gasBumpPct.
+ */
+export interface Sender {
+  allow(target: `0x${string}`): void;
+  isAllowed(target: `0x${string}`): boolean;
+  allowedTargets(): string[];
+  refreshNonce(): Promise<void>;
+  sendWithGasBump(req: SendRequest, label: string): Promise<`0x${string}`>;
+  withExtraAllowed<T>(targets: `0x${string}`[], fn: () => Promise<T>): Promise<T>;
+}
+
+export function makeSender(deps: SenderDeps): Sender {
+  const { projectId, publicClient, walletClient, botAddress, explorerTx } = deps;
+
+  const allowed = new Set<string>();
+  const extraAllowed = new Set<string>();
+  let nonce = 0;
+
+  function assertAllowedTarget(to: `0x${string}`): void {
+    const key = to.toLowerCase();
+    if (!allowed.has(key) && !extraAllowed.has(key)) {
+      throw new Error(
+        `[send:${projectId}] BLOCKED: ${to} is not on the send allowlist — refusing to sign`,
+      );
+    }
   }
-}
 
-// ---------------------------------------------------------------------------
-// Nonce management: fetched once per cycle, incremented locally per broadcast
-// (same convention as memedex distribute.ts). refreshNonce() at cycle start.
-// ---------------------------------------------------------------------------
-
-let nonce = 0;
-
-/** Re-sync the local nonce with the chain's pending count. Call at cycle start (live mode). */
-export async function refreshNonce(): Promise<void> {
-  nonce = await withRetry(
-    () => publicClient.getTransactionCount({ address: botAddress, blockTag: "pending" }),
-    "send.getTransactionCount",
-  );
-}
-
-/** Broadcast `req` at an explicit nonce with the given gas caps. */
-async function broadcast(
-  req: SendRequest,
-  txNonce: number,
-  caps: GasCaps,
-  label: string,
-): Promise<`0x${string}`> {
-  assertAllowedTarget(req.to);
-  return withRetry(() => {
-    if (req.kind === "native") {
-      return walletClient.sendTransaction({
-        to: req.to,
+  async function broadcast(
+    req: SendRequest,
+    txNonce: number,
+    caps: GasCaps,
+    label: string,
+  ): Promise<`0x${string}`> {
+    assertAllowedTarget(req.to);
+    return withRetry(() => {
+      if (req.kind === "native") {
+        return walletClient.sendTransaction({
+          to: req.to,
+          value: req.value,
+          nonce: txNonce,
+          maxFeePerGas: caps.maxFeePerGas,
+          maxPriorityFeePerGas: caps.maxPriorityFeePerGas,
+        });
+      }
+      return walletClient.writeContract({
+        address: req.to,
+        abi: req.abi,
+        functionName: req.functionName,
+        args: req.args as unknown[],
         value: req.value,
+        account: walletClient.account,
+        chain: walletClient.chain,
         nonce: txNonce,
         maxFeePerGas: caps.maxFeePerGas,
         maxPriorityFeePerGas: caps.maxPriorityFeePerGas,
       });
-    }
-    return walletClient.writeContract({
-      address: req.to,
-      abi: req.abi,
-      functionName: req.functionName,
-      args: req.args as unknown[],
-      account: botAddress,
-      nonce: txNonce,
-      maxFeePerGas: caps.maxFeePerGas,
-      maxPriorityFeePerGas: caps.maxPriorityFeePerGas,
-    });
-  }, `${label}[nonce=${txNonce}]`);
-}
-
-/**
- * Send one tx, and if it doesn't confirm within gas.txWaitMs, resend the SAME
- * nonce with gas bumped by gas.gasBumpPct to replace the stuck tx.
- *
- * The local nonce advances even if this throws: by the time an error can
- * surface here the tx was (in all likelihood) already broadcast, so the nonce
- * is consumed. refreshNonce() at the next cycle start self-heals any gap.
- */
-export async function sendWithGasBump(req: SendRequest, label: string): Promise<`0x${string}`> {
-  const txNonce = nonce;
-  nonce++;
-
-  let caps = baseGasCaps();
-  let hash = await broadcast(req, txNonce, caps, label);
-
-  try {
-    await publicClient.waitForTransactionReceipt({ hash, timeout: CONFIG.gas.txWaitMs });
-  } catch {
-    // Timed out — likely stuck. Rebroadcast at the same nonce with higher gas.
-    caps = bumpGasCaps(caps, CONFIG.gas.gasBumpPct);
-    console.warn(
-      `[send] tx ${hash} not confirmed in ${CONFIG.gas.txWaitMs}ms — resending nonce ${txNonce} ` +
-        `with +${CONFIG.gas.gasBumpPct}% gas`,
-    );
-    hash = await broadcast(req, txNonce, caps, label);
-    await publicClient.waitForTransactionReceipt({ hash, timeout: CONFIG.gas.txWaitMs });
+    }, `${label}[nonce=${txNonce}]`);
   }
 
-  console.log(`[send] ${label} confirmed — ${explorerTx(hash)}`);
-  return hash;
+  return {
+    allow(target) {
+      allowed.add(target.toLowerCase());
+    },
+
+    isAllowed(target) {
+      return allowed.has(target.toLowerCase()) || extraAllowed.has(target.toLowerCase());
+    },
+
+    allowedTargets() {
+      return [...allowed];
+    },
+
+    async refreshNonce() {
+      nonce = await withRetry(
+        () => publicClient.getTransactionCount({ address: botAddress, blockTag: "pending" }),
+        `send:${projectId}.getTransactionCount`,
+      );
+    },
+
+    /**
+     * Broadcast, wait for receipt, and on timeout rebroadcast the SAME nonce
+     * with bumped gas. The local nonce advances even if this throws: by the
+     * time an error can surface the tx was (in all likelihood) broadcast, so
+     * the nonce is consumed; refreshNonce() self-heals any gap next cycle.
+     */
+    async sendWithGasBump(req, label) {
+      const txNonce = nonce;
+      nonce++;
+
+      let caps = baseGasCaps();
+      let hash = await broadcast(req, txNonce, caps, label);
+
+      try {
+        await publicClient.waitForTransactionReceipt({ hash, timeout: CONFIG.gas.txWaitMs });
+      } catch {
+        caps = bumpGasCaps(caps, CONFIG.gas.gasBumpPct);
+        console.warn(
+          `[send:${projectId}] tx ${hash} not confirmed in ${CONFIG.gas.txWaitMs}ms — resending ` +
+            `nonce ${txNonce} with +${CONFIG.gas.gasBumpPct}% gas`,
+        );
+        hash = await broadcast(req, txNonce, caps, label);
+        await publicClient.waitForTransactionReceipt({ hash, timeout: CONFIG.gas.txWaitMs });
+      }
+
+      console.log(`[send:${projectId}] ${label} confirmed — ${explorerTx(hash)}`);
+      return hash;
+    },
+
+    /** Temporarily allow `targets` (an executing round's recipient set) while `fn` runs. */
+    async withExtraAllowed(targets, fn) {
+      for (const t of targets) extraAllowed.add(t.toLowerCase());
+      try {
+        return await fn();
+      } finally {
+        extraAllowed.clear();
+      }
+    },
+  };
 }

@@ -1,66 +1,43 @@
-import { defineChain, getAddress, parseEther, parseGwei } from "viem";
+import { mkdirSync } from "node:fs";
+import { resolve } from "node:path";
+import { getAddress, parseGwei } from "viem";
 
 /** Normalise any hex string to a checksummed 0x-address (validates length/hex). */
-function addr(value: string): `0x${string}` {
+export function addr(value: string): `0x${string}` {
   return getAddress(value.trim());
 }
 
-/** Required env address — the bot refuses to boot without it. */
-function requiredAddr(key: string): `0x${string}` {
-  const raw = process.env[key];
-  if (!raw || raw.trim().length === 0) {
-    throw new Error(`${key} env var is required. Set it in .env (copy .env.example).`);
-  }
-  return addr(raw);
-}
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+const DEAD_ADDRESS = "0x000000000000000000000000000000000000dead";
 
-/** Optional env address — null when unset. */
-function optionalAddr(key: string): `0x${string}` | null {
-  const raw = process.env[key];
-  if (!raw || raw.trim().length === 0) return null;
-  return addr(raw);
-}
-
+/**
+ * GLOBAL config only — everything project-specific lives in projects.json
+ * (resolved by projects.ts). Secrets stay in env.
+ */
 export const CONFIG = {
-  // Chain / network (Robinhood Chain mainnet).
-  rpcUrl: process.env.RPC_URL ?? "https://rpc.mainnet.chain.robinhood.com",
-  chainId: 4663,
-  explorerBase: process.env.EXPLORER_BASE ?? "https://robinhoodchain.blockscout.com",
+  // HTTP server (Railway injects PORT).
+  port: Number(process.env.PORT ?? "8787"),
 
-  // Stats HTTP server.
-  serverPort: Number(process.env.PORT ?? "8787"),
-
-  // Cadence.
-  intervalMinutes: Number(process.env.INTERVAL_MINUTES ?? "10"),
-
-  // DRY_RUN defaults ON: every read runs, every send is logged instead of sent.
+  // MASTER dry-run switch: when true, every action is dry regardless of any
+  // per-action flag from the panel. Defaults ON.
   dryRun: (process.env.DRY_RUN ?? "true").toLowerCase() !== "false",
 
-  // The pons launchpad token whose creator fees this bot claims.
-  tokenAddress: requiredAddr("TOKEN_ADDRESS"),
+  // Where journal.jsonl, holders-*.db and keys.json live. On Railway set
+  // DATA_DIR=/data and mount a volume there.
+  dataDir: process.env.DATA_DIR ?? "data",
 
-  // PonsLaunchLocker deployments (verified on Blockscout). LOCKER_ADDRESS skips the auto-probe.
-  lockerOverride: optionalAddr("LOCKER_ADDRESS"),
-  lockers: {
-    current: addr("0x736D76699C26D0d966744cAe304C000d471f7F35"), // block 8991118+, protocol 30%
-    legacy: addr("0x31ca5E101941A93A7DD6d0497928700625CF54B5"), // block 8600612+, protocol 10%
-  },
+  // Panel auth. The server refuses to boot without ADMIN_PASSWORD.
+  adminPassword: process.env.ADMIN_PASSWORD ?? "",
+  sessionTtlHours: Number(process.env.SESSION_TTL_HOURS ?? "24"),
 
-  // Canonical WETH on RHC — fees arrive as WETH ERC20, never native ETH.
-  weth: addr(process.env.WETH ?? "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73"),
+  // Key vault secret (AES-256-GCM). Required only when a project uses
+  // keyRef "vault:<id>" or a key is imported through the panel.
+  keySecret: process.env.KEY_SECRET ?? "",
 
-  // Routing: TREASURY_PCT% of forwarded ETH to treasury, remainder to kumo.
-  treasuryWallet: requiredAddr("TREASURY_WALLET"),
-  kumoWallet: optionalAddr("KUMO_WALLET"),
-  treasuryPct: Number(process.env.TREASURY_PCT ?? "0"),
+  // Re-expose read-only /api/stats without auth (off by default).
+  publicStats: (process.env.PUBLIC_STATS ?? "false").toLowerCase() === "true",
 
-  // Thresholds, all in wei.
-  claimMinWei: parseEther(process.env.CLAIM_MIN_ETH ?? "0.01"), // on the NET WETH share of claimable
-  gasReserveWei: parseEther(process.env.GAS_RESERVE_ETH ?? "0.02"), // ETH kept in the hot wallet
-  maxForwardWei: parseEther(process.env.MAX_FORWARD_ETH ?? "1"), // per-cycle forward cap
-  forwardMinWei: parseEther(process.env.FORWARD_MIN_ETH ?? "0.001"), // skip dust forwards
-
-  // Gas policy.
+  // Gas policy (applies to every project).
   gas: {
     maxFeePerGasGwei: Number(process.env.MAX_FEE_GWEI ?? "50"),
     maxPriorityFeePerGasGwei: Number(process.env.MAX_PRIORITY_GWEI ?? "2"),
@@ -69,32 +46,12 @@ export const CONFIG = {
   },
 } as const;
 
-// Boot-time routing assertions — fail fast, before any client or server exists.
-if (!Number.isInteger(CONFIG.treasuryPct) || CONFIG.treasuryPct < 0 || CONFIG.treasuryPct > 100) {
-  throw new Error(`TREASURY_PCT must be an integer 0-100, got "${process.env.TREASURY_PCT}"`);
+/** Absolute path inside the data dir (created on demand). */
+export function dataPath(...segments: string[]): string {
+  const dir = resolve(process.cwd(), CONFIG.dataDir);
+  mkdirSync(dir, { recursive: true });
+  return resolve(dir, ...segments);
 }
-if (CONFIG.treasuryPct < 100 && !CONFIG.kumoWallet) {
-  throw new Error(
-    `KUMO_WALLET is required while TREASURY_PCT < 100 ` +
-      `(currently ${CONFIG.treasuryPct}% treasury / ${100 - CONFIG.treasuryPct}% kumo).`,
-  );
-}
-if (!Number.isFinite(CONFIG.intervalMinutes) || CONFIG.intervalMinutes <= 0) {
-  throw new Error(`INTERVAL_MINUTES must be a positive number, got "${process.env.INTERVAL_MINUTES}"`);
-}
-
-/** viem chain definition for Robinhood Chain. */
-export const robinhoodChain = defineChain({
-  id: CONFIG.chainId,
-  name: "Robinhood Chain",
-  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-  rpcUrls: {
-    default: { http: [CONFIG.rpcUrl] },
-  },
-  blockExplorers: {
-    default: { name: "RHC Blockscout", url: CONFIG.explorerBase },
-  },
-});
 
 /** EIP-1559 gas caps derived from config, as wei bigints. */
 export function baseGasCaps(): { maxFeePerGas: bigint; maxPriorityFeePerGas: bigint } {
@@ -116,7 +73,4 @@ export function bumpGasCaps(
   };
 }
 
-/** Clickable explorer link for a tx hash. */
-export function explorerTx(hash: string): string {
-  return `${CONFIG.explorerBase}/tx/${hash}`;
-}
+export { ZERO_ADDRESS, DEAD_ADDRESS };

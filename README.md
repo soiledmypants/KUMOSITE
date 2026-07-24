@@ -1,46 +1,61 @@
-# fee-claimer
+# ops-panel
 
-Standalone bot that claims creator fees for one [pons.family](https://www.ponsfamily.com/launchpad) launchpad token on Robinhood Chain (4663), unwraps the WETH, and forwards the ETH — by default 100% to the kumo agent's hot wallet (its staking keeper converts ETH into stock tokens). Token-side fees forward to the treasury wallet as-is.
+Reusable on-chain ops console + engine for EVM token projects (built for Robinhood Chain 4663, works on any EVM chain via `projects.json`). One Node process serves:
 
-## How pons fees actually work (verified on-chain)
+- **engine** — pons.family fee claiming (scheduled loop), ERC-20 holder snapshots (Transfer-event indexer), Uniswap v3 buybacks (SwapRouter02), batch airdrop rounds (ETH or token, flat or pro-rata)
+- **panel** — password-gated dark-terminal web console: dashboard with live WebSocket feed, holders table, round trigger with confirm modal, encrypted key vault
 
-pons tokens trade in Uniswap V3 pools quoted against WETH — there is no bonding curve. Creator fees accrue **inside the token's locked LP position** as two ERC20s: **WETH + the token itself** (never native ETH). They are claimed per-token via `collectFees(address token)` on the verified `PonsLaunchLocker`:
+Phase 1 of this repo was the standalone pons fee-claimer; its claim loop is unchanged, now per-project under `src/engine/claim.ts`.
+
+## How pons fees work (verified on-chain)
+
+pons tokens trade in Uniswap V3 pools quoted against WETH — no bonding curve. Creator fees accrue **inside the token's locked LP position** as two ERC20s: **WETH + the token itself** (never native ETH). Claimed per-token via `collectFees(address)` on the verified `PonsLaunchLocker`:
 
 | generation | locker | protocol share |
 |---|---|---|
 | current (block 8991118+) | `0x736D76699C26D0d966744cAe304C000d471f7F35` | 30% |
 | legacy (block 8600612+) | `0x31ca5E101941A93A7DD6d0497928700625CF54B5` | 10% |
 
-`collectFees` is callable by the locker owner, the token deployer, the current fee recipient, or an approved fee collector — but it **always pays the on-chain recipient** (`feeRedirects[token]`, falling back to the deployer), minus the protocol share snapshotted at lock time. So `PRIVATE_KEY` must derive that recipient wallet; the bot verifies this at boot and refuses to start live otherwise.
+`collectFees` **always pays the on-chain recipient** (`feeRedirects[token]` falling back to the deployer) no matter who calls, so the project's key must derive that wallet — verified at boot, live claiming disabled (loudly) otherwise. Claimable is read by simulating `collectFees` via `eth_call`.
 
-Claimable amounts are read by **simulating** `collectFees` via `eth_call` — no state change, returns the gross `(amount0, amount1)`.
+## Architecture
 
-## Cycle (every `INTERVAL_MINUTES`)
+```
+src/
+  config.ts      global env config (PORT, DRY_RUN master, ADMIN_PASSWORD, KEY_SECRET, DATA_DIR, gas)
+  projects.ts    projects.json loader → per-project clients/sender/caps (${ENV_VAR} interpolation)
+  keyvault.ts    AES-256-GCM encrypted key store (data/keys.json, scrypt(KEY_SECRET))
+  send.ts        per-project allowlisted sender: manual nonce + same-nonce gas-bump resend
+  engine/        claim | holders | swap | airdrop | rounds | journal (JSONL) | events (bus)
+  server/        auth (session cookie + login rate limit) | api | ws hub | http
+panel/           no-build static console: index.html, app.js, style.css, ws.js
+```
 
-1. **CLAIM** — simulate `collectFees`; if the net WETH share ≥ `CLAIM_MIN_ETH`, send the real claim.
-2. **UNWRAP** — `WETH.withdraw` the wallet's entire WETH balance (leftovers self-heal).
-3. **FORWARD ETH** — `(balance − GAS_RESERVE_ETH)`, capped at `MAX_FORWARD_ETH`: `TREASURY_PCT`% → `TREASURY_WALLET`, remainder → `KUMO_WALLET` (defaults: 0/100, all to kumo).
-4. **FORWARD TOKEN** — entire token balance → `TREASURY_WALLET`.
+Security model:
+- `ADMIN_PASSWORD` required to boot; session cookie (httpOnly, SameSite=Lax, Secure behind https); login rate-limited (5 fails → 15 min lockout); every `/api/*` route and the ws handshake check the session.
+- Sends are **hard-allowlisted** per project: locker, WETH, token, treasury, kumo, router — plus, only while a round executes, that round's frozen recipient set. There is no free-form send endpoint.
+- Caps: `maxRoundEth`, `maxAirdropRecipients`, `maxForwardEth`, `gasReserveEth` per project.
+- `DRY_RUN=true` (default) is a master switch: every action logs what it would do, sends nothing, regardless of panel flags.
+- Imported keys: encrypted at rest (AES-256-GCM via `KEY_SECRET`), never logged, never returned to the client — only the derived address. Env-var keys remain the primary path (`keyRef: "env:PRIVATE_KEY"`).
 
-Safety: sends are hard-allowlisted to {locker, WETH, token, treasury, kumo} — nothing else can ever be a tx target. `DRY_RUN=true` (the default) does every read and logs exactly what it *would* send. Every action lands in the append-only journal `data/journal.jsonl`, served at `GET /stats` and `GET /log`.
+## Rounds
 
-## Run
+`[ TRIGGER ROUND ]` = plan → confirm → execute:
+1. **plan** freezes the recipient set (latest snapshot, minBalance/topN filters) and exact per-recipient amounts, quotes the optional buyback, estimates gas, enforces caps — returned to the confirm modal.
+2. **execute** re-validates (plans expire after 10 min, single-use), optionally buys the token with the ETH budget (actual swap output re-split, not the quote), then batch-sends with per-recipient failure isolation. Live progress streams over the ws feed; every tx lands in the append-only journal.
+
+## Run locally
 
 ```bash
 npm install
-cp .env.example .env   # fill in PRIVATE_KEY, TOKEN_ADDRESS, TREASURY_WALLET, KUMO_WALLET
-npm run dev            # DRY_RUN by default
+cp .env.example .env   # fill in at minimum ADMIN_PASSWORD + the pons project vars
+npm run dev            # panel on http://localhost:8787, DRY_RUN by default
 ```
 
-## Test plan
+## Deploy
 
-1. **Dry run (works pre-launch too):** `DRY_RUN=true` with any live pons token as `TOKEN_ADDRESS` and a throwaway key — verify locker resolution, recipient detection, real claimable numbers, and the planned txs in the log + `/stats`.
-2. **Dry run against your real token** after launch — confirm `recipientOk: true` in `/stats`.
-3. **First live run:** `DRY_RUN=false`, `CLAIM_MIN_ETH=0.0001` — verify on [Blockscout](https://robinhoodchain.blockscout.com): `FeesClaimed` event on the locker, WETH `Withdrawal`, ETH arriving at kumo, token transfer to treasury.
-4. Raise thresholds, deploy to Render (`render.yaml` boots with `DRY_RUN=true` — flip it in the dashboard after checking logs).
+Railway — see **RAILWAY.md** for the click-by-click (Dockerfile build, volume at `/data`, env vars, domain).
 
 ## Endpoints
 
-- `GET /health`
-- `GET /stats` — journal totals + live config (recipient, `recipientOk`, dryRun, locker generation…)
-- `GET /log?limit=100` — newest journal entries first
+`GET /health` (public) · panel at `/` · ws at `/ws` · REST under `/api/*` (session-gated): projects, status, claim, snapshot, holders, rounds plan/execute, journal, stats, keys.

@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ops-panel</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="login-view">
+    <div id="login-box" class="box">
+      <h2>OPS-PANEL // AUTH</h2>
+      <form id="login-form">
+        <input id="login-password" type="password" placeholder="admin password" autocomplete="current-password" autofocus />
+        <button class="action" type="submit">[ LOG IN ]</button>
+      </form>
+      <div id="login-error"></div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app-view" class="hidden">
+    <header>
+      <h1>ops-panel</h1>
+      <select id="project-select"></select>
+      <span id="master-dry" class="badge warn hidden">MASTER DRY RUN</span>
+      <span class="spacer"></span>
+      <span id="ws-status">ws: connecting</span>
+      <button id="logout-btn" class="action" style="margin:0">[ LOGOUT ]</button>
+    </header>
+
+    <nav>
+      <button data-tab="dashboard" class="active">Dashboard</button>
+      <button data-tab="holders">Holders</button>
+      <button data-tab="rounds">Rounds</button>
+      <button data-tab="keys">Keys</button>
+    </nav>
+
+    <main>
+      <!-- DASHBOARD -->
+      <section id="tab-dashboard" class="tab active">
+        <div class="grid">
+          <div class="box stat">
+            <h2>ETH balance</h2>
+            <div class="value accent" id="d-eth">—</div>
+          </div>
+          <div class="box stat">
+            <h2>WETH balance</h2>
+            <div class="value" id="d-weth">—</div>
+          </div>
+          <div class="box stat">
+            <h2><span id="d-token-sym">TOKEN</span> balance</h2>
+            <div class="value" id="d-token">—</div>
+          </div>
+          <div class="box stat">
+            <h2>Claimable (net)</h2>
+            <div class="value amber" id="d-claimable">—</div>
+          </div>
+        </div>
+
+        <div class="box">
+          <h2>Wallet / claim state</h2>
+          <div class="kv" id="d-info"></div>
+          <div>
+            <button class="action" id="btn-claim-dry">[ FORCE FEE CLAIM — DRY RUN ]</button>
+            <button class="action danger" id="btn-claim-live">[ FORCE FEE CLAIM — LIVE ]</button>
+          </div>
+        </div>
+
+        <div class="box">
+          <h2>Totals (live only)</h2>
+          <div class="kv" id="d-stats"></div>
+        </div>
+
+        <div class="box">
+          <h2>Live activity feed</h2>
+          <div id="feed"></div>
+        </div>
+      </section>
+
+      <!-- HOLDERS -->
+      <section id="tab-holders" class="tab">
+        <div class="box">
+          <h2>Snapshot</h2>
+          <label class="field"><span>min balance (raw units)</span><input id="h-min" type="text" placeholder="0" /></label>
+          <label class="field"><span>top N (blank = all)</span><input id="h-topn" type="text" placeholder="" /></label>
+          <button class="action" id="btn-snapshot">[ SNAPSHOT ]</button>
+          <button class="action" id="btn-holders-refresh">[ REFRESH VIEW ]</button>
+          <div class="dim" id="h-info"></div>
+        </div>
+        <div class="box">
+          <h2>Holders <span id="h-count" class="dim"></span></h2>
+          <table>
+            <thead><tr><th>#</th><th>address</th><th>balance</th><th>share</th></tr></thead>
+            <tbody id="h-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ROUNDS -->
+      <section id="tab-rounds" class="tab">
+        <div class="box">
+          <h2>Trigger round</h2>
+          <label class="field"><span>mode</span>
+            <select id="r-mode">
+              <option value="eth">airdrop ETH</option>
+              <option value="buyback">buyback token &rarr; airdrop</option>
+              <option value="token">airdrop token from wallet</option>
+            </select>
+          </label>
+          <label class="field" id="r-budget-field"><span>budget (ETH)</span><input id="r-budget" type="text" placeholder="0.01" /></label>
+          <label class="field hidden" id="r-tokenamt-field"><span>token amount (raw units)</span><input id="r-tokenamt" type="text" /></label>
+          <label class="field"><span>distribution</span>
+            <select id="r-dist">
+              <option value="pro-rata">pro-rata</option>
+              <option value="flat">flat</option>
+            </select>
+          </label>
+          <label class="field"><span>top N (blank = all)</span><input id="r-topn" type="text" /></label>
+          <label class="field"><span>min balance (raw units)</span><input id="r-min" type="text" /></label>
+          <div>
+            <button class="action" id="btn-round-dry">[ PLAN ROUND — DRY RUN ]</button>
+            <button class="action danger" id="btn-round-live">[ PLAN ROUND — LIVE ]</button>
+          </div>
+        </div>
+        <div class="box">
+          <h2>Round history</h2>
+          <table>
+            <thead><tr><th>time</th><th>mode</th><th>asset</th><th>recipients</th><th>amount</th><th>failed</th><th>dry</th><th>tx</th></tr></thead>
+            <tbody id="r-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- KEYS -->
+      <section id="tab-keys" class="tab">
+        <div class="box">
+          <h2>Import key (encrypted at rest — AES-256-GCM)</h2>
+          <label class="field"><span>name</span><input id="k-name" type="text" placeholder="deployer" /></label>
+          <label class="field"><span>private key</span><input id="k-priv" type="password" placeholder="0x…" autocomplete="off" /></label>
+          <button class="action" id="btn-key-import">[ IMPORT ]</button>
+          <div id="k-result" class="dim"></div>
+          <div class="dim">The key is encrypted with KEY_SECRET and never displayed or returned again — only the derived address below. Reference it from projects.json as "vault:&lt;id&gt;".</div>
+        </div>
+        <div class="box">
+          <h2>Stored keys</h2>
+          <table>
+            <thead><tr><th>name</th><th>derived address</th><th>id (for keyRef)</th><th>created</th></tr></thead>
+            <tbody id="k-rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- CONFIRM MODAL -->
+  <div id="modal-overlay">
+    <div id="modal">
+      <h3 id="modal-title">CONFIRM</h3>
+      <div id="modal-body"></div>
+      <div style="margin-top:14px">
+        <button class="action" id="modal-cancel">[ CANCEL ]</button>
+        <button class="action danger" id="modal-confirm">[ CONFIRM ]</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
