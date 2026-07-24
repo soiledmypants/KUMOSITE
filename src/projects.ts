@@ -4,13 +4,14 @@ import { createPublicClient, createWalletClient, defineChain, http, parseEther }
 import { privateKeyToAccount } from "viem/accounts";
 import { addr, dataPath } from "./config.js";
 import { decryptKey } from "./keyvault.js";
+import { getOverride, type ProjectOverride } from "./overrides.js";
 import { makeSender, type PC, type Sender, type WC } from "./send.js";
 
 /** Verified Uniswap v3 periphery on Robinhood Chain (defaults; overridable per project). */
 const RHC_SWAP_ROUTER_02 = "0xcaf681a66d020601342297493863e78c959e5cb2";
 const RHC_QUOTER_V2 = "0x33e885ed0ec9bf04ecfb19341582aadcb4c8a9e7";
 
-interface RawProject {
+export interface RawProject {
   id: string;
   name: string;
   chainId: number;
@@ -190,7 +191,9 @@ function buildRuntime(raw: RawProject): ProjectRuntime {
       botAddress: account.address,
       explorerTx,
     }),
-    holdersDbPath: dataPath(`holders-${id}.db`),
+    // token-scoped: switching the CA (panel config) automatically starts a
+    // fresh holder index instead of mixing balances of two different tokens.
+    holdersDbPath: dataPath(`holders-${id}-${tokenAddress.toLowerCase().slice(2, 10)}.db`),
     explorerTx,
   };
 
@@ -204,8 +207,28 @@ function buildRuntime(raw: RawProject): ProjectRuntime {
   return p;
 }
 
-/** Load + validate projects.json (PROJECTS_FILE env overrides the path). */
-export function loadProjects(): ProjectRuntime[] {
+/** Panel overrides (persisted on the data volume) win over projects.json/env. */
+function applyOverride(raw: RawProject, o: ProjectOverride): RawProject {
+  const merged: RawProject = { ...raw };
+  if (o.tokenAddress) merged.tokenAddress = o.tokenAddress;
+  if (o.treasuryWallet) merged.treasuryWallet = o.treasuryWallet;
+  if (o.kumoWallet !== undefined) merged.kumoWallet = o.kumoWallet;
+  if (o.treasuryPct !== undefined) merged.treasuryPct = o.treasuryPct;
+  if (o.keyRef) merged.keyRef = o.keyRef;
+  if (o.claimEnabled !== undefined || o.claimMinEth || o.claimIntervalMinutes !== undefined) {
+    merged.claim = { ...raw.claim };
+    if (o.claimEnabled !== undefined) merged.claim.enabled = o.claimEnabled;
+    if (o.claimMinEth) merged.claim.claimMinEth = o.claimMinEth;
+    if (o.claimIntervalMinutes !== undefined) merged.claim.intervalMinutes = o.claimIntervalMinutes;
+  }
+  if (o.holdersStartBlock) {
+    merged.holders = { ...raw.holders, startBlock: o.holdersStartBlock };
+  }
+  return merged;
+}
+
+/** Interpolated projects.json entries, before overrides. */
+export function loadRawProjects(): RawProject[] {
   const path = resolve(process.cwd(), process.env.PROJECTS_FILE ?? "projects.json");
   const parsed = interpolate(
     JSON.parse(readFileSync(path, "utf8")) as { projects: RawProject[] },
@@ -213,13 +236,29 @@ export function loadProjects(): ProjectRuntime[] {
   if (!parsed.projects || parsed.projects.length === 0) {
     throw new Error(`no projects defined in ${path}`);
   }
+  return parsed.projects;
+}
+
+/** Load + validate projects.json with panel overrides applied. */
+export function loadProjects(): ProjectRuntime[] {
   const seen = new Set<string>();
-  return parsed.projects.map((raw) => {
+  return loadRawProjects().map((raw) => {
     // buildRuntime resolves keyRefs eagerly, so a vault: ref without KEY_SECRET
     // fails right here at boot with keyvault's clear error message.
-    const p = buildRuntime(raw);
+    const p = buildRuntime(applyOverride(raw, getOverride(raw.id ?? "")));
     if (seen.has(p.id)) throw new Error(`duplicate project id "${p.id}"`);
     seen.add(p.id);
     return p;
   });
+}
+
+/**
+ * Rebuild one project's runtime from projects.json + a candidate override.
+ * Throws (without side effects) if the result is invalid — callers persist the
+ * override and swap the runtime in only after this succeeds.
+ */
+export function rebuildProject(id: string, override: ProjectOverride): ProjectRuntime {
+  const raw = loadRawProjects().find((r) => r.id === id);
+  if (!raw) throw new Error(`unknown project "${id}" in projects.json`);
+  return buildRuntime(applyOverride(raw, override));
 }

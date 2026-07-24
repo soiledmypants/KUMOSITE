@@ -12,6 +12,7 @@ export type LogType =
   | "swap"
   | "airdrop"
   | "round"
+  | "config"
   | "error";
 
 /** One journal line. True append-only JSONL — one JSON object per line. */

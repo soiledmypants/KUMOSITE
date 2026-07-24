@@ -36,6 +36,7 @@
       <button data-tab="holders">Holders</button>
       <button data-tab="rounds">Rounds</button>
       <button data-tab="keys">Keys</button>
+      <button data-tab="config">Config</button>
     </nav>
 
     <main>
@@ -63,9 +64,12 @@
         <div class="box">
           <h2>Wallet / claim state</h2>
           <div class="kv" id="d-info"></div>
+          <div class="dim" id="d-timer" style="margin:8px 0"></div>
           <div>
             <button class="action" id="btn-claim-dry">[ FORCE FEE CLAIM — DRY RUN ]</button>
             <button class="action danger" id="btn-claim-live">[ FORCE FEE CLAIM — LIVE ]</button>
+            <button class="action" id="btn-airdrop-dry">[ FORCE AIRDROP — DRY RUN ]</button>
+            <button class="action danger" id="btn-airdrop-live">[ FORCE AIRDROP — LIVE ]</button>
           </div>
         </div>
 
@@ -150,6 +154,34 @@
             <thead><tr><th>name</th><th>derived address</th><th>id (for keyRef)</th><th>created</th></tr></thead>
             <tbody id="k-rows"></tbody>
           </table>
+        </div>
+      </section>
+      <!-- CONFIG -->
+      <section id="tab-config" class="tab">
+        <div class="box">
+          <h2>Project config (applies immediately — no redeploy)</h2>
+          <div class="dim" style="margin-bottom:10px">
+            Saved values persist on the data volume and always win over Railway variables /
+            projects.json. Switching the token CA starts a fresh holder index automatically.
+            Blank fields are left unchanged.
+          </div>
+          <label class="field"><span>token CA</span><input id="c-token" type="text" placeholder="0x…" /></label>
+          <label class="field"><span>holders start block</span><input id="c-startblock" type="text" placeholder="token deploy block" /></label>
+          <label class="field"><span>treasury wallet</span><input id="c-treasury" type="text" placeholder="0x…" /></label>
+          <label class="field"><span>kumo wallet</span><input id="c-kumo" type="text" placeholder="0x… (blank only valid with 100% treasury)" /></label>
+          <label class="field"><span>treasury % (rest &rarr; kumo)</span><input id="c-pct" type="text" placeholder="0-100" /></label>
+          <label class="field"><span>key ref</span><input id="c-keyref" type="text" placeholder='env:PRIVATE_KEY or vault:<id>' /></label>
+          <label class="field"><span>claim enabled</span>
+            <select id="c-claimenabled"><option value="">(unchanged)</option><option value="true">true</option><option value="false">false</option></select>
+          </label>
+          <label class="field"><span>claim min (ETH)</span><input id="c-claimmin" type="text" placeholder="0.01" /></label>
+          <label class="field"><span>claim interval (minutes)</span><input id="c-claiminterval" type="text" placeholder="10" /></label>
+          <button class="action danger" id="btn-config-save">[ SAVE CONFIG ]</button>
+          <div id="c-result" class="dim"></div>
+        </div>
+        <div class="box">
+          <h2>Current effective config</h2>
+          <div class="kv" id="c-current"></div>
         </div>
       </section>
     </main>

@@ -30,7 +30,9 @@ interface Store {
 const stores = new Map<string, Store>();
 
 function store(p: ProjectRuntime): Store {
-  let s = stores.get(p.id);
+  // keyed by db path (not project id): a panel-side token switch changes the
+  // path, so the old token's cached store is never reused for the new token.
+  let s = stores.get(p.holdersDbPath);
   if (s) return s;
 
   const db = new Database(p.holdersDbPath);
@@ -57,7 +59,7 @@ function store(p: ProjectRuntime): Store {
       "INSERT INTO codecache (address, is_contract) VALUES (?, ?) ON CONFLICT(address) DO UPDATE SET is_contract = excluded.is_contract",
     ),
   };
-  stores.set(p.id, s);
+  stores.set(p.holdersDbPath, s);
   return s;
 }
 

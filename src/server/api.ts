@@ -1,12 +1,14 @@
 import { Router, type Request, type Response } from "express";
 import { parseAbi } from "viem";
-import { CONFIG } from "../config.js";
+import { CONFIG, addr } from "../config.js";
 import { withRetry } from "../rpc.js";
-import type { ProjectRuntime } from "../projects.js";
-import { claimCycle, readClaimable, type LockerContext } from "../engine/claim.js";
+import { rebuildProject, type ProjectRuntime } from "../projects.js";
+import { getOverride, saveOverride, type ProjectOverride } from "../overrides.js";
+import { claimCycle, readClaimable, resolveLockerContext, type LockerContext } from "../engine/claim.js";
 import { getHolders, indexInfo, sync } from "../engine/holders.js";
 import { executeRound, isBusy, planRound, type RoundSpec } from "../engine/rounds.js";
 import * as journal from "../engine/journal.js";
+import { emitEvent } from "../engine/events.js";
 import { importKey, listKeys } from "../keyvault.js";
 import { handleLogin, handleLogout, requireAuth } from "./auth.js";
 
@@ -17,10 +19,46 @@ export interface ProjectState {
   claimDisabledReason: string | null;
   claimBusy: boolean;
   tokenMeta?: { symbol: string; decimals: number };
+  /** ms epoch of the next scheduled auto claim cycle (null = scheduler off). */
+  nextClaimAt?: number | null;
+  claimTimer?: NodeJS.Timeout;
 }
 
 export interface AppState {
   projects: Map<string, ProjectState>;
+}
+
+/**
+ * Resolve the locker + recipient sanity check for a project. Used at boot and
+ * again whenever the panel changes the project's config. Sets lockerCtx and
+ * claimDisabledReason on the ProjectState.
+ */
+export async function initProjectLocker(ps: ProjectState): Promise<void> {
+  const { p } = ps;
+  ps.lockerCtx = null;
+  ps.claimDisabledReason = null;
+  if (p.lockerMode === null) return;
+  try {
+    ps.lockerCtx = await resolveLockerContext(p);
+    const recipientOk =
+      ps.lockerCtx !== null && ps.lockerCtx.recipient.toLowerCase() === p.botAddress.toLowerCase();
+    if (!recipientOk && ps.lockerCtx) {
+      const msg =
+        `fee recipient is ${ps.lockerCtx.recipient}, not the bot wallet ${p.botAddress}. ` +
+        `Run with that wallet's key or setFeeRedirect(${p.tokenAddress}, ${p.botAddress}) ` +
+        `on locker ${ps.lockerCtx.locker}.`;
+      if (CONFIG.dryRun) {
+        console.warn(`[locker] WARNING (${p.id}): ${msg}`);
+      } else {
+        ps.claimDisabledReason = msg;
+        console.error(`[locker] LIVE CLAIM DISABLED (${p.id}): ${msg}`);
+      }
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    ps.claimDisabledReason = message;
+    console.error(`[locker] resolution failed (${p.id}): ${message} — claim disabled`);
+  }
 }
 
 const ERC20_META_ABI = parseAbi([
@@ -87,6 +125,79 @@ async function tokenMeta(ps: ProjectState): Promise<{ symbol: string; decimals: 
   return ps.tokenMeta;
 }
 
+/**
+ * (Re)start a project's auto-claim loop. setTimeout chain (not setInterval) so
+ * a panel-side interval change can reschedule cleanly, and so nextClaimAt is
+ * always accurate for the dashboard countdown.
+ */
+export function scheduleClaimLoop(ps: ProjectState): void {
+  if (ps.claimTimer) clearTimeout(ps.claimTimer);
+  const intervalMs = ps.p.claim.intervalMinutes * 60_000;
+  const tick = async (): Promise<void> => {
+    ps.nextClaimAt = Date.now() + intervalMs;
+    ps.claimTimer = setTimeout(() => void tick(), intervalMs);
+    const { p } = ps; // current runtime — panel config changes apply next tick
+    if (!p.claim.enabled || !ps.lockerCtx || ps.claimBusy) return;
+    ps.claimBusy = true;
+    try {
+      // Master DRY_RUN governs scheduled cycles; claimDisabledReason blocks live sends.
+      await claimCycle(p, ps.lockerCtx, { dryRun: CONFIG.dryRun || ps.claimDisabledReason !== null });
+    } finally {
+      ps.claimBusy = false;
+    }
+  };
+  void tick();
+}
+
+/** keyRef for display: never expose env var names beyond the ref itself; vault refs are safe ids. */
+function overrideSafeKeyRef(_projectId: string, override: ProjectOverride): string {
+  return override.keyRef ?? "(from projects.json / env)";
+}
+
+/** Validate + normalize a panel config patch. Throws on anything malformed. */
+function parseConfigPatch(body: Record<string, unknown>): ProjectOverride {
+  const patch: ProjectOverride = {};
+  if (body.tokenAddress !== undefined && String(body.tokenAddress).trim() !== "") {
+    patch.tokenAddress = addr(String(body.tokenAddress));
+  }
+  if (body.treasuryWallet !== undefined && String(body.treasuryWallet).trim() !== "") {
+    patch.treasuryWallet = addr(String(body.treasuryWallet));
+  }
+  if (body.kumoWallet !== undefined) {
+    const v = String(body.kumoWallet).trim();
+    patch.kumoWallet = v ? addr(v) : "";
+  }
+  if (body.treasuryPct !== undefined && String(body.treasuryPct).trim() !== "") {
+    const n = Number(body.treasuryPct);
+    if (!Number.isInteger(n) || n < 0 || n > 100) throw new Error("treasuryPct must be an integer 0-100");
+    patch.treasuryPct = n;
+  }
+  if (body.keyRef !== undefined && String(body.keyRef).trim() !== "") {
+    const v = String(body.keyRef).trim();
+    if (!v.startsWith("env:") && !v.startsWith("vault:")) {
+      throw new Error('keyRef must be "env:VAR" or "vault:<id>" (import keys on the Keys tab)');
+    }
+    patch.keyRef = v;
+  }
+  if (body.claimEnabled !== undefined) patch.claimEnabled = body.claimEnabled === true || body.claimEnabled === "true";
+  if (body.claimMinEth !== undefined && String(body.claimMinEth).trim() !== "") {
+    const v = String(body.claimMinEth).trim();
+    if (!/^\d+(\.\d+)?$/.test(v)) throw new Error("claimMinEth must be a decimal ETH amount");
+    patch.claimMinEth = v;
+  }
+  if (body.claimIntervalMinutes !== undefined && String(body.claimIntervalMinutes).trim() !== "") {
+    const n = Number(body.claimIntervalMinutes);
+    if (!Number.isInteger(n) || n < 1 || n > 1440) throw new Error("claimIntervalMinutes must be 1-1440");
+    patch.claimIntervalMinutes = n;
+  }
+  if (body.holdersStartBlock !== undefined && String(body.holdersStartBlock).trim() !== "") {
+    const v = String(body.holdersStartBlock).trim();
+    if (!/^\d+$/.test(v)) throw new Error("holdersStartBlock must be a block number");
+    patch.holdersStartBlock = v;
+  }
+  return patch;
+}
+
 export function apiRouter(state: AppState): Router {
   const router = Router();
 
@@ -119,6 +230,74 @@ export function apiRouter(state: AppState): Router {
       })),
     });
   });
+
+  // ---- runtime-editable config (persisted on the data volume) ---------------
+  router.get("/projects/:id/config", (req, res) => {
+    const ps = getProject(state, req);
+    const { p } = ps;
+    const override = getOverride(p.id);
+    send(res, {
+      effective: {
+        tokenAddress: p.tokenAddress,
+        treasuryWallet: p.treasuryWallet,
+        kumoWallet: p.kumoWallet,
+        treasuryPct: p.treasuryPct,
+        keyRef: overrideSafeKeyRef(p.id, override),
+        botAddress: p.botAddress,
+        claimEnabled: p.claim.enabled,
+        claimMinEth: (Number(p.claim.claimMinWei) / 1e18).toString(),
+        claimIntervalMinutes: p.claim.intervalMinutes,
+        holdersStartBlock: p.holders.startBlock.toString(),
+      },
+      overridden: Object.keys(override),
+      note: "changes apply immediately and persist on the volume — they always win over Railway env vars / projects.json",
+    });
+  });
+
+  router.post(
+    "/projects/:id/config",
+    wrap(async (req, res) => {
+      const ps = getProject(state, req);
+      if (ps.claimBusy || isBusy(ps.p.id)) {
+        throw new Error("busy: a claim cycle or round is running — try again in a moment");
+      }
+      const patch = parseConfigPatch(req.body ?? {});
+      if (Object.keys(patch).length === 0) throw new Error("nothing to change");
+
+      // Validate the FULL merged config first — only persist + swap on success.
+      const candidate = { ...getOverride(ps.p.id), ...patch };
+      const newP = rebuildProject(ps.p.id, candidate);
+
+      saveOverride(ps.p.id, patch);
+      const oldToken = ps.p.tokenAddress;
+      const oldInterval = ps.p.claim.intervalMinutes;
+      ps.p = newP;
+      ps.tokenMeta = undefined;
+      await initProjectLocker(ps);
+      if (newP.claim.intervalMinutes !== oldInterval) scheduleClaimLoop(ps);
+
+      const changed = Object.keys(patch).join(", ");
+      journal.append({
+        type: "config",
+        dryRun: false,
+        projectId: newP.id,
+        token: newP.tokenAddress,
+        detail: `config changed via panel: ${changed}`,
+      });
+      emitEvent("config", { changed, tokenAddress: newP.tokenAddress }, newP.id);
+      if (oldToken.toLowerCase() !== newP.tokenAddress.toLowerCase()) {
+        console.log(`[config:${newP.id}] token switched ${oldToken} -> ${newP.tokenAddress} (fresh holder index)`);
+      }
+
+      send(res, {
+        ok: true,
+        applied: patch,
+        botAddress: newP.botAddress,
+        locker: ps.lockerCtx?.locker ?? null,
+        claimDisabledReason: ps.claimDisabledReason,
+      });
+    }),
+  );
 
   router.get(
     "/projects/:id/status",
@@ -170,6 +349,8 @@ export function apiRouter(state: AppState): Router {
         claimDisabledReason: ps.claimDisabledReason,
         claimBusy: ps.claimBusy,
         roundBusy: isBusy(p.id),
+        nextClaimAt: ps.nextClaimAt ?? null,
+        claimIntervalMinutes: p.claim.intervalMinutes,
         index: indexInfo(p),
         stats: journal.computeStats(p.id),
         dryRunMaster: CONFIG.dryRun,

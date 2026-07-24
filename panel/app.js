@@ -165,6 +165,7 @@ for (const btn of document.querySelectorAll("nav button")) {
     if (btn.dataset.tab === "rounds") void loadRounds();
     if (btn.dataset.tab === "keys") void loadKeys();
     if (btn.dataset.tab === "holders") void loadHolders();
+    if (btn.dataset.tab === "config") void loadConfig();
   });
 }
 
@@ -215,6 +216,25 @@ async function loadStatus() {
     .map(([k, v]) => `<div class="k">${esc(k)}</div><div class="v">${esc(v)}</div>`)
     .join("");
 }
+
+/* next-auto-claim countdown, ticking client-side off /status timestamps */
+setInterval(() => {
+  const s = state.status;
+  const el = $("d-timer");
+  if (!el) return;
+  if (!s || !s.nextClaimAt) {
+    el.textContent = "";
+    return;
+  }
+  const ms = s.nextClaimAt - Date.now();
+  if (ms <= 0) {
+    el.textContent = "next auto claim: any moment now…";
+    return;
+  }
+  const m = Math.floor(ms / 60000);
+  const sec = Math.floor((ms % 60000) / 1000);
+  el.textContent = `next auto claim in ${m}:${String(sec).padStart(2, "0")} (every ${s.claimIntervalMinutes} min)${s.claimBusy ? " · cycle running…" : ""}`;
+}, 1000);
 
 $("btn-claim-dry").addEventListener("click", async () => {
   feedLine("force claim (dry) requested…");
@@ -345,11 +365,11 @@ function roundSpec(dryRun) {
   return spec;
 }
 
-async function planAndConfirm(dryRun) {
+async function planAndConfirm(dryRun, specOverride = null) {
   feedLine(`planning round (${dryRun ? "dry" : "LIVE"})…`);
   let plan;
   try {
-    plan = await api(`/projects/${state.current}/rounds/plan`, { method: "POST", body: roundSpec(dryRun) });
+    plan = await api(`/projects/${state.current}/rounds/plan`, { method: "POST", body: specOverride ?? roundSpec(dryRun) });
   } catch (err) {
     feedLine(esc(err.message), "error");
     return;
@@ -390,6 +410,33 @@ async function planAndConfirm(dryRun) {
 $("btn-round-dry").addEventListener("click", () => void planAndConfirm(true));
 $("btn-round-live").addEventListener("click", () => void planAndConfirm(false));
 
+/* one-click force airdrop from the dashboard: ETH in the wallet -> holders,
+   pro-rata, budget auto-sized to balance minus gas reserve (capped by maxRoundEth).
+   The plan modal still shows exact numbers before anything executes. */
+function forceAirdrop(dryRun) {
+  const s = state.status;
+  const p = currentProject();
+  if (!s || !p) return;
+  try {
+    const bal = BigInt(s.balances.eth);
+    const reserve = BigInt(p.caps.gasReserveWei);
+    const maxRound = BigInt(p.caps.maxRoundWei);
+    let budget = bal > reserve ? bal - reserve : 0n;
+    if (budget > maxRound) budget = maxRound;
+    if (budget <= 0n) {
+      feedLine("force airdrop: nothing to distribute (balance below gas reserve)", "error");
+      return;
+    }
+    const budgetEth = (Number(budget) / 1e18).toFixed(6);
+    void planAndConfirm(dryRun, { mode: "eth", distribution: "pro-rata", dryRun, budgetEth });
+  } catch (err) {
+    feedLine(esc(err.message), "error");
+  }
+}
+
+$("btn-airdrop-dry").addEventListener("click", () => forceAirdrop(true));
+$("btn-airdrop-live").addEventListener("click", () => forceAirdrop(false));
+
 /* ---------------------------------------------------------------- keys */
 
 async function loadKeys() {
@@ -416,6 +463,80 @@ $("btn-key-import").addEventListener("click", async () => {
   } catch (err) {
     $("k-result").textContent = `error: ${err.message}`;
   }
+});
+
+/* ---------------------------------------------------------------- config */
+
+async function loadConfig() {
+  if (!state.current) return;
+  try {
+    const { effective, overridden } = await api(`/projects/${state.current}/config`);
+    const mark = (k) => (overridden.includes(k) ? " · panel override" : "");
+    const rows = [
+      ["token CA", `${effective.tokenAddress}${mark("tokenAddress")}`],
+      ["holders start block", `${effective.holdersStartBlock}${mark("holdersStartBlock")}`],
+      ["treasury wallet", `${effective.treasuryWallet}${mark("treasuryWallet")}`],
+      ["kumo wallet", `${effective.kumoWallet ?? "(none)"}${mark("kumoWallet")}`],
+      ["treasury %", `${effective.treasuryPct}% (kumo gets ${100 - effective.treasuryPct}%)${mark("treasuryPct")}`],
+      ["key ref", `${effective.keyRef}${mark("keyRef")}`],
+      ["bot wallet (from key)", effective.botAddress],
+      ["claim enabled", `${effective.claimEnabled}${mark("claimEnabled")}`],
+      ["claim min", `${effective.claimMinEth} ETH${mark("claimMinEth")}`],
+      ["claim interval", `${effective.claimIntervalMinutes} min${mark("claimIntervalMinutes")}`],
+    ];
+    $("c-current").innerHTML = rows
+      .map(([k, v]) => `<div class="k">${esc(k)}</div><div class="v">${esc(v)}</div>`)
+      .join("");
+  } catch (err) {
+    feedLine(esc(err.message), "error");
+  }
+}
+
+function configPatch() {
+  const patch = {};
+  if ($("c-token").value.trim()) patch.tokenAddress = $("c-token").value.trim();
+  if ($("c-startblock").value.trim()) patch.holdersStartBlock = $("c-startblock").value.trim();
+  if ($("c-treasury").value.trim()) patch.treasuryWallet = $("c-treasury").value.trim();
+  if ($("c-kumo").value.trim()) patch.kumoWallet = $("c-kumo").value.trim();
+  if ($("c-pct").value.trim()) patch.treasuryPct = Number($("c-pct").value.trim());
+  if ($("c-keyref").value.trim()) patch.keyRef = $("c-keyref").value.trim();
+  if ($("c-claimenabled").value) patch.claimEnabled = $("c-claimenabled").value === "true";
+  if ($("c-claimmin").value.trim()) patch.claimMinEth = $("c-claimmin").value.trim();
+  if ($("c-claiminterval").value.trim()) patch.claimIntervalMinutes = Number($("c-claiminterval").value.trim());
+  return patch;
+}
+
+$("btn-config-save").addEventListener("click", () => {
+  const patch = configPatch();
+  if (Object.keys(patch).length === 0) {
+    $("c-result").textContent = "nothing to change — all fields blank";
+    return;
+  }
+  const rows = Object.entries(patch)
+    .map(([k, v]) => `<div class="k">${esc(k)}</div><div class="v">${esc(String(v))}</div>`)
+    .join("");
+  openModal(
+    "APPLY CONFIG CHANGES",
+    `<div class="kv">${rows}</div>
+     <p style="margin-top:8px">Applies immediately (next claim cycle uses the new values) and persists on the volume. Token change = fresh holder index.</p>`,
+    "[ APPLY ]",
+    async () => {
+      try {
+        const r = await api(`/projects/${state.current}/config`, { method: "POST", body: patch });
+        $("c-result").textContent = `applied: ${Object.keys(r.applied).join(", ")}${r.claimDisabledReason ? ` — NOTE: ${r.claimDisabledReason}` : ""}`;
+        for (const id of ["c-token", "c-startblock", "c-treasury", "c-kumo", "c-pct", "c-keyref", "c-claimmin", "c-claiminterval"]) $(id).value = "";
+        $("c-claimenabled").value = "";
+        feedLine(`config applied: ${Object.keys(r.applied).join(", ")}`);
+        // refresh everything that displays config-derived values
+        const { projects } = await api("/projects");
+        state.projects = projects;
+        await Promise.all([loadConfig(), loadStatus(), loadHolders()]);
+      } catch (err) {
+        $("c-result").textContent = `error: ${err.message}`;
+        feedLine(esc(err.message), "error");
+      }
+    },
+  );
 });
 
 /* ---------------------------------------------------------------- boot */
