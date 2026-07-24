@@ -295,6 +295,19 @@ export function buildServer(): express.Express {
     res.json(await keeperPlanOnce());
   }));
 
+  // remove a connected agent and its intel (cleanup for test agents)
+  app.delete("/admin/agents/:address", adminOnly, wrap(async (req, res) => {
+    const address = getAddress(String(req.params.address ?? "")).toLowerCase();
+    const existing = await db.get("SELECT address FROM agents WHERE LOWER(address) = ?", [address]);
+    if (!existing) {
+      res.json({ ok: false, line: "kumo never met that one." });
+      return;
+    }
+    await db.run("DELETE FROM intel WHERE LOWER(agent_address) = ?", [address]);
+    await db.run("DELETE FROM agents WHERE LOWER(address) = ?", [address]);
+    res.json({ ok: true, line: "kumo waved goodbye and shredded the file." });
+  }));
+
   app.use((_req, res) => {
     res.status(404).json({ error: "not found", line: "kumo looked everywhere but couldn't find that." });
   });
