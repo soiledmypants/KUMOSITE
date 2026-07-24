@@ -28,6 +28,7 @@
       <span id="master-dry" class="badge warn hidden">MASTER DRY RUN</span>
       <span class="spacer"></span>
       <span id="ws-status">ws: connecting</span>
+      <button id="autodrop-btn" class="action" style="margin:0">[ AUTODROP ]</button>
       <button id="settings-btn" class="action" style="margin:0">[ SETTINGS ]</button>
       <button id="logout-btn" class="action" style="margin:0">[ LOGOUT ]</button>
     </header>
@@ -199,6 +200,47 @@
           </div>
           <button class="action danger" id="btn-project-remove">[ REMOVE CURRENT PROJECT ]</button>
           <div id="np-remove-result" class="dim"></div>
+        </div>
+      </section>
+
+      <!-- AUTODROP — simplified: swap wallet ETH -> token -> holders. no fee claim. -->
+      <section id="view-autodrop" class="hidden">
+        <button class="action" id="btn-autodrop-back" style="margin-bottom:12px">[ &larr; BACK ]</button>
+
+        <div class="box">
+          <h2>New autodrop job</h2>
+          <div class="dim" style="margin-bottom:10px">
+            Fund the wallet with ETH however you like. Every interval: swap the ETH on Uniswap for
+            the airdrop token, send it pro-rata to holders of the hold token. Import the wallet's
+            key in SETTINGS first, then use vault:&lt;id&gt; here. Master DRY RUN applies — scheduled
+            runs stay dry until you flip it off.
+          </div>
+          <label class="field"><span>id (short slug)</span><input id="ad-id" type="text" placeholder="mydrop" /></label>
+          <label class="field"><span>wallet key ref</span><input id="ad-keyref" type="text" placeholder="vault:&lt;id&gt; or env:VAR" /></label>
+          <label class="field"><span>airdrop token CA (bought &amp; sent)</span><input id="ad-drop" type="text" placeholder="0x…" /></label>
+          <label class="field"><span>hold token CA (who qualifies)</span><input id="ad-hold" type="text" placeholder="0x…" /></label>
+          <label class="field"><span>min holding (whole units)</span><input id="ad-min" type="text" placeholder="0" /></label>
+          <label class="field"><span>hold token deploy block</span><input id="ad-startblock" type="text" placeholder="e.g. 18300000" /></label>
+          <label class="field"><span>interval (minutes)</span><input id="ad-interval" type="text" placeholder="10" /></label>
+          <label class="field"><span>min ETH per round</span><input id="ad-mineth" type="text" placeholder="0.005" /></label>
+          <label class="field"><span>pool fee tier</span>
+            <select id="ad-feetier">
+              <option value="10000">1% (pons tokens)</option>
+              <option value="3000">0.3%</option>
+              <option value="500">0.05%</option>
+            </select>
+          </label>
+          <label class="field"><span>max recipients</span><input id="ad-maxrec" type="text" placeholder="300" /></label>
+          <button class="action" id="btn-autodrop-add">[ CREATE JOB ]</button>
+          <div id="ad-result" class="dim"></div>
+        </div>
+
+        <div class="box">
+          <h2>Jobs</h2>
+          <table>
+            <thead><tr><th>id</th><th>wallet</th><th>airdrop token</th><th>hold token</th><th>min hold</th><th>every</th><th>status</th><th>last result</th><th>actions</th></tr></thead>
+            <tbody id="ad-rows"></tbody>
+          </table>
         </div>
       </section>
     </main>

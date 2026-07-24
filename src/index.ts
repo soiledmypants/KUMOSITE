@@ -3,6 +3,7 @@ import { CONFIG } from "./config.js";
 import { loadProjects } from "./projects.js";
 import { startServer } from "./server/http.js";
 import { initProjectLocker, scheduleClaimLoop, type AppState, type ProjectState } from "./server/api.js";
+import { initAutodrop } from "./engine/autodrop.js";
 
 async function main(): Promise<void> {
   console.log("[boot] ops-panel starting");
@@ -34,6 +35,7 @@ async function main(): Promise<void> {
   }
 
   startServer(state);
+  initAutodrop();
 
   // Claim schedulers (rounds are manual-only from the panel). Each loop reads
   // ps.p FRESH every tick — panel config changes (new token CA, wallets, key,

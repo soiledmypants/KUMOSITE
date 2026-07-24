@@ -5,6 +5,7 @@ import { withRetry } from "../rpc.js";
 import { buildRuntime, rebuildProject, RHC_DEFAULTS, type ProjectRuntime, type RawProject } from "../projects.js";
 import { getOverride, saveOverride, type ProjectOverride } from "../overrides.js";
 import { deleteExtraProject, isExtraProject, saveExtraProject } from "../extra-projects.js";
+import * as autodrop from "../engine/autodrop.js";
 import { claimCycle, readClaimable, resolveLockerContext, type LockerContext } from "../engine/claim.js";
 import { getHolders, indexInfo, sync } from "../engine/holders.js";
 import { executeRound, isBusy, planRound, type RoundSpec } from "../engine/rounds.js";
@@ -489,6 +490,41 @@ export function apiRouter(state: AppState): Router {
     const ps = getProject(state, req);
     send(res, { rounds: journal.readRounds(ps.p.id) });
   });
+
+  // ---- autodrop (simplified: swap ETH -> token -> holders; no fee claim) ------
+  router.get("/autodrop", (_req, res) => send(res, { dryRunMaster: CONFIG.dryRun, jobs: autodrop.listJobs() }));
+
+  router.post(
+    "/autodrop",
+    wrap(async (req, res) => {
+      const r = autodrop.createJob((req.body ?? {}) as Record<string, unknown>);
+      send(res, { ok: true, ...r });
+    }),
+  );
+
+  router.post(
+    "/autodrop/:id/run",
+    wrap(async (req, res) => {
+      const dryRun = req.body?.dryRun !== false; // default dry — live requires explicit false
+      send(res, await autodrop.runJobOnce(req.params.id ?? "", { dryRun }));
+    }),
+  );
+
+  router.post(
+    "/autodrop/:id/toggle",
+    wrap(async (req, res) => {
+      autodrop.setJobEnabled(req.params.id ?? "", req.body?.enabled === true);
+      send(res, { ok: true });
+    }),
+  );
+
+  router.delete(
+    "/autodrop/:id",
+    wrap(async (req, res) => {
+      autodrop.deleteJob(req.params.id ?? "");
+      send(res, { ok: true });
+    }),
+  );
 
   // ---- journal / stats --------------------------------------------------------
   router.get("/journal", (req, res) => {

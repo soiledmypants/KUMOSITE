@@ -156,9 +156,12 @@ $("modal-confirm").addEventListener("click", async () => {
 
 /* ---------------------------------------------------------------- views */
 
+function showView(id) {
+  for (const v of ["view-main", "view-settings", "view-autodrop"]) $(v).classList.toggle("hidden", v !== id);
+}
+
 function openSettings() {
-  $("view-main").classList.add("hidden");
-  $("view-settings").classList.remove("hidden");
+  showView("view-settings");
   void loadConfig();
   void loadKeys();
 }
@@ -167,8 +170,17 @@ $("settings-btn").addEventListener("click", openSettings);
 $("btn-open-settings").addEventListener("click", openSettings);
 
 $("btn-settings-back").addEventListener("click", () => {
-  $("view-settings").classList.add("hidden");
-  $("view-main").classList.remove("hidden");
+  showView("view-main");
+  void loadStatus();
+});
+
+$("autodrop-btn").addEventListener("click", () => {
+  showView("view-autodrop");
+  void loadAutodrop();
+});
+
+$("btn-autodrop-back").addEventListener("click", () => {
+  showView("view-main");
   void loadStatus();
 });
 
@@ -552,6 +564,108 @@ $("btn-config-save").addEventListener("click", () => {
       }
     },
   );
+});
+
+/* ---------------------------------------------------------------- autodrop */
+
+async function loadAutodrop() {
+  try {
+    const { jobs } = await api("/autodrop");
+    $("ad-rows").innerHTML = jobs
+      .map((j) => {
+        const next = j.nextRunAt ? Math.max(0, Math.round((j.nextRunAt - Date.now()) / 60000)) : null;
+        const status = j.busy ? "running…" : j.enabled ? `on${next !== null ? ` · next ~${next}m` : ""}` : "off";
+        return `<tr>
+          <td>${esc(j.id)}</td>
+          <td>${esc(short(j.wallet))}</td>
+          <td>${esc(short(j.airdropToken))}</td>
+          <td>${esc(short(j.holdToken))}</td>
+          <td>${esc(j.minHolding)}</td>
+          <td>${j.intervalMinutes}m</td>
+          <td>${esc(status)}</td>
+          <td class="dim">${esc(j.lastResult)}</td>
+          <td>
+            <button class="action" data-ad="dry" data-id="${esc(j.id)}">[ DRY ]</button>
+            <button class="action danger" data-ad="live" data-id="${esc(j.id)}">[ LIVE ]</button>
+            <button class="action" data-ad="toggle" data-id="${esc(j.id)}" data-enabled="${j.enabled}">[ ${j.enabled ? "OFF" : "ON"} ]</button>
+            <button class="action danger" data-ad="delete" data-id="${esc(j.id)}">[ X ]</button>
+          </td>
+        </tr>`;
+      })
+      .join("");
+  } catch (err) {
+    feedLine(esc(err.message), "error");
+  }
+}
+
+$("ad-rows").addEventListener("click", async (e) => {
+  const btn = e.target.closest("button[data-ad]");
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.ad;
+  try {
+    if (action === "dry" || action === "live") {
+      const dryRun = action === "dry";
+      const go = async () => {
+        feedLine(`autodrop ${id}: running (${dryRun ? "dry" : "LIVE"})…`);
+        const r = await api(`/autodrop/${id}/run`, { method: "POST", body: { dryRun } });
+        feedLine(`autodrop ${id}: ${r.phase} — ${r.detail}`, r.phase === "error" ? "error" : "");
+        if (r.top?.length) {
+          for (const t of r.top) feedLine(`  plan: ${short(t.address)} gets ${t.amount} ${r.airdropSymbol ?? ""}`);
+        }
+        await loadAutodrop();
+      };
+      if (dryRun) await go();
+      else {
+        openModal(
+          "AUTODROP — LIVE RUN",
+          `<p>Swaps the wallet's ETH on Uniswap and sends the tokens to holders. Real transactions${state.dryRunMaster ? " (master DRY RUN is ON — this will still be dry)" : ""}.</p>`,
+          "[ RUN LIVE ]",
+          go,
+        );
+      }
+    } else if (action === "toggle") {
+      await api(`/autodrop/${id}/toggle`, { method: "POST", body: { enabled: btn.dataset.enabled !== "true" } });
+      await loadAutodrop();
+    } else if (action === "delete") {
+      openModal(
+        "REMOVE AUTODROP JOB",
+        `<p>Removes job "${esc(id)}" and stops its loop. Nothing on-chain changes.</p>`,
+        "[ REMOVE ]",
+        async () => {
+          await api(`/autodrop/${id}`, { method: "DELETE" });
+          feedLine(`autodrop job removed: ${id}`);
+          await loadAutodrop();
+        },
+      );
+    }
+  } catch (err) {
+    feedLine(esc(err.message), "error");
+  }
+});
+
+$("btn-autodrop-add").addEventListener("click", async () => {
+  const body = {
+    id: $("ad-id").value.trim(),
+    keyRef: $("ad-keyref").value.trim(),
+    airdropToken: $("ad-drop").value.trim(),
+    holdToken: $("ad-hold").value.trim(),
+    minHolding: $("ad-min").value.trim(),
+    holdersStartBlock: $("ad-startblock").value.trim(),
+    intervalMinutes: Number($("ad-interval").value.trim() || "10"),
+    minEthPerRound: $("ad-mineth").value.trim(),
+    feeTier: Number($("ad-feetier").value),
+    maxRecipients: Number($("ad-maxrec").value.trim() || "300"),
+  };
+  try {
+    const r = await api("/autodrop", { method: "POST", body });
+    $("ad-result").textContent = `created "${r.id}" — wallet ${r.wallet}. fund it with ETH and it does the rest.`;
+    for (const id of ["ad-id", "ad-keyref", "ad-drop", "ad-hold", "ad-min", "ad-startblock", "ad-interval", "ad-mineth", "ad-maxrec"]) $(id).value = "";
+    feedLine(`autodrop job created: ${r.id}`);
+    await loadAutodrop();
+  } catch (err) {
+    $("ad-result").textContent = `error: ${err.message}`;
+  }
 });
 
 /* ---------------------------------------------------------------- add / remove projects */
