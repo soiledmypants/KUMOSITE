@@ -28,20 +28,13 @@
       <span id="master-dry" class="badge warn hidden">MASTER DRY RUN</span>
       <span class="spacer"></span>
       <span id="ws-status">ws: connecting</span>
+      <button id="settings-btn" class="action" style="margin:0">[ SETTINGS ]</button>
       <button id="logout-btn" class="action" style="margin:0">[ LOGOUT ]</button>
     </header>
 
-    <nav>
-      <button data-tab="dashboard" class="active">Dashboard</button>
-      <button data-tab="holders">Holders</button>
-      <button data-tab="rounds">Rounds</button>
-      <button data-tab="keys">Keys</button>
-      <button data-tab="config">Config</button>
-    </nav>
-
     <main>
-      <!-- DASHBOARD -->
-      <section id="tab-dashboard" class="tab active">
+      <!-- MAIN — everything on one screen -->
+      <section id="view-main">
         <div class="grid">
           <div class="box stat">
             <h2>ETH balance</h2>
@@ -74,37 +67,28 @@
         </div>
 
         <div class="box">
+          <h2>Console</h2>
+          <div id="feed"></div>
+        </div>
+
+        <div class="box">
           <h2>Totals (live only)</h2>
           <div class="kv" id="d-stats"></div>
         </div>
 
         <div class="box">
-          <h2>Live activity feed</h2>
-          <div id="feed"></div>
-        </div>
-      </section>
-
-      <!-- HOLDERS -->
-      <section id="tab-holders" class="tab">
-        <div class="box">
-          <h2>Snapshot</h2>
+          <h2>Holders <span id="h-count" class="dim"></span></h2>
           <label class="field"><span>min balance (raw units)</span><input id="h-min" type="text" placeholder="0" /></label>
           <label class="field"><span>top N (blank = all)</span><input id="h-topn" type="text" placeholder="" /></label>
           <button class="action" id="btn-snapshot">[ SNAPSHOT ]</button>
           <button class="action" id="btn-holders-refresh">[ REFRESH VIEW ]</button>
           <div class="dim" id="h-info"></div>
-        </div>
-        <div class="box">
-          <h2>Holders <span id="h-count" class="dim"></span></h2>
           <table>
             <thead><tr><th>#</th><th>address</th><th>balance</th><th>share</th></tr></thead>
             <tbody id="h-rows"></tbody>
           </table>
         </div>
-      </section>
 
-      <!-- ROUNDS -->
-      <section id="tab-rounds" class="tab">
         <div class="box">
           <h2>Trigger round</h2>
           <label class="field"><span>mode</span>
@@ -129,6 +113,7 @@
             <button class="action danger" id="btn-round-live">[ PLAN ROUND — LIVE ]</button>
           </div>
         </div>
+
         <div class="box">
           <h2>Round history</h2>
           <table>
@@ -138,26 +123,10 @@
         </div>
       </section>
 
-      <!-- KEYS -->
-      <section id="tab-keys" class="tab">
-        <div class="box">
-          <h2>Import key (encrypted at rest — AES-256-GCM)</h2>
-          <label class="field"><span>name</span><input id="k-name" type="text" placeholder="deployer" /></label>
-          <label class="field"><span>private key</span><input id="k-priv" type="password" placeholder="0x…" autocomplete="off" /></label>
-          <button class="action" id="btn-key-import">[ IMPORT ]</button>
-          <div id="k-result" class="dim"></div>
-          <div class="dim">The key is encrypted with KEY_SECRET and never displayed or returned again — only the derived address below. Reference it from projects.json as "vault:&lt;id&gt;".</div>
-        </div>
-        <div class="box">
-          <h2>Stored keys</h2>
-          <table>
-            <thead><tr><th>name</th><th>derived address</th><th>id (for keyRef)</th><th>created</th></tr></thead>
-            <tbody id="k-rows"></tbody>
-          </table>
-        </div>
-      </section>
-      <!-- CONFIG -->
-      <section id="tab-config" class="tab">
+      <!-- SETTINGS — config + keys, behind the header button -->
+      <section id="view-settings" class="hidden">
+        <button class="action" id="btn-settings-back" style="margin-bottom:12px">[ &larr; BACK ]</button>
+
         <div class="box">
           <h2>Project config (applies immediately — no redeploy)</h2>
           <div class="dim" style="margin-bottom:10px">
@@ -170,7 +139,7 @@
           <label class="field"><span>treasury wallet</span><input id="c-treasury" type="text" placeholder="0x…" /></label>
           <label class="field"><span>kumo wallet</span><input id="c-kumo" type="text" placeholder="0x… (blank only valid with 100% treasury)" /></label>
           <label class="field"><span>treasury % (rest &rarr; kumo)</span><input id="c-pct" type="text" placeholder="0-100" /></label>
-          <label class="field"><span>key ref</span><input id="c-keyref" type="text" placeholder='env:PRIVATE_KEY or vault:<id>' /></label>
+          <label class="field"><span>key ref</span><input id="c-keyref" type="text" placeholder="env:PRIVATE_KEY or vault:&lt;id&gt;" /></label>
           <label class="field"><span>claim enabled</span>
             <select id="c-claimenabled"><option value="">(unchanged)</option><option value="true">true</option><option value="false">false</option></select>
           </label>
@@ -179,9 +148,27 @@
           <button class="action danger" id="btn-config-save">[ SAVE CONFIG ]</button>
           <div id="c-result" class="dim"></div>
         </div>
+
         <div class="box">
           <h2>Current effective config</h2>
           <div class="kv" id="c-current"></div>
+        </div>
+
+        <div class="box">
+          <h2>Import key (encrypted at rest — AES-256-GCM)</h2>
+          <label class="field"><span>name</span><input id="k-name" type="text" placeholder="deployer" /></label>
+          <label class="field"><span>private key</span><input id="k-priv" type="password" placeholder="0x…" autocomplete="off" /></label>
+          <button class="action" id="btn-key-import">[ IMPORT ]</button>
+          <div id="k-result" class="dim"></div>
+          <div class="dim">The key is encrypted with KEY_SECRET and never displayed or returned again — only the derived address below. Use it as key ref "vault:&lt;id&gt;" in the config above.</div>
+        </div>
+
+        <div class="box">
+          <h2>Stored keys</h2>
+          <table>
+            <thead><tr><th>name</th><th>derived address</th><th>id (for keyRef)</th><th>created</th></tr></thead>
+            <tbody id="k-rows"></tbody>
+          </table>
         </div>
       </section>
     </main>

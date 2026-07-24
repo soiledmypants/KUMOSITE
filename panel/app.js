@@ -154,20 +154,20 @@ $("modal-confirm").addEventListener("click", async () => {
   if (fn) await fn();
 });
 
-/* ---------------------------------------------------------------- tabs */
+/* ---------------------------------------------------------------- views */
 
-for (const btn of document.querySelectorAll("nav button")) {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll("nav button").forEach((b) => b.classList.remove("active"));
-    document.querySelectorAll("section.tab").forEach((s) => s.classList.remove("active"));
-    btn.classList.add("active");
-    $(`tab-${btn.dataset.tab}`).classList.add("active");
-    if (btn.dataset.tab === "rounds") void loadRounds();
-    if (btn.dataset.tab === "keys") void loadKeys();
-    if (btn.dataset.tab === "holders") void loadHolders();
-    if (btn.dataset.tab === "config") void loadConfig();
-  });
-}
+$("settings-btn").addEventListener("click", () => {
+  $("view-main").classList.add("hidden");
+  $("view-settings").classList.remove("hidden");
+  void loadConfig();
+  void loadKeys();
+});
+
+$("btn-settings-back").addEventListener("click", () => {
+  $("view-settings").classList.add("hidden");
+  $("view-main").classList.remove("hidden");
+  void loadStatus();
+});
 
 /* ---------------------------------------------------------------- dashboard */
 
