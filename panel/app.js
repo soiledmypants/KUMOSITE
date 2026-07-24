@@ -156,12 +156,15 @@ $("modal-confirm").addEventListener("click", async () => {
 
 /* ---------------------------------------------------------------- views */
 
-$("settings-btn").addEventListener("click", () => {
+function openSettings() {
   $("view-main").classList.add("hidden");
   $("view-settings").classList.remove("hidden");
   void loadConfig();
   void loadKeys();
-});
+}
+
+$("settings-btn").addEventListener("click", openSettings);
+$("btn-open-settings").addEventListener("click", openSettings);
 
 $("btn-settings-back").addEventListener("click", () => {
   $("view-settings").classList.add("hidden");
@@ -487,6 +490,18 @@ async function loadConfig() {
     $("c-current").innerHTML = rows
       .map(([k, v]) => `<div class="k">${esc(k)}</div><div class="v">${esc(v)}</div>`)
       .join("");
+
+    // pre-fill the form with the live values so editing is in-place, not guesswork
+    $("c-token").value = effective.tokenAddress ?? "";
+    $("c-startblock").value = effective.holdersStartBlock ?? "";
+    $("c-treasury").value = effective.treasuryWallet ?? "";
+    $("c-kumo").value = effective.kumoWallet ?? "";
+    $("c-pct").value = String(effective.treasuryPct ?? "");
+    // keyRef: only prefill a real ref — the "(from projects.json / env)" label isn't one
+    $("c-keyref").value = /^(env:|vault:)/.test(effective.keyRef ?? "") ? effective.keyRef : "";
+    $("c-claimenabled").value = String(effective.claimEnabled);
+    $("c-claimmin").value = effective.claimMinEth ?? "";
+    $("c-claiminterval").value = String(effective.claimIntervalMinutes ?? "");
   } catch (err) {
     feedLine(esc(err.message), "error");
   }
