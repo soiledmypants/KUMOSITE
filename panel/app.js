@@ -539,6 +539,69 @@ $("btn-config-save").addEventListener("click", () => {
   );
 });
 
+/* ---------------------------------------------------------------- add / remove projects */
+
+async function refreshProjects(selectId = null) {
+  const { projects } = await api("/projects");
+  state.projects = projects;
+  $("project-select").innerHTML = projects
+    .map((p) => `<option value="${esc(p.id)}">${esc(p.name)} (${esc(p.id)})</option>`)
+    .join("");
+  if (selectId && projects.some((p) => p.id === selectId)) state.current = selectId;
+  else if (!projects.some((p) => p.id === state.current)) state.current = projects[0]?.id ?? null;
+  $("project-select").value = state.current ?? "";
+}
+
+$("btn-project-add").addEventListener("click", async () => {
+  const body = {
+    id: $("np-id").value.trim(),
+    name: $("np-name").value.trim(),
+    tokenAddress: $("np-token").value.trim(),
+    holdersStartBlock: $("np-startblock").value.trim(),
+    treasuryWallet: $("np-treasury").value.trim(),
+    kumoWallet: $("np-kumo").value.trim(),
+    treasuryPct: $("np-pct").value.trim(),
+    keyRef: $("np-keyref").value.trim(),
+  };
+  try {
+    const r = await api("/projects", { method: "POST", body });
+    $("np-result").textContent = `created "${r.id}" — claim wallet ${r.botAddress}${r.claimDisabledReason ? ` — NOTE: ${r.claimDisabledReason}` : ""}`;
+    for (const id of ["np-id", "np-name", "np-token", "np-startblock", "np-treasury", "np-kumo", "np-pct", "np-keyref"]) $(id).value = "";
+    feedLine(`project created: ${r.id}`);
+    await refreshProjects(r.id);
+    await Promise.all([loadStatus(), loadConfig(), loadRounds(), loadHolders()]);
+  } catch (err) {
+    $("np-result").textContent = `error: ${err.message}`;
+  }
+});
+
+$("btn-project-remove").addEventListener("click", () => {
+  const p = currentProject();
+  if (!p) return;
+  if (!p.extra) {
+    $("np-remove-result").textContent = `"${p.id}" comes from projects.json — it can't be removed from the panel`;
+    return;
+  }
+  openModal(
+    "REMOVE PROJECT",
+    `<div class="kv"><div class="k">project</div><div class="v">${esc(p.name)} (${esc(p.id)})</div>
+      <div class="k">token</div><div class="v">${esc(p.tokenAddress)}</div></div>
+     <p style="margin-top:8px">Stops its claim loop and removes it from the panel. Nothing on-chain changes.</p>`,
+    "[ REMOVE ]",
+    async () => {
+      try {
+        await api(`/projects/${p.id}`, { method: "DELETE" });
+        $("np-remove-result").textContent = `removed "${p.id}"`;
+        feedLine(`project removed: ${p.id}`);
+        await refreshProjects();
+        await Promise.all([loadStatus(), loadConfig(), loadRounds(), loadHolders()]);
+      } catch (err) {
+        $("np-remove-result").textContent = `error: ${err.message}`;
+      }
+    },
+  );
+});
+
 /* ---------------------------------------------------------------- boot */
 
 $("project-select").addEventListener("change", async () => {

@@ -2,8 +2,9 @@ import { Router, type Request, type Response } from "express";
 import { parseAbi } from "viem";
 import { CONFIG, addr } from "../config.js";
 import { withRetry } from "../rpc.js";
-import { rebuildProject, type ProjectRuntime } from "../projects.js";
+import { buildRuntime, rebuildProject, RHC_DEFAULTS, type ProjectRuntime, type RawProject } from "../projects.js";
 import { getOverride, saveOverride, type ProjectOverride } from "../overrides.js";
+import { deleteExtraProject, isExtraProject, saveExtraProject } from "../extra-projects.js";
 import { claimCycle, readClaimable, resolveLockerContext, type LockerContext } from "../engine/claim.js";
 import { getHolders, indexInfo, sync } from "../engine/holders.js";
 import { executeRound, isBusy, planRound, type RoundSpec } from "../engine/rounds.js";
@@ -227,9 +228,72 @@ export function apiRouter(state: AppState): Router {
         claimDisabledReason,
         locker: lockerCtx?.locker ?? null,
         caps: p.caps,
+        extra: isExtraProject(p.id),
       })),
     });
   });
+
+  // ---- create / remove projects from the panel -------------------------------
+  router.post(
+    "/projects",
+    wrap(async (req, res) => {
+      const b = (req.body ?? {}) as Record<string, unknown>;
+      const id = String(b.id ?? "").trim().toLowerCase();
+      if (!/^[a-z0-9-]{2,24}$/.test(id)) throw new Error("id must be 2-24 chars: a-z, 0-9, dashes");
+      if (state.projects.has(id)) throw new Error(`project "${id}" already exists`);
+      const keyRef = String(b.keyRef ?? "").trim();
+      if (!keyRef.startsWith("env:") && !keyRef.startsWith("vault:")) {
+        throw new Error('keyRef required — "vault:<id>" (import on this page) or "env:VAR"');
+      }
+      const raw: RawProject = {
+        id,
+        name: String(b.name ?? id).trim() || id,
+        chainId: RHC_DEFAULTS.chainId,
+        rpcUrl: RHC_DEFAULTS.rpcUrl,
+        explorerBase: RHC_DEFAULTS.explorerBase,
+        tokenAddress: addr(String(b.tokenAddress ?? "")),
+        weth: RHC_DEFAULTS.weth,
+        locker: "auto",
+        treasuryWallet: addr(String(b.treasuryWallet ?? "")),
+        kumoWallet: String(b.kumoWallet ?? "").trim() ? addr(String(b.kumoWallet)) : undefined,
+        treasuryPct: b.treasuryPct !== undefined && String(b.treasuryPct).trim() !== "" ? Number(b.treasuryPct) : 100,
+        keyRef,
+        claim: { enabled: true, intervalMinutes: 10, claimMinEth: "0.01" },
+        holders: {
+          startBlock: /^\d+$/.test(String(b.holdersStartBlock ?? "").trim()) ? String(b.holdersStartBlock).trim() : "0",
+          scanChunkBlocks: "10000",
+        },
+        swap: { feeTier: 10000, slippagePct: 3 },
+      };
+
+      const p = buildRuntime(raw); // validates everything (addresses, pct, key resolution)
+      saveExtraProject(raw);
+      const ps: ProjectState = { p, lockerCtx: null, claimDisabledReason: null, claimBusy: false };
+      state.projects.set(id, ps);
+      await initProjectLocker(ps);
+      scheduleClaimLoop(ps);
+
+      journal.append({ type: "config", dryRun: false, projectId: id, token: p.tokenAddress, detail: `project "${id}" created via panel` });
+      emitEvent("config", { created: id, tokenAddress: p.tokenAddress }, id);
+      send(res, { ok: true, id, botAddress: p.botAddress, claimDisabledReason: ps.claimDisabledReason });
+    }),
+  );
+
+  router.delete(
+    "/projects/:id",
+    wrap(async (req, res) => {
+      const ps = getProject(state, req);
+      const id = ps.p.id;
+      if (!isExtraProject(id)) throw new Error(`"${id}" comes from projects.json — remove it there, not from the panel`);
+      if (ps.claimBusy || isBusy(id)) throw new Error("busy: a claim cycle or round is running — try again in a moment");
+      if (ps.claimTimer) clearTimeout(ps.claimTimer);
+      deleteExtraProject(id);
+      state.projects.delete(id);
+      journal.append({ type: "config", dryRun: false, projectId: id, detail: `project "${id}" removed via panel` });
+      emitEvent("config", { removed: id }, id);
+      send(res, { ok: true, removed: id });
+    }),
+  );
 
   // ---- runtime-editable config (persisted on the data volume) ---------------
   router.get("/projects/:id/config", (req, res) => {

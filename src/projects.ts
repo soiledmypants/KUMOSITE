@@ -5,11 +5,20 @@ import { privateKeyToAccount } from "viem/accounts";
 import { addr, dataPath } from "./config.js";
 import { decryptKey } from "./keyvault.js";
 import { getOverride, type ProjectOverride } from "./overrides.js";
+import { loadExtraProjects } from "./extra-projects.js";
 import { makeSender, type PC, type Sender, type WC } from "./send.js";
 
 /** Verified Uniswap v3 periphery on Robinhood Chain (defaults; overridable per project). */
 const RHC_SWAP_ROUTER_02 = "0xcaf681a66d020601342297493863e78c959e5cb2";
 const RHC_QUOTER_V2 = "0x33e885ed0ec9bf04ecfb19341582aadcb4c8a9e7";
+
+/** Chain defaults for panel-created projects (Robinhood Chain). */
+export const RHC_DEFAULTS = {
+  chainId: 4663,
+  rpcUrl: "https://rpc.mainnet.chain.robinhood.com",
+  explorerBase: "https://robinhoodchain.blockscout.com",
+  weth: "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+} as const;
 
 export interface RawProject {
   id: string;
@@ -107,7 +116,7 @@ function resolvePrivateKey(project: string, keyRef: string): `0x${string}` {
   throw new Error(`project "${project}": keyRef must be "env:VAR" or "vault:<id>", got "${keyRef}"`);
 }
 
-function buildRuntime(raw: RawProject): ProjectRuntime {
+export function buildRuntime(raw: RawProject): ProjectRuntime {
   const id = req(raw.id ?? "?", "id", raw.id);
   const tokenAddress = addr(req(id, "tokenAddress", raw.tokenAddress));
   const weth = addr(req(id, "weth", raw.weth));
@@ -227,7 +236,7 @@ function applyOverride(raw: RawProject, o: ProjectOverride): RawProject {
   return merged;
 }
 
-/** Interpolated projects.json entries, before overrides. */
+/** Interpolated projects.json entries plus panel-created ones, before overrides. */
 export function loadRawProjects(): RawProject[] {
   const path = resolve(process.cwd(), process.env.PROJECTS_FILE ?? "projects.json");
   const parsed = interpolate(
@@ -236,7 +245,7 @@ export function loadRawProjects(): RawProject[] {
   if (!parsed.projects || parsed.projects.length === 0) {
     throw new Error(`no projects defined in ${path}`);
   }
-  return parsed.projects;
+  return [...parsed.projects, ...loadExtraProjects()];
 }
 
 /** Load + validate projects.json with panel overrides applied. */

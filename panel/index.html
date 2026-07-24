@@ -170,6 +170,35 @@
             <tbody id="k-rows"></tbody>
           </table>
         </div>
+
+        <div class="box">
+          <h2>Add project (reuse this console for any token)</h2>
+          <div class="dim" style="margin-bottom:10px">
+            Robinhood Chain defaults are filled in automatically (RPC, WETH, Uniswap router, pons
+            locker auto-detect). Import the claim wallet's key above first, then reference it as
+            vault:&lt;id&gt;. New projects appear in the header dropdown immediately.
+          </div>
+          <label class="field"><span>id (short slug)</span><input id="np-id" type="text" placeholder="mytoken" /></label>
+          <label class="field"><span>name</span><input id="np-name" type="text" placeholder="My Token" /></label>
+          <label class="field"><span>token CA</span><input id="np-token" type="text" placeholder="0x…" /></label>
+          <label class="field"><span>deploy block</span><input id="np-startblock" type="text" placeholder="e.g. 18300000" /></label>
+          <label class="field"><span>treasury wallet</span><input id="np-treasury" type="text" placeholder="0x…" /></label>
+          <label class="field"><span>secondary wallet (optional)</span><input id="np-kumo" type="text" placeholder="0x… (gets the rest below 100%)" /></label>
+          <label class="field"><span>treasury % (default 100)</span><input id="np-pct" type="text" placeholder="100" /></label>
+          <label class="field"><span>key ref</span><input id="np-keyref" type="text" placeholder="vault:&lt;id&gt; or env:VAR" /></label>
+          <button class="action" id="btn-project-add">[ ADD PROJECT ]</button>
+          <div id="np-result" class="dim"></div>
+        </div>
+
+        <div class="box">
+          <h2>Remove this project</h2>
+          <div class="dim" style="margin-bottom:8px">
+            Only projects created from the panel can be removed here. Holder index and journal
+            entries stay on disk.
+          </div>
+          <button class="action danger" id="btn-project-remove">[ REMOVE CURRENT PROJECT ]</button>
+          <div id="np-remove-result" class="dim"></div>
+        </div>
       </section>
     </main>
   </div>
