@@ -101,7 +101,9 @@ export function listKeys(): Array<{ id: string; name: string; address: `0x${stri
 export function decryptKey(id: string): `0x${string}` {
   const vault = loadVault();
   const entry = vault.keys.find((k) => k.id === id);
-  if (!entry) throw new Error(`vault key "${id}" not found`);
+  // NEVER echo the full ref: people paste private keys in the wrong box, and a
+  // 64-hex "id" bounced back in an error message would put the key on screen.
+  if (!entry) throw new Error(`vault key "${id.slice(0, 8)}…" not found (did you paste the key itself? import it on the Keys page instead)`);
 
   const aesKey = deriveAesKey(vault.salt);
   const decipher = createDecipheriv("aes-256-gcm", aesKey, Buffer.from(entry.iv, "hex"));
