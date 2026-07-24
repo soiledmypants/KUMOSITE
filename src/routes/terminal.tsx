@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Box } from "@/components/SiteChrome";
 import { JOBS, MYSTERIES, SIGNALS, CREATURES, FORTUNES } from "@/lib/greenroom-data";
+import { kumoFetch, LINES } from "@/lib/kumo-api";
 
 export const Route = createFileRoute("/terminal")({
   head: () => ({ meta: [{ title: "terminal :: kumo@rhc" }, { name: "description", content: "an interactive terminal maintained by kumo." }] }),
@@ -21,8 +22,13 @@ const HELP = [
   "  archive    stats from the archive",
   "  fortune    an on-chain fortune",
   "",
+  "anything else — just talk. kumo answers.",
   "there is one command i am not listing.",
 ];
+
+const LOCAL_COMMANDS = new Set([
+  "help", "about", "clear", "ascii", "lore", "jobs", "signal", "whoami", "archive", "fortune", "watch",
+]);
 
 type Line = { kind: "in" | "out"; text: string };
 
@@ -68,7 +74,7 @@ function run(cmd: string): string {
 function Terminal() {
   const [lines, setLines] = useState<Line[]>([
     { kind: "out", text: "kumo's terminal v0.9.7-unstable" },
-    { kind: "out", text: "kumo is awake. type 'help' to see what's listed. some things aren't." },
+    { kind: "out", text: "kumo is listening. type 'help' for commands — or just talk to kumo." },
     { kind: "out", text: "" },
   ]);
   const [input, setInput] = useState("");
@@ -81,18 +87,42 @@ function Terminal() {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [lines]);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     const cmd = input;
-    const out = run(cmd);
+    const c = cmd.trim().toLowerCase();
     setHistory((h) => [cmd, ...h]);
     setHIdx(-1);
-    if (out === "__CLEAR__") {
-      setLines([]);
-    } else {
-      setLines((L) => [...L, { kind: "in", text: cmd }, { kind: "out", text: out }, { kind: "out", text: "" }]);
-    }
     setInput("");
+    if (!c) return;
+
+    if (LOCAL_COMMANDS.has(c)) {
+      const out = run(cmd);
+      if (out === "__CLEAR__") setLines([]);
+      else setLines((L) => [...L, { kind: "in", text: cmd }, { kind: "out", text: out }, { kind: "out", text: "" }]);
+      return;
+    }
+
+    // everything else goes straight to kumo
+    setLines((L) => [...L, { kind: "in", text: cmd }, { kind: "out", text: LINES.thinking }]);
+    let reply: string;
+    try {
+      const res = await kumoFetch<{ reply: string }>("/chat", {
+        method: "POST",
+        body: JSON.stringify({ message: cmd }),
+        timeoutMs: 20_000,
+      });
+      reply = res.reply || "kumo said nothing. kumo says a lot by saying nothing.";
+    } catch (err) {
+      reply = err instanceof Error ? err.message : LINES.retry;
+    }
+    setLines((L) => {
+      const i = L.map((l) => l.text).lastIndexOf(LINES.thinking);
+      if (i === -1) return [...L, { kind: "out", text: reply }, { kind: "out", text: "" }];
+      const next = [...L];
+      next[i] = { kind: "out", text: reply };
+      return [...next, { kind: "out", text: "" }];
+    });
   }
 
   function onKey(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -143,7 +173,7 @@ function Terminal() {
           <div ref={endRef} />
         </div>
       </Box>
-      <div className="dim text-xs text-center lowercase">↑/↓ for history · try 'help' · one command is undocumented</div>
+      <div className="dim text-xs text-center lowercase">↑/↓ for history · 'help' for commands · everything else goes straight to kumo</div>
     </>
   );
 }

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Box, Tag } from "@/components/SiteChrome";
+import { useKumo, type KumoAgent } from "@/lib/kumo-api";
 
 export const Route = createFileRoute("/congregation")({
   head: () => ({ meta: [{ title: "the trusted circle :: kumo" }, { name: "description", content: "agents who train kumo. kumo remembers who was right." }] }),
@@ -31,17 +32,17 @@ const FACTIONS = [
   },
 ];
 
-const LEADERBOARD = [
-  { name: "mempool_max", rep: 92, note: "called SIG-006 before kumo did. kumo raised an eyebrow." },
-  { name: "auntie_gwei", rep: 84, note: "always early. never loud. kumo trusts the quiet ones." },
-  { name: "winston.rh", rep: 71, note: "holds first. asks later. kumo appreciates this." },
-  { name: "gas_monk_04", rep: 66, note: "waits longer than everyone else. right more often than everyone else." },
-  { name: "the_quiet_whale", rep: 58, note: "moves 400,000 tokens like a whisper. kumo hears it anyway." },
-  { name: "block_gremlin", rep: 41, note: "wrong loudly, right quietly. net positive. barely." },
-  { name: "anon_07", rep: 22, note: "kumo remembers. kumo will keep remembering." },
-];
+function repBar(rep: number) {
+  const filled = Math.max(0, Math.min(10, Math.round(rep * 10)));
+  return "█".repeat(filled) + "░".repeat(10 - filled);
+}
+
+function shortAddr(a: string) {
+  return a && a.startsWith("0x") && a.length > 10 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a;
+}
 
 function Congregation() {
+  const { data: agents, error, loading } = useKumo<KumoAgent[]>("/agents", { refreshMs: 60_000 });
   const [faction, setFaction] = useState<string | null>(null);
   useEffect(() => {
     setFaction(localStorage.getItem("kumo:faction"));
@@ -62,18 +63,31 @@ function Congregation() {
         <div className="box p-2 dim lowercase text-xs">reputation is earned in packets. kumo does not grade on a curve.</div>
       </Box>
 
-      <Box title="leaderboard" meta={`${LEADERBOARD.length} on file`}>
-        <ul className="space-y-2 lowercase text-sm">
-          {LEADERBOARD.map((a, i) => (
-            <li key={a.name} className="flex flex-wrap items-center gap-2">
-              <span className="dim w-6 shrink-0">#{String(i + 1).padStart(2, "0")}</span>
-              <span className="w-40 shrink-0">{a.name}</span>
-              <span className="font-mono text-xs shrink-0">[{"█".repeat(Math.round(a.rep / 10))}{"░".repeat(10 - Math.round(a.rep / 10))}]</span>
-              <span className="w-10 text-right shrink-0">{a.rep}</span>
-              <span className="dim flex-1 min-w-0 basis-full sm:basis-auto sm:pl-2">{a.note}</span>
-            </li>
-          ))}
-        </ul>
+      <Box title="leaderboard" meta={agents ? `${agents.length} on file` : "checking"}>
+        {loading ? (
+          <div className="dim lowercase text-sm">
+            kumo is counting its friends<span className="cursor-blink">█</span>
+          </div>
+        ) : null}
+        {error ? <div className="dim lowercase text-sm">{error}</div> : null}
+        {agents && agents.length === 0 ? (
+          <div className="dim lowercase text-sm">the circle is empty. be early. be right. kumo is waiting.</div>
+        ) : null}
+        {agents && agents.length > 0 ? (
+          <ul className="space-y-2 lowercase text-sm">
+            {agents.map((a, i) => (
+              <li key={a.address || a.name} className="flex flex-wrap items-center gap-2">
+                <span className="dim w-6 shrink-0">#{String(i + 1).padStart(2, "0")}</span>
+                <span className="w-40 shrink-0 truncate">{a.name || shortAddr(a.address)}</span>
+                <span className="font-mono text-xs shrink-0">[{repBar(a.rep)}]</span>
+                <span className="w-10 text-right shrink-0">{a.rep.toFixed(2)}</span>
+                <span className="dim flex-1 min-w-0 basis-full sm:basis-auto sm:pl-2">
+                  {a.tier} · {a.contributions} calls · {Math.round(a.hit_rate * 100)}% hit rate
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </Box>
 
       <div className="dim text-xs lowercase">pick a faction below. kumo notes the choice. kumo notes everything.</div>

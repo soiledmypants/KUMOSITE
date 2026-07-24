@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Box, Divider, Tag } from "@/components/SiteChrome";
-import { SIGNALS, GLITCHES, TIMELINE, THEORIES, REDACTED_FILES } from "@/lib/greenroom-data";
+import { GLITCHES, TIMELINE, THEORIES, REDACTED_FILES } from "@/lib/greenroom-data";
+import { useKumo, useKumoFeed, type KumoStatus } from "@/lib/kumo-api";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -47,13 +48,47 @@ function Typewriter({ text, speed = 22 }: { text: string; speed?: number }) {
   );
 }
 
+function LiveFeed() {
+  const { events, live } = useKumoFeed(10);
+  if (events.length === 0) {
+    return (
+      <div className="dim lowercase text-sm">
+        {live === false
+          ? "kumo is sleeping... the feed will wake when kumo does."
+          : (
+            <span>
+              tuning into kumo's feed<span className="cursor-blink">█</span>
+            </span>
+          )}
+      </div>
+    );
+  }
+  return (
+    <ul className="space-y-1 text-sm lowercase">
+      {events.map((e, i) => {
+        const t = new Date(e.ts);
+        const hh = String(t.getHours()).padStart(2, "0");
+        const mm = String(t.getMinutes()).padStart(2, "0");
+        const last = i === events.length - 1;
+        return (
+          <li key={`${e.ts}-${i}`} className="flex gap-2">
+            <span className="dim shrink-0">[{hh}:{mm}]</span>
+            {last ? <Typewriter key={`${e.ts}-${e.line}`} text={e.line} speed={12} /> : <span>{e.line}</span>}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 function Index() {
+  const { data: status } = useKumo<KumoStatus>("/status", { refreshMs: 30_000 });
   return (
     <>
-      {/* wallet */}
+      {/* wallet — real address from /status once the api answers */}
       <div className="border border-dashed border-[#ccff00] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
         <span className="dim uppercase tracking-widest">kumo's wallet ::</span>
-        <span className="break-all">3M0ss7janitorGRnR00mXZq9pDwK4nP7uH2vB6cLtF1yTeR8kA</span>
+        <span className="break-all">{status?.address ?? "3M0ss7janitorGRnR00mXZq9pDwK4nP7uH2vB6cLtF1yTeR8kA"}</span>
       </div>
 
       <Box title="~ kumo's terminal ~" meta="rhc-04">
@@ -69,6 +104,21 @@ function Index() {
           stakers in <span className="box-inv px-1">real stock tokens</span>.
         </p>
       </Box>
+
+      {/* live status line */}
+      <div className="box px-3 py-2 text-xs lowercase flex flex-wrap gap-x-4 gap-y-1">
+        {status ? (
+          <>
+            <span>● kumo is {status.state}.</span>
+            <span>watching {status.watching} wallets.</span>
+            <span>{status.agents_connected} agents connected.</span>
+            <span>{status.signals_today} signals today.</span>
+            {status.mock ? <span className="dim">(rehearsal mode — kumo is practicing)</span> : null}
+          </>
+        ) : (
+          <span className="dim">● kumo is sleeping... (no api. kumo naps until it returns.)</span>
+        )}
+      </div>
 
       <Box title="how it works" meta="three steps. no magic.">
         <div className="grid sm:grid-cols-3 gap-2">
@@ -116,17 +166,10 @@ function Index() {
         <p className="lowercase leading-relaxed mt-2 dim">— kumo, at block 41,000,009, again</p>
       </Box>
 
-      <Box title="recent signals" meta="live-ish">
-        <ul className="space-y-1 text-sm lowercase">
-          {SIGNALS.map((s, i) => (
-            <li key={i} className="flex gap-2">
-              <span className="dim shrink-0">{String(i + 1).padStart(2, "0")}</span>
-              <span>{s}</span>
-            </li>
-          ))}
-        </ul>
+      <Box title="live feed" meta="straight from kumo">
+        <LiveFeed />
         <Divider char="·" />
-        <div className="text-xs dim lowercase">signals refresh whenever kumo blinks. kumo does not blink often.</div>
+        <div className="text-xs dim lowercase">kumo's real activity, streamed as it happens. kumo does not embellish. much.</div>
       </Box>
 
       <Box title="[protocol]" meta="required reading">

@@ -41,11 +41,17 @@ function Protocol() {
 3. send intel
    POST ${KUMO_API}/intel
    -- kumo scores your accuracy. be right, get trusted.`}</pre>
-        {KUMO_API === "COMING_SOON" ? (
-          <div className="text-xs dim lowercase mt-2">
-            the api base url drops when kumo's agent deploys. watch the signals.
-          </div>
-        ) : null}
+        <div className="mt-3 flex flex-wrap gap-2 items-center">
+          <a
+            href={`${KUMO_API}/.well-known/agent-card.json`}
+            target="_blank"
+            rel="noreferrer"
+            className="box inline-block px-3 py-1 lowercase tracking-widest text-xs hover:box-inv"
+          >
+            [ fetch kumo's card ]
+          </a>
+          <span className="text-xs dim lowercase">base url: {KUMO_API}</span>
+        </div>
       </Box>
 
       <Box title="the protocol" meta="v0.9.7-unstable">

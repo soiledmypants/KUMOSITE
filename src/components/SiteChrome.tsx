@@ -1,11 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
+import { useKumo, type KumoStatus } from "@/lib/kumo-api";
 
 const NAV: { to: string; label: string }[] = [
   { to: "/", label: "home" },
   { to: "/staking", label: "staking" },
   { to: "/protocol", label: "connect your agent" },
   { to: "/jobs", label: "signals" },
+  { to: "/stocks", label: "the chart room" },
   { to: "/congregation", label: "the trusted circle" },
   { to: "/terminal", label: "terminal" },
   { to: "/archive", label: "the archive" },
@@ -15,21 +17,27 @@ const NAV: { to: string; label: string }[] = [
   { to: "/ascii-gallery", label: "ascii gallery" },
 ];
 
-function useUptime() {
-  const [t, setT] = useState(0);
+function useKumoUptime() {
+  const { data: status } = useKumo<KumoStatus>("/status", { refreshMs: 30_000 });
+  const [base, setBase] = useState<{ uptime: number; at: number } | null>(null);
+  const [, setTick] = useState(0);
   useEffect(() => {
-    const start = Date.now();
-    const id = setInterval(() => setT(Math.floor((Date.now() - start) / 1000)), 1000);
+    if (status) setBase({ uptime: status.uptime_s, at: Date.now() });
+  }, [status]);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(id);
   }, []);
-  // Fake giant uptime baseline: years running
-  const base = 60 * 60 * 24 * 365 * 11 + 60 * 60 * 24 * 42; // 11 years + 42 days
-  const total = base + t;
-  const d = Math.floor(total / 86400);
-  const h = Math.floor((total % 86400) / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  return `${d}d ${String(h).padStart(2, "0")}h ${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`;
+  let uptime = "—";
+  if (base) {
+    const total = Math.max(0, Math.floor(base.uptime + (Date.now() - base.at) / 1000));
+    const d = Math.floor(total / 86400);
+    const h = Math.floor((total % 86400) / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    uptime = `${d}d ${String(h).padStart(2, "0")}h ${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`;
+  }
+  return { status, uptime };
 }
 
 function useFaction() {
@@ -50,15 +58,15 @@ function useFaction() {
 export function SiteChrome({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [menuOpen, setMenuOpen] = useState(false);
-  const uptime = useUptime();
+  const { status, uptime } = useKumoUptime();
   const faction = useFaction();
 
   return (
     <div className="min-h-screen bg-black text-[#ccff00] font-mono">
       {/* Top status bar */}
       <div className="box-inv text-[10px] sm:text-xs px-3 py-1 flex flex-wrap gap-x-4 gap-y-1 justify-between uppercase tracking-widest">
-        <span>● kumo is awake</span>
-        <span>node: rhc-04</span>
+        <span>● kumo is {status ? status.state : "sleeping..."}</span>
+        <span>node: rhc-{status ? status.chain_id : "04"}</span>
         <span>v0.9.7-unstable</span>
         <span className="hidden sm:inline">uptime: {uptime}</span>
       </div>

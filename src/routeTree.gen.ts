@@ -19,6 +19,7 @@ import { Route as LoreRouteImport } from './routes/lore'
 import { Route as ProtocolRouteImport } from './routes/protocol'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StakingRouteImport } from './routes/staking'
+import { Route as StocksRouteImport } from './routes/stocks'
 import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as TransmissionsRouteImport } from './routes/transmissions'
 import { Route as TransmissionsIndexRouteImport } from './routes/transmissions.index'
@@ -74,6 +75,11 @@ const StakingRoute = StakingRouteImport.update({
   path: '/staking',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StocksRoute = StocksRouteImport.update({
+  id: '/stocks',
+  path: '/stocks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TerminalRoute = TerminalRouteImport.update({
   id: '/terminal',
   path: '/terminal',
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/protocol': typeof ProtocolRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staking': typeof StakingRoute
+  '/stocks': typeof StocksRoute
   '/terminal': typeof TerminalRoute
   '/transmissions': typeof TransmissionsRouteWithChildren
   '/transmissions/$id': typeof TransmissionsIdRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/protocol': typeof ProtocolRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staking': typeof StakingRoute
+  '/stocks': typeof StocksRoute
   '/terminal': typeof TerminalRoute
   '/transmissions/$id': typeof TransmissionsIdRoute
   '/transmissions': typeof TransmissionsIndexRoute
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/protocol': typeof ProtocolRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staking': typeof StakingRoute
+  '/stocks': typeof StocksRoute
   '/terminal': typeof TerminalRoute
   '/transmissions': typeof TransmissionsRouteWithChildren
   '/transmissions/$id': typeof TransmissionsIdRoute
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/protocol'
     | '/sitemap.xml'
     | '/staking'
+    | '/stocks'
     | '/terminal'
     | '/transmissions'
     | '/transmissions/$id'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/protocol'
     | '/sitemap.xml'
     | '/staking'
+    | '/stocks'
     | '/terminal'
     | '/transmissions/$id'
     | '/transmissions'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/protocol'
     | '/sitemap.xml'
     | '/staking'
+    | '/stocks'
     | '/terminal'
     | '/transmissions'
     | '/transmissions/$id'
@@ -204,6 +216,7 @@ export interface RootRouteChildren {
   ProtocolRoute: typeof ProtocolRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StakingRoute: typeof StakingRoute
+  StocksRoute: typeof StocksRoute
   TerminalRoute: typeof TerminalRoute
   TransmissionsRoute: typeof TransmissionsRouteWithChildren
 }
@@ -280,6 +293,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StakingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/stocks': {
+      id: '/stocks'
+      path: '/stocks'
+      fullPath: '/stocks'
+      preLoaderRoute: typeof StocksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terminal': {
       id: '/terminal'
       path: '/terminal'
@@ -336,6 +356,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProtocolRoute: ProtocolRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StakingRoute: StakingRoute,
+  StocksRoute: StocksRoute,
   TerminalRoute: TerminalRoute,
   TransmissionsRoute: TransmissionsRouteWithChildren,
 }
