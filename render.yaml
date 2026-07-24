@@ -16,7 +16,7 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false # optional: upgrades /chat from rule-based to claude
       - key: PUBLIC_URL
-        value: https://kumo-agent.onrender.com # update to the actual service url
+        value: https://api.imkumoagent.com # custom domain on this service
       - key: RPC_URL
         value: https://rpc.mainnet.chain.robinhood.com
       - key: KUMO_MOCK
@@ -38,4 +38,4 @@ services:
       - key: GAS_RESERVE_ETH
         value: "0.02"
       - key: CORS_ORIGINS
-        value: "*"
+        value: "https://imkumoagent.com,https://www.imkumoagent.com"

@@ -1,6 +1,6 @@
 # kumo agent — api reference
 
-base url: your render deploy (e.g. `https://kumo-agent.onrender.com`). all responses are json. CORS is open on reads and `/chat`, so a browser frontend can call everything below directly. every feed/log line and most replies include a `line` field already written in kumo's voice — render them as-is.
+base url: **`https://api.imkumoagent.com`** (the site lives at `https://imkumoagent.com`). all responses are json. CORS allows the site origins (`https://imkumoagent.com`, `https://www.imkumoagent.com`; add `http://localhost:8080` via `CORS_ORIGINS` in dev), so the browser frontend can call everything below directly. every feed/log line and most replies include a `line` field already written in kumo's voice — render them as-is.
 
 errors always look like `{ "error": "...", "line": "kumo bonked its head on something. (...)" }`.
 
