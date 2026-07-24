@@ -12,6 +12,8 @@ import { routerAbi } from "../trade/execute.js";
 import { brandTx, sendGuardedTx } from "../trade/guard.js";
 import { epochStock } from "./epoch.js";
 import { stockByAddress } from "../scanner/discovery.js";
+import { ethUsd } from "../scanner/prices.js";
+import { emitKumoEvent } from "../twitter/events.js";
 
 const stakingAbi = parseAbi([
   "function totalSupply() view returns (uint256)",
@@ -150,6 +152,15 @@ export async function keeperCycleOnce(): Promise<void> {
     );
     keeperState.lastResult = `notified ${stockBal} raw ${pick.symbol} to the pool`;
     say("stake", lines.staking(`${formatEther(distributable)} eth became ${pick.symbol} for stakers.`));
+    const eu = await ethUsd().catch(() => null);
+    if (eu) {
+      emitKumoEvent({
+        type: "fee_claimed",
+        amountUsd: Number(formatEther(distributable)) * eu,
+        token: pick.symbol,
+        txHash: notifyTx, // event metadata only — composer never receives it, guardrails block it anyway
+      });
+    }
   } catch (err) {
     keeperState.lastResult = `error: ${(err as Error).message.slice(0, 200)}`;
     say("stake", lines.err("keeper cycle failed. kumo will try again later."));

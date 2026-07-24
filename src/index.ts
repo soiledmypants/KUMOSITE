@@ -11,6 +11,7 @@ import { scanWalletsOnce, walletCount } from "./scanner/wallets.js";
 import { scanMemecoinsOnce } from "./scanner/memecoins.js";
 import { scoreIntelOnce } from "./agents/reputation.js";
 import { keeperCycleOnce } from "./staking/keeper.js";
+import { startTwitter } from "./twitter/events.js";
 import { startMockTicker } from "./mock.js";
 
 function loop(label: string, fn: () => Promise<void>, ms: number): NodeJS.Timeout {
@@ -60,6 +61,7 @@ async function main(): Promise<void> {
   if (CONFIG.stakingAddress) {
     loop("keeper", keeperCycleOnce, CONFIG.keeperIntervalMs);
   }
+  startTwitter();
 }
 
 process.on("SIGTERM", () => {

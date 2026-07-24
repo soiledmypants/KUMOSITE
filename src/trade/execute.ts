@@ -7,6 +7,8 @@ import { db, getMeta, setMeta } from "../db.js";
 import { lines, say } from "../voice.js";
 import { bestQuote, type Quote } from "./quote.js";
 import { brandTx, sendGuardedTx } from "./guard.js";
+import { stockByAddress } from "../scanner/discovery.js";
+import { emitKumoEvent } from "../twitter/events.js";
 
 export const routerAbi = parseAbi([
   "function exactInputSingle((address tokenIn, address tokenOut, uint24 fee, address recipient, uint256 amountIn, uint256 amountOutMinimum, uint160 sqrtPriceLimitX96) params) payable returns (uint256 amountOut)",
@@ -92,5 +94,11 @@ export async function executeEthSwap(opts: {
     [Date.now(), "ETH", opts.tokenOut.toLowerCase(), amountIn.toString(), minOut.toString(), tx],
   );
   say("trade", lines.tradeDone(`${formatEther(amountIn)} eth in, route ${quote.route}.`));
+  const outSymbol =
+    stockByAddress(opts.tokenOut)?.symbol ??
+    (await db.get<{ symbol: string }>("SELECT symbol FROM tokens WHERE address = ?", [opts.tokenOut.toLowerCase()]))?.symbol;
+  if (outSymbol && outSymbol !== "???") {
+    emitKumoEvent({ type: "trade_found", symbol: outSymbol });
+  }
   return { tx, amountIn: amountIn.toString(), minOut: minOut.toString(), route: quote.route };
 }

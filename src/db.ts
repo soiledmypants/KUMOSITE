@@ -124,6 +124,25 @@ const SCHEMA = [
     price DOUBLE PRECISION NOT NULL
   )`,
   `CREATE INDEX IF NOT EXISTS idx_price_history ON price_history(token, ts)`,
+  `CREATE TABLE IF NOT EXISTS tweets (
+    id %AUTOPK%,
+    ts BIGINT NOT NULL,
+    kind TEXT NOT NULL,
+    text TEXT NOT NULL,
+    text_hash TEXT NOT NULL,
+    in_reply_to TEXT,
+    tweet_id TEXT,
+    status TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_tweets_hash ON tweets(text_hash, ts)`,
+  `CREATE TABLE IF NOT EXISTS mentions (
+    id %AUTOPK%,
+    mention_id TEXT NOT NULL UNIQUE,
+    author TEXT NOT NULL,
+    status TEXT NOT NULL,
+    note TEXT,
+    handled_at BIGINT NOT NULL
+  )`,
 ];
 
 // additive column migrations (ALTER fails harmlessly when the column exists)

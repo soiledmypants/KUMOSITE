@@ -7,6 +7,7 @@ import { withRetry } from "../rpc.js";
 import { db, getMeta, setMeta } from "../db.js";
 import { lines, say } from "../voice.js";
 import { noteWalletActivity } from "./signals.js";
+import { emitKumoEvent } from "../twitter/events.js";
 
 const transferEvent = parseAbiItem(
   "event Transfer(address indexed from, address indexed to, uint256 value)",
@@ -140,6 +141,10 @@ export async function scanWalletsOnce(): Promise<void> {
           });
           say("move", lines.bigMove(w.label, `${kind === "out" ? "sent" : "received"} ${pretty} ${info.symbol}`));
           feedLines++;
+          // twitter alert: label + symbol only, cooldown-throttled in events.ts
+          if (info.symbol !== "???") {
+            emitKumoEvent({ type: "wallet_alert", label: w.label, action: `${kind === "out" ? "sent" : "received"} ${info.symbol}` });
+          }
         }
         noteWalletActivity(w.address, kind);
       }
