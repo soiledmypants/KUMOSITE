@@ -194,9 +194,10 @@ async function initSqlite(): Promise<Db> {
   // unsupported node versions) — production always sets DATABASE_URL and
   // never reaches this path, so a failed sqlite build must not kill boot
   // until someone actually needs the fallback.
-  let Database: (typeof import("better-sqlite3"))["default"];
+  const loadSqlite = async () => (await import("better-sqlite3")).default;
+  let Database: Awaited<ReturnType<typeof loadSqlite>>;
   try {
-    ({ default: Database } = await import("better-sqlite3"));
+    Database = await loadSqlite();
   } catch {
     throw new Error(
       "sqlite fallback unavailable (better-sqlite3 native build was skipped) — set DATABASE_URL to use postgres, or reinstall on a supported node (22.x)",
