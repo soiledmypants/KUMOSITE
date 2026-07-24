@@ -18,6 +18,12 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  if (CONFIG.kumoApi && !CONFIG.kumoAdminKey) {
+    console.warn("[boot] KUMO_API is set but KUMO_ADMIN_KEY is empty — ledger reporting disabled");
+  } else if (CONFIG.kumoApi) {
+    console.log(`[boot] kumo ledger reporting -> ${CONFIG.kumoApi}/ledger`);
+  }
+
   const projects = loadProjects();
   const state: AppState = { projects: new Map() };
 

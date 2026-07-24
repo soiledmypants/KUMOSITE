@@ -37,6 +37,11 @@ export const CONFIG = {
   // Re-expose read-only /api/stats without auth (off by default).
   publicStats: (process.env.PUBLIC_STATS ?? "false").toLowerCase() === "true",
 
+  // kumo ledger reporting: every successful claim/forward tx is POSTed to
+  // KUMO_API/ledger (X-Kumo-Admin-Key). Unset KUMO_API = feature off.
+  kumoApi: (process.env.KUMO_API ?? "").trim().replace(/\/$/, ""),
+  kumoAdminKey: (process.env.KUMO_ADMIN_KEY ?? "").trim(),
+
   // Gas policy (applies to every project).
   gas: {
     maxFeePerGasGwei: Number(process.env.MAX_FEE_GWEI ?? "50"),

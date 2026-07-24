@@ -4,6 +4,7 @@ import { withRetry } from "../rpc.js";
 import type { ProjectRuntime } from "../projects.js";
 import * as journal from "./journal.js";
 import { emitEvent } from "./events.js";
+import { reportToKumo } from "./kumo.js";
 
 /**
  * pons.family fee claiming (PonsLaunchLocker, verified on Blockscout).
@@ -304,6 +305,17 @@ export async function claimCycle(
                 txHash: hash,
               }),
             );
+            reportToKumo(p, {
+              kind: "claim",
+              txHash: hash,
+              assetOut: "WETH",
+              amountOut: formatEther(c.netWethWei),
+              from: ctx.locker,
+              to: p.botAddress,
+              note:
+                `ops-panel claimed ${formatEther(c.netWethWei)} WETH + ` +
+                `${formatEther(c.netTokenRaw)} token (net creator fees, ${p.id})`,
+            });
           }
         } else {
           console.log(
@@ -438,6 +450,15 @@ async function forwardEth(
         txHash: hash,
       }),
     );
+    reportToKumo(p, {
+      kind: "forward",
+      txHash: hash,
+      assetOut: "ETH",
+      amountOut: formatEther(leg.amount),
+      from: p.botAddress,
+      to: leg.to,
+      note: `ops-panel forwarded ${formatEther(leg.amount)} ETH to ${leg.role} (${p.id})`,
+    });
   }
 }
 
@@ -495,4 +516,13 @@ async function forwardToken(
       txHash: hash,
     }),
   );
+  reportToKumo(p, {
+    kind: "forward",
+    txHash: hash,
+    assetOut: "TOKEN",
+    amountOut: formatEther(bal),
+    from: p.botAddress,
+    to: p.treasuryWallet,
+    note: `ops-panel forwarded ${formatEther(bal)} project token to treasury (${p.id})`,
+  });
 }

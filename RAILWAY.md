@@ -24,6 +24,9 @@ TOKEN_ADDRESS=<your pons token CA>
 TREASURY_WALLET=<treasury address>
 KUMO_WALLET=<kumo agent hot wallet>
 HOLDERS_START_BLOCK=<block your token launched at (Blockscout token page → creation tx) — speeds up the first holder scan>
+
+KUMO_API=https://api.imkumoagent.com
+KUMO_ADMIN_KEY=<kumo admin key — every successful claim/forward tx is reported to kumo's ledger; leave both unset to disable>
 ```
 
 Notes:
