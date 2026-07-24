@@ -225,27 +225,37 @@ replies `{ "recorded": true, "duplicate": false, "line": "kumo noted it in the l
 
 ## GET /staking/stats
 
+payout model: **rotating direct airdrops**. every `cycle_minutes` (default 10) kumo sweeps its fee ETH; once it holds ≥ `distribute_min_eth` it runs a payout round — the ta engine picks the current best screen-passing stock (the pick can change every round), market-buys it, and transfers it DIRECTLY to stakers pro-rata by on-chain stake (pre-launch: $KUMO holders). connected agents get a `BOOST_PCT` weight boost. the staking contract remains the stake/unstake registry and carries only the capped KUMO bootstrap stream.
+
 ```json
 {
   "pool": "0x...",
-  "epoch_stock": "NVDA",
-  "screen": "geckoterminal: reserve $631,162, 24h vol $12,063,720",
-  "keeper": { "last_run": 1784840000000, "last_result": "notified ... to the pool", "alerts": [], "next_threshold_eth": 0.05 },
+  "model": "rotating direct airdrops (fee-funded) + on-chain KUMO bootstrap stream",
+  "round_stock": "MSTR",
+  "screen": "geckoterminal: reserve $412,000, 24h vol $2,900,000",
+  "keeper": {
+    "last_run": 1784900000000,
+    "last_result": "paid 143 stakers in MSTR",
+    "last_round": { "ts": 1784900000000, "stock": "MSTR", "recipients": 143, "skippedDust": 12, "totalSent": "1.8421", "gasSpentEth": "0.000114" },
+    "alerts": [],
+    "cycle_minutes": 10,
+    "distribute_min_eth": 0.05,
+    "per_recipient_min_usd": 0.25
+  },
+  "airdrops_7d": [ { "asset_out": "NVDA", "rounds": 41, "total": 30.12 }, { "asset_out": "MSTR", "rounds": 18, "total": 22.7 } ],
   "onchain": {
     "totalStaked": "1284000000000000000000000",
-    "rewards": [
-      { "symbol": "KUMO", "rewardRateScaled": "...", "periodFinish": 1785000000, "notifiedTotal": "...", "claimedTotal": "...", "ethSpentTotal": "0" },
-      { "symbol": "NVDA", "rewardRateScaled": "...", "periodFinish": 1785000000, "notifiedTotal": "...", "claimedTotal": "...", "ethSpentTotal": "..." }
-    ]
+    "bootstrapStreams": [ { "symbol": "KUMO", "rewardRateScaled": "...", "periodFinish": 1785000000, "notifiedTotal": "...", "claimedTotal": "..." } ]
   },
-  "journal": [ { "ts": ..., "eth_spent": "...", "token": "0x...", "amount": "...", "tx_hashes": "0x...", "note": "notify" } ]
+  "journal": [ { "ts": 1784900000000, "eth_spent": "...", "token": "0x...", "amount": "...", "tx_hashes": "0x...,0x...", "note": "round: 143 paid, 12 dust-accrued, 0 failed, gas 0.000114 eth" } ]
 }
 ```
 
-honest apr display rules for the frontend:
-- **bootstrap apr (paid in KUMO)** — price-free: `rewardRateScaled × 31536000 / 1e18 / totalStaked`. label it as the capped 12-week genesis stream.
-- **fee-funded apr (paid in NVDA)** — `(nvdaRate/1e18 × 31536000 × usdPerNvda) / (totalStaked × usdPerKumo)`. show `ethSpentTotal` as the live "kumo has earned and bought X eth of stock for stakers" counter.
-- never blend the two numbers into one headline apy.
+honest yield display rules for the frontend:
+- **bootstrap apr (paid in KUMO)** — price-free, from the on-chain stream: `rewardRateScaled × 31536000 / 1e18 / totalStaked`. label it as the capped genesis stream with its end date.
+- **fee-funded yield (rotating stocks, airdropped directly)** — do NOT quote a projected apy. show the trailing reality: `airdrops_7d` (what was actually delivered, per stock, this week) valued in usd against `totalStaked`, labeled "last 7 days, annualized only if you must, always marked as trailing". the `/ledger` airdrop entries are the receipts — link them.
+- dust honesty: shares under `per_recipient_min_usd` are never lost — they accrue and pay out the next time that stock is picked. say so in the ui.
+- never blend bootstrap and fee-funded numbers into one headline apy.
 
 ## mock mode
 

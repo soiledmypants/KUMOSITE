@@ -84,12 +84,14 @@ export const CONFIG = {
   intelDailyLimit: envNum("INTEL_DAILY_LIMIT", 30),
   repScoreIntervalMs: envNum("REP_SCORE_INTERVAL_MS", 60_000),
 
-  // staking / keeper
+  // staking / keeper — rapid rotating payout cycle
   kumoToken: process.env.KUMO_TOKEN ?? "",
   stakingAddress: process.env.STAKING_ADDRESS ?? "",
-  epochStock: process.env.KUMO_EPOCH_STOCK ?? "auto",
-  keeperIntervalMs: envNum("KEEPER_INTERVAL_MS", 6 * 3600 * 1000),
-  minFundEth: envNum("MIN_FUND_ETH", 0.05),
+  epochStock: process.env.KUMO_EPOCH_STOCK ?? "auto", // manual round-pick override
+  cycleMinutes: envNum("CYCLE_MINUTES", 10),
+  distributeMinEth: envNum("DISTRIBUTE_MIN_ETH", envNum("MIN_FUND_ETH", 0.05)),
+  perRecipientMinUsd: envNum("PER_RECIPIENT_MIN_USD", 0.25),
+  boostPct: envNum("BOOST_PCT", 10),
   gasReserveEth: envNum("GAS_RESERVE_ETH", 0.02),
   maxImpactPct: envNum("MAX_IMPACT_PCT", 2),
 

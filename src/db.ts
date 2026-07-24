@@ -159,6 +159,24 @@ const SCHEMA = [
     note TEXT NOT NULL
   )`,
   `CREATE INDEX IF NOT EXISTS idx_ledger_kind_ts ON ledger(kind, ts)`,
+  `CREATE TABLE IF NOT EXISTS stakers (
+    address TEXT PRIMARY KEY,
+    first_seen BIGINT NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS kumo_holders (
+    address TEXT PRIMARY KEY,
+    balance TEXT NOT NULL DEFAULT '0'
+  )`,
+  `CREATE TABLE IF NOT EXISTS dust_accruals (
+    address TEXT NOT NULL,
+    token TEXT NOT NULL,
+    amount TEXT NOT NULL DEFAULT '0',
+    PRIMARY KEY (address, token)
+  )`,
+  `CREATE TABLE IF NOT EXISTS codecache (
+    address TEXT PRIMARY KEY,
+    is_contract INTEGER NOT NULL
+  )`,
 ];
 
 // additive column migrations (ALTER fails harmlessly when the column exists)

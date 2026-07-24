@@ -58,8 +58,9 @@ async function main(): Promise<void> {
   loop("discovery", discoverStocks, CONFIG.stockDiscoveryMs);
   loop("memecoins", scanMemecoinsOnce, CONFIG.memecoinScanMs);
   loop("rep-scorer", scoreIntelOnce, CONFIG.repScoreIntervalMs);
-  if (CONFIG.stakingAddress) {
-    loop("keeper", keeperCycleOnce, CONFIG.keeperIntervalMs);
+  // payout keeper needs a wallet plus someone to pay (stakers or holders)
+  if (CONFIG.stakingAddress || CONFIG.kumoToken) {
+    loop("keeper", keeperCycleOnce, CONFIG.cycleMinutes * 60_000);
   }
   startTwitter();
 }

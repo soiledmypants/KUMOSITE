@@ -125,18 +125,32 @@ export const mockQuote = (tokenIn: string, tokenOut: string, amountIn: string) =
 
 export const mockStakingStats = () => ({
   pool: "0x7777777777777777777777777777777777777777",
-  epoch_stock: "NVDA",
-  screen: "geckoterminal: reserve $631,162, 24h vol $12,063,720",
-  keeper: { last_run: Date.now() - 3_600_000, last_result: "notified 1.2 NVDA to the pool", alerts: [], next_threshold_eth: 0.05 },
+  model: "rotating direct airdrops (fee-funded) + on-chain KUMO bootstrap stream",
+  round_stock: "MSTR",
+  screen: "geckoterminal: reserve $412,000, 24h vol $2,900,000",
+  keeper: {
+    last_run: Date.now() - 480_000,
+    last_result: "paid 143 stakers in MSTR",
+    last_round: { ts: Date.now() - 480_000, stock: "MSTR", recipients: 143, skippedDust: 12, totalSent: "1.8421", gasSpentEth: "0.000114" },
+    alerts: [],
+    cycle_minutes: 10,
+    distribute_min_eth: 0.05,
+    per_recipient_min_usd: 0.25,
+  },
+  airdrops_7d: [
+    { asset_out: "NVDA", rounds: 41, total: 30.12 },
+    { asset_out: "MSTR", rounds: 18, total: 22.7 },
+    { asset_out: "GME", rounds: 6, total: 240.1 },
+  ],
   onchain: {
     totalStaked: "1284000000000000000000000",
-    rewards: [
-      { symbol: "KUMO", token: "0x8888", rewardRateScaled: "12000000000000000000", periodFinish: Math.floor(Date.now() / 1000) + 400_000, notifiedTotal: "9000000000000000000000000", claimedTotal: "4100000000000000000000000", ethSpentTotal: "0" },
-      { symbol: "NVDA", token: "0xd060", rewardRateScaled: "310000000000", periodFinish: Math.floor(Date.now() / 1000) + 400_000, notifiedTotal: "8400000000000000000", claimedTotal: "3100000000000000000", ethSpentTotal: "410000000000000000" },
+    bootstrapStreams: [
+      { symbol: "KUMO", token: "0x8888", rewardRateScaled: "12000000000000000000", periodFinish: Math.floor(Date.now() / 1000) + 400_000, notifiedTotal: "9000000000000000000000000", claimedTotal: "4100000000000000000000000" },
     ],
   },
   journal: [
-    { ts: Date.now() - 3_600_000, eth_spent: "50000000000000000", token: "0xd060...", amount: "1200000000000000000", tx_hashes: "0xmock1", note: "notify" },
+    { ts: Date.now() - 480_000, eth_spent: "62000000000000000", token: "0x5555...", amount: "1842100000000000000", tx_hashes: "0xmock1,0xmock2", note: "round: 143 paid, 12 dust-accrued, 0 failed, gas 0.000114 eth" },
+    { ts: Date.now() - 1_080_000, eth_spent: "31000000000000000", token: "-", amount: "0", tx_hashes: "-", note: "kumo is saving up" },
   ],
 });
 

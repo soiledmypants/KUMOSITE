@@ -43,8 +43,14 @@ services:
         sync: false # KumoMultiStaking CA once deployed
       - key: KUMO_EPOCH_STOCK
         value: auto
-      - key: MIN_FUND_ETH
+      - key: CYCLE_MINUTES
+        value: "10"
+      - key: DISTRIBUTE_MIN_ETH
         value: "0.05"
+      - key: PER_RECIPIENT_MIN_USD
+        value: "0.25"
+      - key: BOOST_PCT
+        value: "10"
       - key: GAS_RESERVE_ETH
         value: "0.02"
       - key: CORS_ORIGINS

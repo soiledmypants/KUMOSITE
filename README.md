@@ -59,13 +59,13 @@ forge script script/Deploy.s.sol --rpc-url rhc --broadcast \
   --verify --verifier blockscout --verifier-url https://robinhoodchain.blockscout.com/api/
 ```
 
-then set `STAKING_ADDRESS` + `KUMO_TOKEN` on the backend — the keeper starts sweeping fee ETH → two-hop buyback (ETH→USDG→stock) → pull-based `notifyRewardAmount`. yield is real revenue only; the KUMO genesis stream is capped on-chain and clearly labeled. see the honest-apr rules in [docs/API.md](docs/API.md).
+then set `STAKING_ADDRESS` + `KUMO_TOKEN` on the backend and the payout keeper starts its **rapid rotating cycle** (every `CYCLE_MINUTES`, default 10): sweep fee ETH → below `DISTRIBUTE_MIN_ETH` journal "kumo is saving up" → otherwise a payout round: the ta engine picks the current best screen-passing stock (rotation — the pick can differ every round), market-buys it with an impact cap, and **airdrops it directly** to stakers pro-rata by on-chain stake (memedex-style batch transfers with gas-bump; pre-launch fallback: $KUMO holders snapshot; connected agents get `BOOST_PCT` extra weight). shares under `PER_RECIPIENT_MIN_USD` skip-and-accrue as dust until that stock pays again. the staking contract stays deployed as the stake/unstake registry and the capped KUMO bootstrap stream — fee-funded stock rewards flow through the direct-airdrop path, receipted in `/ledger` every round. yield is real revenue only; see the honest-yield rules in [docs/API.md](docs/API.md).
 
 ## stock discovery + ta
 
 kumo auto-discovers every stock token on chain 4663 from the asset registry feed behind docs.robinhood.com/chain/contracts (`api.robinhood.com/rhj/assets`, ~96 assets), resolves each one's chainlink feed from chainlink's reference data directory and its deepest USDG/WETH v3 pool with a both-sides liquidity valuation. `STOCK_TOKENS` env adds extras; previously-discovered assets persist in the db as the offline fallback.
 
-every 5 minutes the ta engine (src/scanner/ta.ts) scores all of them — short/long momentum from stored price history, swap-volume delta, volatility, liquidity — feeding kumo's signals and `GET /stocks/ranking`. weekly, the staking epoch re-picks the highest-scoring stock that passes the liquidity screen (reserve ≥ $250k, 24h vol ≥ $500k); a winner that isn't a registered reward token yet only raises an alert until the cold-key `addReward` ceremony ("new epoch. kumo pays out in <SYM> this week. kumo liked the chart.").
+every 5 minutes the ta engine (src/scanner/ta.ts) scores all of them — short/long momentum from stored price history, swap-volume delta, volatility, liquidity — feeding kumo's signals, `GET /stocks/ranking`, and each payout round's stock pick: the highest-scoring stock that passes the liquidity screen (reserve ≥ $250k, 24h vol ≥ $500k) wins the round ("kumo ran the numbers. this round: MSTR.").
 
 ## llm provider
 
