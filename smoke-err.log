@@ -1,0 +1,2 @@
+[boot] WARNING: fee recipient is 0x4061157f6eb42bD043841b6B9B2492a817BD3F60, not this wallet (0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266). Fine for DRY_RUN reads, but live mode will refuse to start.
+[cycle] WARNING: on-chain fee recipient is 0x4061157f6eb42bD043841b6B9B2492a817BD3F60, not the bot wallet 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 — claimed funds would NOT land here

@@ -1,0 +1,19 @@
+[boot] pons fee-claimer starting
+[boot] bot address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+[boot] chain 4663 @ https://rpc.mainnet.chain.robinhood.com
+[boot] mode: DRY RUN — no txs will be sent
+[boot] token: 0xca989d6f0428830f2d0e8e6d158cBBCFD97F3760
+[boot] ETH routing: 0% -> treasury 0x70997970C51812dc3A010C7d01b50e0d17dc79C8, 100% -> kumo 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
+[boot] cycle every 10 min
+[locker] resolved current locker 0x736D76699C26D0d966744cAe304C000d471f7F35 — deployer 0x4061157f6eb42bD043841b6B9B2492a817BD3F60, recipient 0x4061157f6eb42bD043841b6B9B2492a817BD3F60, protocol share 30%
+[send] allowlist: 0x736D76699C26D0d966744cAe304C000d471f7F35, 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73, 0xca989d6f0428830f2d0e8e6d158cBBCFD97F3760, 0x70997970C51812dc3A010C7d01b50e0d17dc79C8, 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
+
+[cycle] ===== 2026-07-23T23:51:01.046Z (DRY RUN) =====
+[server] stats API listening on http://localhost:8787
+[server]   GET /health   GET /log?limit=100   GET /stats
+[claim] claimable gross 0 WETH + 29902465415328934082020 token units — net after 30% protocol: 0 WETH
+[claim] net claimable below CLAIM_MIN_ETH (0.001) — not claiming
+[unwrap] no WETH balance — nothing to unwrap
+[forward] balance 0 ETH <= gas reserve 0.02 — nothing to forward
+[forward] no token balance — nothing to forward
+[cycle] complete
