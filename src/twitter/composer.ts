@@ -1,8 +1,9 @@
 // kumo's twitter persona: an immortal intelligence live-tweeting its lab notes
-// on the humans. claude-composed when ANTHROPIC_API_KEY is set, in-voice
-// templates otherwise. NOTE: composed text is a candidate only — everything
-// still passes guardrails before posting.
-import { CONFIG } from "../config.js";
+// on the humans. llm-composed when a provider key is configured (anthropic or
+// openai-compatible, see src/llm.ts), in-voice templates otherwise. NOTE:
+// composed text is a candidate only — everything still passes guardrails
+// before posting.
+import { hasLlm, llmComplete } from "../llm.js";
 
 export type KumoEvent =
   | { type: "fee_claimed"; amountUsd: number; token: string; txHash: string }
@@ -125,29 +126,10 @@ function enforceVoice(text: string, max: number): string {
 
 export async function compose(ev: KumoEvent): Promise<string | null> {
   const { prompt, max } = eventInstruction(ev);
-  if (!CONFIG.anthropicKey) return enforceVoice(template(ev), max);
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": CONFIG.anthropicKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: CONFIG.chatModel,
-        max_tokens: 200,
-        system: PERSONA,
-        messages: [{ role: "user", content: prompt }],
-      }),
-      signal: AbortSignal.timeout(20_000),
-    });
-    if (!res.ok) throw new Error(`anthropic ${res.status}`);
-    const data = (await res.json()) as { content: { type: string; text?: string }[] };
-    const text = data.content?.find((c) => c.type === "text")?.text;
-    if (!text) throw new Error("empty");
-    return enforceVoice(text, max);
-  } catch {
-    return enforceVoice(template(ev), max);
+  if (hasLlm()) {
+    const text = await llmComplete({ system: PERSONA, user: prompt, maxTokens: 200 });
+    if (text) return enforceVoice(text, max);
+    // llm failed — fall through to templates, never a blank tweet
   }
+  return enforceVoice(template(ev), max);
 }

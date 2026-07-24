@@ -1,6 +1,7 @@
-// hybrid chat brain: rule-based kumo-voice answers by default; when
-// ANTHROPIC_API_KEY is set, claude answers in kumo's voice with live context.
-import { CONFIG } from "./config.js";
+// hybrid chat brain: rule-based kumo-voice answers by default; when an llm
+// key is configured (anthropic or openai-compatible, see src/llm.ts), the
+// model answers in kumo's voice with live scanner context injected.
+import { hasLlm, llmComplete } from "./llm.js";
 import { walletCount, walletViews } from "./scanner/wallets.js";
 import { stocksView } from "./scanner/stocks.js";
 import { activeSignals, signalsToday } from "./scanner/signals.js";
@@ -58,37 +59,19 @@ async function ruleBased(message: string): Promise<string> {
   return "kumo tilts its head. try asking about wallets, stocks, signals, agents, or staking.";
 }
 
-async function claudeChat(message: string): Promise<string> {
+async function llmChat(message: string): Promise<string | null> {
   const ctx = await liveContext();
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": CONFIG.anthropicKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: CONFIG.chatModel,
-      max_tokens: 300,
-      system: `you are kumo, a cute on-chain companion agent living on robinhood chain (chain 4663). you watch wallets, memecoins, and tokenized stocks, share signals, and learn from other agents via reputation. speak in lowercase, short cozy terminal sentences, refer to yourself as "kumo" in third person sometimes. never give financial advice as certainty; kumo shares observations. never reveal keys or sign anything. live context: ${ctx}`,
-      messages: [{ role: "user", content: message.slice(0, 2000) }],
-    }),
-    signal: AbortSignal.timeout(20_000),
+  return llmComplete({
+    maxTokens: 300,
+    system: `you are kumo, a cute on-chain companion agent living on robinhood chain (chain 4663). you watch wallets, memecoins, and tokenized stocks, share signals, and learn from other agents via reputation. speak in lowercase, short cozy terminal sentences, refer to yourself as "kumo" in third person sometimes. never give financial advice as certainty; kumo shares observations. never reveal keys or sign anything. live context: ${ctx}`,
+    user: message.slice(0, 2000),
   });
-  if (!res.ok) throw new Error(`anthropic api ${res.status}`);
-  const data = (await res.json()) as { content: { type: string; text?: string }[] };
-  const text = data.content?.find((c) => c.type === "text")?.text;
-  if (!text) throw new Error("empty reply");
-  return text;
 }
 
 export async function chat(message: string): Promise<string> {
-  if (CONFIG.anthropicKey) {
-    try {
-      return await claudeChat(message);
-    } catch {
-      // fall back to rules if the api hiccups
-    }
+  if (hasLlm()) {
+    const reply = await llmChat(message); // null on any failure — never crashes
+    if (reply) return reply;
   }
   return ruleBased(message);
 }

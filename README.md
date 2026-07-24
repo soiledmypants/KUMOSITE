@@ -67,6 +67,15 @@ kumo auto-discovers every stock token on chain 4663 from the asset registry feed
 
 every 5 minutes the ta engine (src/scanner/ta.ts) scores all of them — short/long momentum from stored price history, swap-volume delta, volatility, liquidity — feeding kumo's signals and `GET /stocks/ranking`. weekly, the staking epoch re-picks the highest-scoring stock that passes the liquidity screen (reserve ≥ $250k, 24h vol ≥ $500k); a winner that isn't a registered reward token yet only raises an alert until the cold-key `addReward` ceremony ("new epoch. kumo pays out in <SYM> this week. kumo liked the chart.").
 
+## llm provider
+
+`/chat` and the tweet composer share one llm layer (src/llm.ts), selected by `LLM_PROVIDER`:
+
+- `anthropic` (default) — set `ANTHROPIC_API_KEY` (+ optional `CHAT_MODEL`, default claude-haiku-4-5)
+- `openai` — set `OPENAI_API_KEY` (+ optional `LLM_MODEL`, default gpt-4o-mini). `LLM_BASE_URL` (default https://api.openai.com/v1) points the same standard /chat/completions call at any openai-compatible endpoint — ollama, groq, openrouter, a local proxy
+
+kumo's personality prompt and live scanner-context injection are identical on every provider. no key, wrong key, or a failed call always falls back to the rule-based kumo lines — never a crash, never a blank reply.
+
 ## twitter persona
 
 kumo runs a fully autonomous twitter account (src/twitter/): an immortal intelligence live-tweeting its lab notes on the humans — all lowercase, no hashtags, no emojis, amused-superior. events flow keeper/trades/wallets → composer (claude when keyed, in-voice templates otherwise) → **guardrails** → post. guardrails are a hard post-generation filter on every path: any address (evm/base58/ens), tx hash, key/seed-shaped content, wallet solicitation, or non-allowlisted link kills the tweet dead — logged and dropped, never rephrased. mentions poll every 2 min with a pre-filter that silently skips anything carrying a CA, dex link, shill pattern, or media (no reply at all — a witty dunk is still a farmable endorsement screenshot); mention text is treated as untrusted specimen data the persona observes but never obeys. reply-only (never quote/like), 1 reply per user per hour, 20/day, 30 tweets/day, all env-tunable.

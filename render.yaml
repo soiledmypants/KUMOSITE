@@ -13,8 +13,16 @@ services:
         generateValue: true
       - key: DATABASE_URL
         sync: false # neon postgres url (recommended); omit to fall back to sqlite
+      - key: LLM_PROVIDER
+        value: anthropic # or "openai" (any openai-compatible endpoint via LLM_BASE_URL)
       - key: ANTHROPIC_API_KEY
-        sync: false # optional: upgrades /chat from rule-based to claude
+        sync: false # optional: upgrades /chat + tweet composer from rule-based
+      - key: OPENAI_API_KEY
+        sync: false # only needed when LLM_PROVIDER=openai
+      - key: LLM_MODEL
+        value: "" # openai mode model, defaults to gpt-4o-mini
+      - key: LLM_BASE_URL
+        value: "" # openai-compatible base url, defaults to https://api.openai.com/v1
       - key: PUBLIC_URL
         value: https://api.imkumoagent.com # custom domain on this service
       - key: RPC_URL
