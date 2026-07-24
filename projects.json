@@ -29,7 +29,7 @@
       },
       "holders": {
         "startBlock": "${HOLDERS_START_BLOCK}",
-        "scanChunkBlocks": "2000",
+        "scanChunkBlocks": "10000",
         "minBalance": "0",
         "exclude": []
       }
