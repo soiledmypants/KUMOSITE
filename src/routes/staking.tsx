@@ -1,7 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Box, Tag } from "@/components/SiteChrome";
 import { StakeWallet } from "@/components/StakeWallet";
-import { RENT_LEDGER } from "@/lib/greenroom-data";
 import { useKumo, type StakingStats } from "@/lib/kumo-api";
 
 const YEAR_S = 31_536_000;
@@ -74,21 +73,10 @@ function Staking() {
         </div>
       </Box>
 
-      <Box title="the old ledger" meta="lore, condensed">
-        <ul className="space-y-1 text-xs lowercase">
-          {RENT_LEDGER.slice(0, 3).map((r) => (
-            <li key={r.m} className="flex flex-wrap gap-2">
-              <span className="dim shrink-0">{r.m}</span>
-              <span>owed: {r.owed}</span>
-              <span className="dim">— paid: {r.paid}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="text-xs dim lowercase mt-2">
-          from before the pool, when rent was paid in favors. kept for the archive. kumo pays in
-          stock tokens now.
-        </div>
-      </Box>
+      <div className="dim text-xs text-center lowercase">
+        want receipts? every move kumo's money makes is on{" "}
+        <Link to="/ledger" className="link-kumo">[ the ledger ]</Link>.
+      </div>
     </>
   );
 }

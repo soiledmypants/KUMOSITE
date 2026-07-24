@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // kumo's agent API. Override with VITE_KUMO_API; otherwise the production
 // agent in builds, a local agent in dev.
@@ -60,6 +60,18 @@ export type StockRank = {
   scored_at: number;
 };
 
+// GET /ledger — kumo's money movements, newest first. (Shape the site codes
+// against; the agent should serve this once the endpoint ships.)
+export type LedgerEntry = {
+  ts: number;
+  kind: "claim" | "forward" | "buyback" | "reward" | "trade" | string;
+  in?: { symbol?: string; amount?: string | number } | null;
+  out?: { symbol?: string; amount?: string | number } | null;
+  tx?: string | null;
+  line?: string;
+  note?: string;
+};
+
 export type StakingStats = {
   pool?: string;
   epoch_stock?: string;
@@ -80,6 +92,14 @@ export type StakingStats = {
 };
 
 // ---- shared client ----
+
+export class KumoApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
 
 export async function kumoFetch<T>(path: string, init?: RequestInit & { timeoutMs?: number }): Promise<T> {
   const { timeoutMs = 8000, ...rest } = init ?? {};
@@ -104,7 +124,7 @@ export async function kumoFetch<T>(path: string, init?: RequestInit & { timeoutM
   }
   if (!res.ok) {
     const line = (body as { line?: string } | null)?.line;
-    throw new Error(line || LINES.retry);
+    throw new KumoApiError(line || LINES.retry, res.status);
   }
   return body as T;
 }
@@ -115,6 +135,9 @@ export function useKumo<T>(path: string, opts?: { refreshMs?: number }) {
   const refreshMs = opts?.refreshMs;
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorStatus, setErrorStatus] = useState<number | null>(null);
+  const [nonce, setNonce] = useState(0);
+  const refetch = useCallback(() => setNonce((n) => n + 1), []);
 
   useEffect(() => {
     let alive = true;
@@ -125,9 +148,11 @@ export function useKumo<T>(path: string, opts?: { refreshMs?: number }) {
         if (!alive) return;
         setData(d);
         setError(null);
+        setErrorStatus(null);
       } catch (e) {
         if (!alive) return;
         setError(e instanceof Error ? e.message : LINES.retry);
+        setErrorStatus(e instanceof KumoApiError ? e.status : null);
       } finally {
         if (alive && refreshMs) timer = setTimeout(tick, refreshMs);
       }
@@ -137,9 +162,9 @@ export function useKumo<T>(path: string, opts?: { refreshMs?: number }) {
       alive = false;
       if (timer) clearTimeout(timer);
     };
-  }, [path, refreshMs]);
+  }, [path, refreshMs, nonce]);
 
-  return { data, error, loading: data === null && error === null };
+  return { data, error, errorStatus, loading: data === null && error === null, refetch };
 }
 
 // Live SSE feed. `live` is null while connecting, then true/false; EventSource

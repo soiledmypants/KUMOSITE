@@ -14,6 +14,7 @@ import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as AsciiGalleryRouteImport } from './routes/ascii-gallery'
 import { Route as CongregationRouteImport } from './routes/congregation'
 import { Route as JobsRouteImport } from './routes/jobs'
+import { Route as LedgerRouteImport } from './routes/ledger'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as LoreRouteImport } from './routes/lore'
 import { Route as ProtocolRouteImport } from './routes/protocol'
@@ -48,6 +49,11 @@ const CongregationRoute = CongregationRouteImport.update({
 const JobsRoute = JobsRouteImport.update({
   id: '/jobs',
   path: '/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LedgerRoute = LedgerRouteImport.update({
+  id: '/ledger',
+  path: '/ledger',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LibraryRoute = LibraryRouteImport.update({
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/ascii-gallery': typeof AsciiGalleryRoute
   '/congregation': typeof CongregationRoute
   '/jobs': typeof JobsRoute
+  '/ledger': typeof LedgerRoute
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
   '/protocol': typeof ProtocolRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/ascii-gallery': typeof AsciiGalleryRoute
   '/congregation': typeof CongregationRoute
   '/jobs': typeof JobsRoute
+  '/ledger': typeof LedgerRoute
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
   '/protocol': typeof ProtocolRoute
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/ascii-gallery': typeof AsciiGalleryRoute
   '/congregation': typeof CongregationRoute
   '/jobs': typeof JobsRoute
+  '/ledger': typeof LedgerRoute
   '/library': typeof LibraryRoute
   '/lore': typeof LoreRoute
   '/protocol': typeof ProtocolRoute
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/ascii-gallery'
     | '/congregation'
     | '/jobs'
+    | '/ledger'
     | '/library'
     | '/lore'
     | '/protocol'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/ascii-gallery'
     | '/congregation'
     | '/jobs'
+    | '/ledger'
     | '/library'
     | '/lore'
     | '/protocol'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/ascii-gallery'
     | '/congregation'
     | '/jobs'
+    | '/ledger'
     | '/library'
     | '/lore'
     | '/protocol'
@@ -211,6 +223,7 @@ export interface RootRouteChildren {
   AsciiGalleryRoute: typeof AsciiGalleryRoute
   CongregationRoute: typeof CongregationRoute
   JobsRoute: typeof JobsRoute
+  LedgerRoute: typeof LedgerRoute
   LibraryRoute: typeof LibraryRoute
   LoreRoute: typeof LoreRoute
   ProtocolRoute: typeof ProtocolRoute
@@ -256,6 +269,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs'
       fullPath: '/jobs'
       preLoaderRoute: typeof JobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ledger': {
+      id: '/ledger'
+      path: '/ledger'
+      fullPath: '/ledger'
+      preLoaderRoute: typeof LedgerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/library': {
@@ -351,6 +371,7 @@ const rootRouteChildren: RootRouteChildren = {
   AsciiGalleryRoute: AsciiGalleryRoute,
   CongregationRoute: CongregationRoute,
   JobsRoute: JobsRoute,
+  LedgerRoute: LedgerRoute,
   LibraryRoute: LibraryRoute,
   LoreRoute: LoreRoute,
   ProtocolRoute: ProtocolRoute,
