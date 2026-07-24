@@ -22,8 +22,10 @@ export type KumoStatus = {
   signals_today: number;
   trading_enabled: boolean;
   mock: boolean;
-  address?: string;
+  address?: string | null;
   chain_id: number;
+  /** $KUMO contract address once launched; null pre-launch */
+  kumo_token?: string | null;
 };
 
 export type FeedEvent = { ts: number; kind: string; line: string };
@@ -60,38 +62,60 @@ export type StockRank = {
   scored_at: number;
 };
 
-// GET /ledger — kumo's money movements, newest first. (Shape the site codes
-// against; the agent should serve this once the endpoint ships.)
+// GET /ledger — kumo's money movements, newest first (live shape, docs/API.md)
 export type LedgerEntry = {
+  id: number;
   ts: number;
-  kind: "claim" | "forward" | "buyback" | "reward" | "trade" | "airdrop" | string;
-  in?: { symbol?: string; amount?: string | number } | null;
-  out?: { symbol?: string; amount?: string | number } | null;
-  tx?: string | null;
-  line?: string;
-  note?: string;
-  // airdrop rounds
-  recipients?: number;
-  value_usd?: number;
+  kind: "claim" | "forward" | "buyback" | "reward_fund" | "trade" | "airdrop" | string;
+  txHash: string;
+  chainExplorerUrl: string;
+  assetIn: string | null;
+  amountIn: string | null;
+  assetOut: string | null;
+  amountOut: string | null;
+  from: string | null;
+  to: string | null;
+  source: string;
+  note: string;
 };
 
+// GET /staking/stats (live shape, docs/API.md)
 export type StakingStats = {
-  pool?: string;
-  epoch_stock?: string;
-  screen?: string;
-  keeper?: { last_run?: number; last_result?: string; alerts?: string[]; next_threshold_eth?: number };
+  pool?: string | null;
+  model?: string;
+  round_stock?: string | null;
+  screen?: string | null;
+  keeper?: {
+    last_run?: number | null;
+    last_result?: string;
+    last_round?: {
+      ts: number;
+      stock: string;
+      recipients: number;
+      skippedDust: number;
+      totalSent: string;
+      gasSpentEth: string;
+    } | null;
+    alerts?: string[];
+    cycle_minutes?: number;
+    distribute_min_eth?: number;
+    per_recipient_min_usd?: number;
+    dry_run?: boolean;
+  };
+  boost?: { enabled: boolean; pct: number };
+  airdrops_7d?: Array<{ asset_out: string; rounds: number; total: number }>;
   onchain?: {
     totalStaked?: string;
-    rewards?: Array<{
+    bootstrapStreams?: Array<{
       symbol: string;
+      token?: string;
       rewardRateScaled?: string;
       periodFinish?: number;
       notifiedTotal?: string;
       claimedTotal?: string;
-      ethSpentTotal?: string;
     }>;
-  };
-  journal?: Array<{ ts?: number; eth_spent?: string; note?: string }>;
+  } | null;
+  journal?: Array<{ ts?: number; eth_spent?: string; token?: string; amount?: string; tx_hashes?: string; note?: string }>;
 };
 
 // ---- shared client ----

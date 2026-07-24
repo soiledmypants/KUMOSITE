@@ -85,10 +85,36 @@ function Index() {
   const { data: status } = useKumo<KumoStatus>("/status", { refreshMs: 30_000 });
   return (
     <>
-      {/* wallet — real address from /status once the api answers */}
+      {/* wallet + $kumo ca — real values from /status, honest empty states otherwise */}
       <div className="border border-dashed border-[#ccff00] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
         <span className="dim uppercase tracking-widest">kumo's wallet ::</span>
-        <span className="break-all">{status?.address ?? "3M0ss7janitorGRnR00mXZq9pDwK4nP7uH2vB6cLtF1yTeR8kA"}</span>
+        {status?.address ? (
+          <a
+            href={`https://robinhoodchain.blockscout.com/address/${status.address}`}
+            target="_blank"
+            rel="noreferrer"
+            className="break-all link-kumo"
+          >
+            {status.address}
+          </a>
+        ) : (
+          <span className="dim">kumo hasn't shown its wallet yet. (api sleeping.)</span>
+        )}
+      </div>
+      <div className="border border-dashed border-[#ccff00] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
+        <span className="dim uppercase tracking-widest">$kumo ca ::</span>
+        {status?.kumo_token ? (
+          <a
+            href={`https://robinhoodchain.blockscout.com/token/${status.kumo_token}`}
+            target="_blank"
+            rel="noreferrer"
+            className="break-all link-kumo"
+          >
+            {status.kumo_token}
+          </a>
+        ) : (
+          <span className="dim">not launched yet. kumo pins it here the moment it exists. trust nothing else.</span>
+        )}
       </div>
 
       <Box title="~ kumo's terminal ~" meta="rhc-04">

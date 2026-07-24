@@ -8,7 +8,7 @@ export const Route = createFileRoute("/ledger")({
   component: Ledger,
 });
 
-const KINDS = ["all", "claim", "forward", "buyback", "reward", "trade", "airdrop"] as const;
+const KINDS = ["all", "claim", "forward", "buyback", "reward_fund", "trade", "airdrop"] as const;
 const EXPLORER_TX = "https://robinhoodchain.blockscout.com/tx/";
 // feed kinds that mean money moved — any of these triggers a live refetch
 const MONEY_KINDS = new Set(["trade", "stake", "move", "claim", "buyback", "forward", "reward", "airdrop"]);
@@ -23,9 +23,9 @@ function shortTx(tx: string) {
   return tx.length > 16 ? `${tx.slice(0, 8)}…${tx.slice(-6)}` : tx;
 }
 
-function amt(a: LedgerEntry["in"]) {
-  if (!a || a.amount == null) return "—";
-  return `${a.amount} ${a.symbol ?? ""}`.trim();
+function amt(amount: string | null, symbol: string | null) {
+  if (amount == null && symbol == null) return "—";
+  return `${amount ?? ""} ${symbol ?? ""}`.trim() || "—";
 }
 
 function Ledger() {
@@ -105,21 +105,26 @@ function Ledger() {
               </thead>
               <tbody>
                 {filtered.map((e, i) => (
-                  <tr key={`${e.ts}-${e.tx ?? i}`} className="border-t border-[#ccff00]/30">
+                  <tr key={`${e.ts}-${e.txHash ?? i}`} className="border-t border-[#ccff00]/30">
                     <td className="py-1 pr-3 dim">{when(e.ts)}</td>
                     <td className="py-1 pr-3"><Tag>{e.kind}</Tag></td>
-                    <td className="py-1 pr-3">{amt(e.in)}</td>
-                    <td className="py-1 pr-3">{amt(e.out)}</td>
+                    <td className="py-1 pr-3">{amt(e.amountIn, e.assetIn)}</td>
+                    <td className="py-1 pr-3">{amt(e.amountOut, e.assetOut)}</td>
                     <td className="py-1 pr-3">
-                      {e.tx ? (
-                        <a href={`${EXPLORER_TX}${e.tx}`} target="_blank" rel="noreferrer" className="link-kumo">
-                          {shortTx(e.tx)}
+                      {e.txHash ? (
+                        <a
+                          href={e.chainExplorerUrl || `${EXPLORER_TX}${e.txHash}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="link-kumo"
+                        >
+                          {shortTx(e.txHash)}
                         </a>
                       ) : (
                         "—"
                       )}
                     </td>
-                    <td className="py-1 dim whitespace-normal min-w-[16ch]">{e.line ?? e.note ?? "kumo said nothing."}</td>
+                    <td className="py-1 dim whitespace-normal min-w-[16ch]">{e.note || "kumo said nothing."}</td>
                   </tr>
                 ))}
               </tbody>

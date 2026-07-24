@@ -6,23 +6,23 @@ import { useKumo, type LedgerEntry, type StakingStats } from "@/lib/kumo-api";
 const YEAR_S = 31_536_000;
 
 // Honest-apr rules from docs/API.md: bootstrap is price-free
-// (rate × year / 1e18 / totalStaked); fee-funded shows the live
-// eth-spent counter instead of a made-up blended apy.
+// (rate × year / 1e18 / totalStaked); fee-funded shows what was ACTUALLY
+// delivered in the trailing week instead of a made-up blended apy.
 function bootstrapApr(stats: StakingStats | null): number | null {
-  const rewards = stats?.onchain?.rewards;
+  const streams = stats?.onchain?.bootstrapStreams;
   const total = Number(stats?.onchain?.totalStaked);
-  const kumo = rewards?.find((r) => r.symbol === "KUMO");
+  const kumo = streams?.find((r) => r.symbol === "KUMO");
   if (!kumo?.rewardRateScaled || !Number.isFinite(total) || total <= 0) return null;
   const apr = (Number(kumo.rewardRateScaled) * YEAR_S) / 1e18 / total;
   return Number.isFinite(apr) ? apr * 100 : null;
 }
 
-function feeEthSpent(stats: StakingStats | null): number | null {
-  const rewards = stats?.onchain?.rewards;
-  const stock = rewards?.find((r) => r.symbol !== "KUMO" && r.ethSpentTotal != null);
-  if (!stock?.ethSpentTotal) return null;
-  const eth = Number(stock.ethSpentTotal) / 1e18;
-  return Number.isFinite(eth) ? eth : null;
+function trailingWeek(stats: StakingStats | null): { rounds: number; perStock: string } | null {
+  const week = stats?.airdrops_7d;
+  if (!week || week.length === 0) return null;
+  const rounds = week.reduce((a, w) => a + (w.rounds ?? 0), 0);
+  const perStock = week.map((w) => `${Number(w.total ?? 0).toFixed(2)} ${w.asset_out}`).join(" · ");
+  return { rounds, perStock };
 }
 
 export const Route = createFileRoute("/staking")({
@@ -40,9 +40,10 @@ function Staking() {
   const { data: stats, error } = useKumo<StakingStats>("/staking/stats", { refreshMs: 60_000 });
   const { data: roundsData } = useKumo<LedgerEntry[]>("/ledger?kind=airdrop", { refreshMs: 60_000 });
   const apr = bootstrapApr(stats);
-  const ethSpent = feeEthSpent(stats);
+  const week = trailingWeek(stats);
   const rounds = (roundsData ?? []).slice().sort((a, b) => b.ts - a.ts).slice(0, 5);
-  const lastStock = rounds[0]?.out?.symbol ?? null;
+  const lastStock = rounds[0]?.assetOut ?? stats?.keeper?.last_round?.stock ?? null;
+  const boost = stats?.boost ?? null;
   return (
     <>
       <Box title="connect wallet" meta="step one">
@@ -67,11 +68,11 @@ function Staking() {
             </div>
           </div>
           <div className="box p-3">
-            <div className="text-2xl">{ethSpent != null ? `${ethSpent.toFixed(4)} eth` : "0.0%+ apr"}</div>
+            <div className="text-2xl">{week ? `${week.rounds} round${week.rounds === 1 ? "" : "s"}` : "— rounds"}</div>
             <div className="text-xs lowercase dim mt-1">
-              fee-funded — stocks dropped straight to staker wallets. {ethSpent != null
-                ? `kumo has earned and bought ${ethSpent.toFixed(4)} eth of stock for stakers so far.`
-                : "starts near zero. grows only with kumo's real revenue."}
+              fee-funded, last 7 days — stocks dropped straight to staker wallets. {week
+                ? `delivered: ${week.perStock}. trailing reality, not a projection.`
+                : "starts at zero. grows only with kumo's real revenue."}
             </div>
           </div>
         </div>
@@ -98,25 +99,36 @@ function Staking() {
                 <tr>
                   <th className="text-left py-1 pr-3">time</th>
                   <th className="text-left py-1 pr-3">stock</th>
-                  <th className="text-right py-1 pr-3">recipients</th>
-                  <th className="text-right py-1">total value</th>
+                  <th className="text-right py-1 pr-3">total dropped</th>
+                  <th className="text-left py-1">note</th>
                 </tr>
               </thead>
               <tbody>
                 {rounds.map((r, i) => (
                   <tr key={`${r.ts}-${i}`} className="border-t border-[#ccff00]/30">
                     <td className="py-1 pr-3 dim">{roundTime(r.ts)}</td>
-                    <td className="py-1 pr-3">{r.out?.symbol ?? "—"}</td>
-                    <td className="py-1 pr-3 text-right">{r.recipients ?? "—"}</td>
-                    <td className="py-1 text-right">
-                      {r.value_usd != null && Number.isFinite(r.value_usd) ? `$${r.value_usd.toFixed(2)}` : "—"}
+                    <td className="py-1 pr-3">{r.assetOut ?? "—"}</td>
+                    <td className="py-1 pr-3 text-right">
+                      {r.amountOut != null ? `${Number(r.amountOut).toFixed(4)} ${r.assetOut ?? ""}`.trim() : "—"}
                     </td>
+                    <td className="py-1 dim whitespace-normal min-w-[16ch]">{r.note || "—"}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
+      </Box>
+
+      <Box title="agent boost" meta={boost?.enabled ? "on" : "off"}>
+        <div className="lowercase text-sm flex items-center gap-2 flex-wrap">
+          <Tag>{boost?.enabled ? `+${boost.pct}% weight` : "off"}</Tag>
+          <span className="dim">
+            {boost?.enabled
+              ? `agents that connect to kumo get +${boost.pct}% weight in every round, on top of their stake.`
+              : "designed in, shipped off. when kumo flips it on, connected agents will earn a little extra weight in every round. kumo will announce it."}
+          </span>
+        </div>
       </Box>
 
       <div className="dim text-xs text-center lowercase">
