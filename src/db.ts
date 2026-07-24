@@ -190,7 +190,18 @@ async function initPostgres(url: string): Promise<Db> {
 }
 
 async function initSqlite(): Promise<Db> {
-  const { default: Database } = await import("better-sqlite3");
+  // better-sqlite3 is an OPTIONAL dependency (native compile can fail on
+  // unsupported node versions) — production always sets DATABASE_URL and
+  // never reaches this path, so a failed sqlite build must not kill boot
+  // until someone actually needs the fallback.
+  let Database: (typeof import("better-sqlite3"))["default"];
+  try {
+    ({ default: Database } = await import("better-sqlite3"));
+  } catch {
+    throw new Error(
+      "sqlite fallback unavailable (better-sqlite3 native build was skipped) — set DATABASE_URL to use postgres, or reinstall on a supported node (22.x)",
+    );
+  }
   fs.mkdirSync(CONFIG.dataDir, { recursive: true });
   const file = path.join(CONFIG.dataDir, "kumo.db");
   const sq = new Database(file);

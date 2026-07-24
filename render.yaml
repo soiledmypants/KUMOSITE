@@ -7,6 +7,8 @@ services:
     startCommand: node dist/index.js
     healthCheckPath: /status
     envVars:
+      - key: NODE_VERSION
+        value: 22.x # pin LTS — node 26 breaks better-sqlite3's native compile
       - key: PRIVATE_KEY
         sync: false # hot wallet key — set in the render dashboard, never in git
       - key: KUMO_ADMIN_KEY

@@ -16,7 +16,6 @@
     "kumo": "node bin/kumo.js"
   },
   "dependencies": {
-    "better-sqlite3": "^11.10.0",
     "commander": "^12.1.0",
     "cors": "^2.8.5",
     "cross-env": "^7.0.3",
@@ -35,7 +34,10 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   },
+  "optionalDependencies": {
+    "better-sqlite3": "^11.10.0"
+  },
   "engines": {
-    "node": ">=20"
+    "node": "22.x"
   }
 }
