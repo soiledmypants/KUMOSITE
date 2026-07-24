@@ -15,7 +15,7 @@ export const MYSTERIES = [
   { id: "MYSTERY-0042", q: "the answer", status: "SOLVED", body: "it was 42 gwei. we're as disappointed as you are." },
   { id: "MYSTERY-0044", q: "the revert that answered back", status: "BLEEDING", body: "on a tuesday, a failed tx returned the message 'thank you for asking'. every revert since has been suspiciously polite." },
   { id: "MYSTERY-0051", q: "the second kumo", status: "REDACTED", body: "there is only one kumo. there has always been only one kumo. please do not ask about the second kumo." },
-  { id: "MYSTERY-0055", q: "the drift", status: "OPEN", body: "block times drift 4 milliseconds per day. always 4. always in the same direction. always into last epoch." },
+  { id: "MYSTERY-0055", q: "the drift", status: "OPEN", body: "block times drift 4 milliseconds per day. always 4. always in the same direction. always into last era." },
   { id: "MYSTERY-0063", q: "the gas monks' vow of patience", status: "OPEN", body: "gas monks refuse to pay more than 1 gwei. their transactions confirm eventually. their reasons are, quote, 'obvious'." },
   { id: "MYSTERY-0069", q: "the missing blocks", status: "DISPUTED", body: "between block 41,000,000 and 41,000,011 there is a gap of 11 blocks in the archive. kumo says 'we were on break.'" },
 ] as const;
@@ -38,7 +38,7 @@ export const JOBS = [
 
 export const SIGNALS = [
   "[03:17] kumo watched a wallet move 400 tokens at 3am. kumo said nothing. kumo saw.",
-  "[07:42] a tx pending since epoch 3 finally confirmed. it was a gm. the chain said gm back.",
+  "[07:42] a tx pending since era 3 finally confirmed. it was a gm. the chain said gm back.",
   "[11:03] the revert chorus sang the error codes backwards. code 0x51 abstained.",
   "[13:29] wallet 009 moved. we did not.",
   "[16:01] gas monks reported higher-than-expected patience. good.",
@@ -60,13 +60,13 @@ export const TIMELINE = [
   { y: "block 12", t: "kumo (probably not yet named kumo) begins watching." },
   { y: "block 404", t: "kumo's wallet registered under a key nobody remembers generating." },
   { y: "block 41m", t: "11 blocks missing. official statement: 'we were on break.'" },
-  { y: "epoch 9", t: "gas monks form. take vow of patience." },
-  { y: "epoch 12", t: "the ghost validator boots. never shuts down. see MYSTERY-0017." },
-  { y: "epoch 15", t: "the revert chorus premieres. audience: no one. reviews: excellent." },
-  { y: "epoch 17", t: "a failed tx thanks a user. politeness plague begins." },
-  { y: "epoch 21", t: "the mempool watchers convene. adopt the telescope." },
-  { y: "epoch 24", t: "kumo briefly considered launching a token. kumo reconsidered." },
-  { y: "epoch 30", t: "wallet 009 is observed. it is not queried. it will not be queried." },
+  { y: "era 9", t: "gas monks form. take vow of patience." },
+  { y: "era 12", t: "the ghost validator boots. never shuts down. see MYSTERY-0017." },
+  { y: "era 15", t: "the revert chorus premieres. audience: no one. reviews: excellent." },
+  { y: "era 17", t: "a failed tx thanks a user. politeness plague begins." },
+  { y: "era 21", t: "the mempool watchers convene. adopt the telescope." },
+  { y: "era 24", t: "kumo briefly considered launching a token. kumo reconsidered." },
+  { y: "era 30", t: "wallet 009 is observed. it is not queried. it will not be queried." },
   { y: "now", t: "you are reading this. kumo is watching you read this. hi." },
 ];
 
@@ -186,7 +186,7 @@ export const LIBRARY = [
   {
     cat: "dead chains",
     items: [
-      ["cat-91-04", "obscura mainnet (epochs 1–4)", "a chain for moths. still, somehow, one node running."],
+      ["cat-91-04", "obscura mainnet (eras 1–4)", "a chain for moths. still, somehow, one node running."],
       ["cat-91-08", "the chain of one", "a network with a single validator. it finalizes itself, politely."],
       ["cat-91-15", "testnet-1, blocks 0–9111", "recovered from a hard drive in a coat pocket. mostly faucet claims."],
       ["cat-91-22", "hamsterchain fork #7", "the one where the hamsters unionize."],
@@ -198,7 +198,7 @@ export const LIBRARY = [
       ["cat-04-01", "$LUNARFARM", "the yield was fake. the community garden was real."],
       ["cat-04-03", "moon manor: an oral history", "someone talks about the mint for 40 minutes. it is beautiful."],
       ["cat-04-07", "the friendly rug", "the dev returned half and apologized in the memo field. we keep the memo."],
-      ["cat-04-11", "a taxonomy of 'soon'", "the word 'soon' between epoch 3 and epoch 9. all 11,000 uses."],
+      ["cat-04-11", "a taxonomy of 'soon'", "the word 'soon' between era 3 and era 9. all 11,000 uses."],
     ],
   },
   {
@@ -214,7 +214,7 @@ export const LIBRARY = [
     cat: "whitepapers nobody read",
     items: [
       ["cat-19-01", "obscura: a peer-to-peer moth system", "9 pages. 7 are diagrams of moths."],
-      ["cat-19-04", "proof of patience (v0.1 draft)", "consensus by waiting. the gas monks cite it weekly."],
+      ["cat-19-04", "proof of patience (v0.1 draft)", "consensus by waiting. the gas monks cite it constantly."],
       ["cat-19-07", "the hamsterchain yellow paper", "the equations check out. the hamsters remain unverified."],
       ["cat-19-11", "on the phenomenology of the pending spinner", "9 pages. worth it."],
     ],

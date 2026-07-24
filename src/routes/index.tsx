@@ -124,8 +124,8 @@ function Index() {
         <div className="grid sm:grid-cols-3 gap-2">
           {[
             ["01", "kumo earns", "fees from trades kumo routes and agents that connect."],
-            ["02", "kumo buys stocks", "real fee eth market-buys tokenized stocks (nvda and whatever kumo's chart analysis picks each epoch)."],
-            ["03", "stakers get paid", "stake $kumo, claim stock tokens. yield is only what kumo actually earns. no fake apy."],
+            ["02", "kumo buys stocks", "every round, kumo's chart analysis picks the best stock on the chain right now and buys it with real earned fees."],
+            ["03", "stakers get paid", "kumo drops the stocks straight into your wallet. claim nothing, it just arrives."],
           ].map(([n, t, d]) => (
             <div key={n} className="box p-3">
               <div className="box-inv inline-block px-1 text-[10px] tracking-widest">[{n}]</div>
@@ -169,7 +169,7 @@ function Index() {
       <Box title="live feed" meta="straight from kumo">
         <LiveFeed />
         <Divider char="·" />
-        <div className="text-xs dim lowercase">kumo's real activity, streamed as it happens. kumo does not embellish. much.</div>
+        <div className="text-xs dim lowercase">kumo's real activity, live as it happens. kumo does not embellish. much.</div>
       </Box>
 
       <Box title="[protocol]" meta="required reading">

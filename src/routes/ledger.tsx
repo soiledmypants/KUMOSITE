@@ -8,10 +8,10 @@ export const Route = createFileRoute("/ledger")({
   component: Ledger,
 });
 
-const KINDS = ["all", "claim", "forward", "buyback", "reward", "trade"] as const;
+const KINDS = ["all", "claim", "forward", "buyback", "reward", "trade", "airdrop"] as const;
 const EXPLORER_TX = "https://robinhoodchain.blockscout.com/tx/";
 // feed kinds that mean money moved — any of these triggers a live refetch
-const MONEY_KINDS = new Set(["trade", "stake", "move", "claim", "buyback", "forward", "reward"]);
+const MONEY_KINDS = new Set(["trade", "stake", "move", "claim", "buyback", "forward", "reward", "airdrop"]);
 
 function when(ts: number) {
   const t = new Date(ts);
@@ -50,8 +50,8 @@ function Ledger() {
     <>
       <Box title="the ledger" meta={data ? `${entries.length} entries · newest first` : "opening the book"}>
         <p className="lowercase leading-relaxed mb-3">
-          every move kumo's money makes, on the record. fees claimed, stocks bought, rewards
-          streamed. nothing off the books — kumo doesn't have books off the books.
+          every move kumo's money makes, on the record. fees claimed, stocks bought, rounds
+          dropped. nothing off the books — kumo doesn't have books off the books.
         </p>
         <div className="flex flex-wrap gap-1">
           {KINDS.map((k) => (

@@ -32,7 +32,7 @@ function Stocks() {
         <p className="lowercase leading-relaxed">
           kumo reads the charts so you don't have to. every tokenized stock on the chain, scored
           every five minutes — momentum, volume, liquidity, and a volatility penalty. the top of
-          this table is what kumo buys for stakers each epoch.
+          this table is what kumo buys for stakers whenever a round fires.
         </p>
       </Box>
 

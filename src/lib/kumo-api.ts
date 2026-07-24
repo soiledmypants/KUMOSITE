@@ -64,12 +64,15 @@ export type StockRank = {
 // against; the agent should serve this once the endpoint ships.)
 export type LedgerEntry = {
   ts: number;
-  kind: "claim" | "forward" | "buyback" | "reward" | "trade" | string;
+  kind: "claim" | "forward" | "buyback" | "reward" | "trade" | "airdrop" | string;
   in?: { symbol?: string; amount?: string | number } | null;
   out?: { symbol?: string; amount?: string | number } | null;
   tx?: string | null;
   line?: string;
   note?: string;
+  // airdrop rounds
+  recipients?: number;
+  value_usd?: number;
 };
 
 export type StakingStats = {

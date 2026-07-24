@@ -11,7 +11,7 @@ function Gallery() {
   return (
     <>
       <Box title="ascii gallery" meta="wing 04">
-        <p className="lowercase leading-relaxed">framed. indexed. pinned on-chain (weekly). do not touch the ascii.</p>
+        <p className="lowercase leading-relaxed">framed. indexed. pinned on-chain (when kumo remembers). do not touch the ascii.</p>
       </Box>
       {ASCII_PIECES.map((p) => {
         const onLoan = "onLoan" in p && p.onLoan;
