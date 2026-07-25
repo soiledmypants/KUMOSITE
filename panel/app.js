@@ -131,10 +131,25 @@ async function loadJob() {
   $("d-interval").textContent = `${s.intervalMinutes} min`;
   $("d-last").textContent = s.lastResult ?? "—";
 
-  const on = s.enabled && !s.dryRunMaster;
+  // scheduler pill + resume/pause button reflect the job's enabled flag
   const pill = $("scheduler-pill");
-  pill.className = `pill ${s.enabled ? (s.dryRunMaster ? "paused" : "on") : "paused"}`;
-  $("scheduler-text").textContent = s.dryRunMaster ? "dry-run mode" : s.enabled ? "running" : "paused";
+  pill.className = `pill ${s.enabled ? "on" : "paused"}`;
+  $("scheduler-text").textContent = s.enabled ? "running" : "paused";
+  const st = $("sched-toggle");
+  st.textContent = s.enabled ? "Pause" : "Resume";
+  st.className = `btn ${s.enabled ? "red" : "green"}`;
+
+  // master live/safe banner
+  const dry = s.dryRunMaster;
+  const banner = $("mode-banner");
+  banner.className = `mode-banner ${dry ? "safe" : "live"}`;
+  $("mode-label").textContent = dry ? "SAFE MODE" : "LIVE — MAINNET";
+  $("mode-desc").textContent = dry
+    ? "Simulating only — no real transactions are sent."
+    : "Real transactions. Rounds move real funds from the wallet.";
+  $("mode-toggle").textContent = dry ? "Go LIVE (mainnet)" : "Switch to SAFE";
+  $("mode-toggle").className = `btn ${dry ? "amber" : "ghost"}`;
+  state.dryRunMaster = dry;
 }
 
 /* live countdown, ticks off nextRunAt */
@@ -187,16 +202,43 @@ $("trigger-btn").addEventListener("click", () => {
   );
 });
 
-/* scheduler pause/resume (job enabled flag) */
-$("scheduler-pill").addEventListener("click", async () => {
+/* scheduler pause/resume — both the header pill and the dashboard button */
+async function toggleScheduler() {
   const s = state.job;
   if (!s) return;
   try {
     await api(`/autodrop/${JOB}/toggle`, { method: "POST", body: { enabled: !s.enabled } });
-    toast(s.enabled ? "scheduler paused" : "scheduler resumed", "ok");
+    toast(s.enabled ? "airdrop paused" : "airdrop resumed", "ok");
+    feedLine(s.enabled ? "airdrop scheduler paused" : "airdrop scheduler resumed");
     await loadJob();
   } catch (err) { toast(err.message, "err"); }
+}
+$("scheduler-pill").addEventListener("click", toggleScheduler);
+$("sched-toggle").addEventListener("click", toggleScheduler);
+
+/* master live/safe switch */
+$("mode-toggle").addEventListener("click", () => {
+  const goingLive = state.dryRunMaster; // currently dry -> going live
+  if (!goingLive) {
+    // switching back to safe: no confirm needed
+    void setMode(false);
+    return;
+  }
+  openModal(
+    "Go LIVE on mainnet",
+    "This turns off simulation. Every round — automatic and manual — will send <b>real transactions</b> that move real funds from the airdrop wallet. Make sure your admin password is strong. Continue?",
+    "Yes, go LIVE",
+    () => setMode(true),
+  );
 });
+async function setMode(live) {
+  try {
+    await api("/mode", { method: "POST", body: { live } });
+    toast(live ? "LIVE — real transactions armed" : "back to SAFE (simulate only)", live ? "err" : "ok");
+    feedLine(live ? "MASTER MODE: LIVE — real transactions" : "MASTER MODE: SAFE — simulate only", live ? "error" : "");
+    await loadJob();
+  } catch (err) { toast(err.message, "err"); }
+}
 
 /* ---------- settings save ---------- */
 $("save-btn").addEventListener("click", async () => {

@@ -6,6 +6,7 @@
 import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { formatEther, formatUnits, parseEther, parseUnits, parseAbi } from "viem";
 import { CONFIG, addr, dataPath } from "../config.js";
+import { isDryRun } from "../runtime-mode.js";
 import { buildRuntime, RHC_DEFAULTS, type ProjectRuntime, type RawProject } from "../projects.js";
 import { withRetry } from "../rpc.js";
 import { quoteBuy, buyToken } from "./swap.js";
@@ -241,7 +242,7 @@ export async function runJobOnce(id: string, opts: { dryRun: boolean }): Promise
   if (!s) throw new Error(`unknown autodrop job "${id}"`);
   if (s.busy) throw new Error(`job "${id}" is already running`);
   s.busy = true;
-  const dryRun = CONFIG.dryRun || opts.dryRun; // master switch always wins
+  const dryRun = isDryRun() || opts.dryRun; // master switch always wins
   try {
     const { base, holdView, job } = s;
     const wallet = base.botAddress;
@@ -373,7 +374,7 @@ function schedule(s: JobState): void {
     s.timer = setTimeout(() => void tick(), intervalMs);
     if (!s.job.enabled || s.busy) return;
     // scheduled cycles: live when the master switch allows it, dry otherwise
-    await runJobOnce(s.job.id, { dryRun: CONFIG.dryRun }).catch(() => undefined);
+    await runJobOnce(s.job.id, { dryRun: isDryRun() }).catch(() => undefined);
   };
   void tick();
 }
@@ -464,7 +465,7 @@ export async function getJobStatus(id: string): Promise<Record<string, unknown> 
     nextRunAt: s.nextRunAt,
     lastResult: s.lastResult,
     busy: s.busy,
-    dryRunMaster: CONFIG.dryRun,
+    dryRunMaster: isDryRun(),
   };
 }
 

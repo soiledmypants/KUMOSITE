@@ -1,6 +1,7 @@
 import { appendFileSync, existsSync, readFileSync } from "node:fs";
 import { formatEther } from "viem";
 import { CONFIG, dataPath } from "../config.js";
+import { isDryRun } from "../runtime-mode.js";
 import { emitEvent } from "./events.js";
 
 export type LogType =
@@ -72,7 +73,7 @@ function logPath(): string {
 export function append(entry: Omit<LogEntry, "ts" | "dryRun"> & { dryRun?: boolean }): LogEntry {
   const full: LogEntry = {
     ts: new Date().toISOString(),
-    dryRun: entry.dryRun ?? CONFIG.dryRun,
+    dryRun: entry.dryRun ?? isDryRun(),
     ...entry,
   };
   appendFileSync(logPath(), JSON.stringify(full) + "\n");

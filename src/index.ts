@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { CONFIG } from "./config.js";
+import { isDryRun } from "./runtime-mode.js";
 import { loadProjects } from "./projects.js";
 import { startServer } from "./server/http.js";
 import { initProjectLocker, scheduleClaimLoop, type AppState, type ProjectState } from "./server/api.js";
@@ -7,7 +8,7 @@ import { initAutodrop } from "./engine/autodrop.js";
 
 async function main(): Promise<void> {
   console.log("[boot] ops-panel starting");
-  console.log(`[boot] mode: ${CONFIG.dryRun ? "DRY RUN (master) — no txs will be sent" : "LIVE"}`);
+  console.log(`[boot] mode: ${isDryRun() ? "DRY RUN (master) — no txs will be sent" : "LIVE"}`);
 
   if (!CONFIG.adminPassword) {
     console.error("[boot] REFUSING TO START: ADMIN_PASSWORD env var is required (panel auth).");

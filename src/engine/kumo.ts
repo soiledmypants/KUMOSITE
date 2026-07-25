@@ -1,4 +1,5 @@
 import { CONFIG } from "../config.js";
+import { isDryRun } from "../runtime-mode.js";
 import type { ProjectRuntime } from "../projects.js";
 import * as journal from "./journal.js";
 
@@ -33,7 +34,7 @@ export interface LedgerReport {
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function reportToKumo(p: ProjectRuntime, report: LedgerReport): void {
-  if (CONFIG.dryRun) return; // DRY_RUN posts nothing
+  if (isDryRun()) return; // DRY_RUN posts nothing
   if (!CONFIG.kumoApi || !CONFIG.kumoAdminKey) return; // feature off / not configured
   void deliver(p, report); // detached — never awaited by the claim loop
 }

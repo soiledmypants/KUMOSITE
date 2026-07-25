@@ -1,5 +1,6 @@
 import { formatEther, parseAbi } from "viem";
 import { addr, CONFIG, ZERO_ADDRESS } from "../config.js";
+import { isDryRun } from "../runtime-mode.js";
 import { withRetry } from "../rpc.js";
 import type { ProjectRuntime } from "../projects.js";
 import * as journal from "./journal.js";
@@ -219,7 +220,7 @@ export async function claimCycle(
   ctx: LockerContext | null,
   opts: { dryRun?: boolean } = {},
 ): Promise<journal.LogEntry[]> {
-  const dryRun = CONFIG.dryRun || (opts.dryRun ?? false);
+  const dryRun = isDryRun() || (opts.dryRun ?? false);
   const out: journal.LogEntry[] = [];
   console.log(`\n[cycle:${p.id}] ===== ${new Date().toISOString()}${dryRun ? " (DRY RUN)" : ""} =====`);
   emitEvent("cycle", { phase: "start", dryRun }, p.id);

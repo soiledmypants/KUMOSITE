@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { formatEther, parseAbi, parseEther } from "viem";
 import { baseGasCaps, CONFIG } from "../config.js";
+import { isDryRun } from "../runtime-mode.js";
 import { withRetry } from "../rpc.js";
 import type { ProjectRuntime } from "../projects.js";
 import { getHolders, type HolderBalance } from "./holders.js";
@@ -104,7 +105,7 @@ export async function planRound(p: ProjectRuntime, spec: RoundSpec): Promise<Rou
   sweepPlans();
   if (busyProjects.has(p.id)) throw new Error(`project "${p.id}" already has a round executing`);
 
-  const dryRun = CONFIG.dryRun || (spec.dryRun ?? false);
+  const dryRun = isDryRun() || (spec.dryRun ?? false);
   const warnings: string[] = [];
 
   // ---- budget + caps -------------------------------------------------------

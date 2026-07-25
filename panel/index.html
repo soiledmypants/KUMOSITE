@@ -50,6 +50,12 @@
         </div>
 
         <div id="dash-body" class="hidden">
+          <div id="mode-banner" class="mode-banner safe">
+            <span class="label" id="mode-label">SAFE MODE</span>
+            <span class="desc" id="mode-desc">Simulating only — no real transactions are sent.</span>
+            <button class="btn amber" id="mode-toggle">Go LIVE (mainnet)</button>
+          </div>
+
           <div class="grid-3">
             <!-- wallet -->
             <div class="card">
@@ -65,7 +71,8 @@
               <div class="progress"><div id="d-progress"></div></div>
               <div class="btn-row" style="margin-top:16px">
                 <button class="btn amber" id="trigger-btn">Trigger round</button>
-                <button class="btn ghost sm" id="preview-btn">Preview (dry)</button>
+                <button class="btn ghost sm" id="preview-btn">Preview</button>
+                <button class="btn green" id="sched-toggle">Resume</button>
               </div>
             </div>
             <!-- summary -->

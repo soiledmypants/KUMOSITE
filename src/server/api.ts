@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { parseAbi } from "viem";
 import { CONFIG, addr } from "../config.js";
+import { isDryRun, setDryRun } from "../runtime-mode.js";
 import { withRetry } from "../rpc.js";
 import { buildRuntime, rebuildProject, RHC_DEFAULTS, type ProjectRuntime, type RawProject } from "../projects.js";
 import { getOverride, saveOverride, type ProjectOverride } from "../overrides.js";
@@ -49,7 +50,7 @@ export async function initProjectLocker(ps: ProjectState): Promise<void> {
         `fee recipient is ${ps.lockerCtx.recipient}, not the bot wallet ${p.botAddress}. ` +
         `Run with that wallet's key or setFeeRedirect(${p.tokenAddress}, ${p.botAddress}) ` +
         `on locker ${ps.lockerCtx.locker}.`;
-      if (CONFIG.dryRun) {
+      if (isDryRun()) {
         console.warn(`[locker] WARNING (${p.id}): ${msg}`);
       } else {
         ps.claimDisabledReason = msg;
@@ -143,7 +144,7 @@ export function scheduleClaimLoop(ps: ProjectState): void {
     ps.claimBusy = true;
     try {
       // Master DRY_RUN governs scheduled cycles; claimDisabledReason blocks live sends.
-      await claimCycle(p, ps.lockerCtx, { dryRun: CONFIG.dryRun || ps.claimDisabledReason !== null });
+      await claimCycle(p, ps.lockerCtx, { dryRun: isDryRun() || ps.claimDisabledReason !== null });
     } finally {
       ps.claimBusy = false;
     }
@@ -209,12 +210,25 @@ export function apiRouter(state: AppState): Router {
   // Everything below requires a session.
   router.use(requireAuth);
   router.post("/logout", handleLogout);
-  router.get("/me", (_req, res) => send(res, { ok: true, dryRunMaster: CONFIG.dryRun }));
+  router.get("/me", (_req, res) => send(res, { ok: true, dryRunMaster: isDryRun() }));
+
+  // master live/safe switch — controls whether the app SENDS real transactions.
+  router.get("/mode", (_req, res) => send(res, { dryRun: isDryRun() }));
+  router.post(
+    "/mode",
+    wrap(async (req, res) => {
+      const live = req.body?.live === true || req.body?.live === "true";
+      setDryRun(!live);
+      journal.append({ type: "config", dryRun: !live, detail: `master mode set to ${live ? "LIVE (real transactions)" : "SAFE (dry-run)"} via panel` });
+      emitEvent("config", { dryRun: !live }, undefined);
+      send(res, { ok: true, dryRun: !live });
+    }),
+  );
 
   // ---- projects -------------------------------------------------------------
   router.get("/projects", (_req, res) => {
     send(res, {
-      dryRunMaster: CONFIG.dryRun,
+      dryRunMaster: isDryRun(),
       projects: [...state.projects.values()].map(({ p, lockerCtx, claimDisabledReason }) => ({
         id: p.id,
         name: p.name,
@@ -418,7 +432,7 @@ export function apiRouter(state: AppState): Router {
         claimIntervalMinutes: p.claim.intervalMinutes,
         index: indexInfo(p),
         stats: journal.computeStats(p.id),
-        dryRunMaster: CONFIG.dryRun,
+        dryRunMaster: isDryRun(),
         allowlist: p.sender.allowedTargets(),
       });
     }),
@@ -437,7 +451,7 @@ export function apiRouter(state: AppState): Router {
       ps.claimBusy = true;
       try {
         const entries = await claimCycle(ps.p, ps.lockerCtx, { dryRun });
-        send(res, { dryRun: CONFIG.dryRun || dryRun, entries });
+        send(res, { dryRun: isDryRun() || dryRun, entries });
       } finally {
         ps.claimBusy = false;
       }
@@ -492,7 +506,7 @@ export function apiRouter(state: AppState): Router {
   });
 
   // ---- autodrop (simplified: swap ETH -> token -> holders; no fee claim) ------
-  router.get("/autodrop", (_req, res) => send(res, { dryRunMaster: CONFIG.dryRun, jobs: autodrop.listJobs() }));
+  router.get("/autodrop", (_req, res) => send(res, { dryRunMaster: isDryRun(), jobs: autodrop.listJobs() }));
 
   router.post(
     "/autodrop",
