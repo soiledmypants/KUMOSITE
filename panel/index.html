@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ops-panel</title>
+  <title>Airdrop Distributor</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
 
   <!-- LOGIN -->
   <div id="login-view">
-    <div id="login-box" class="box">
-      <h2>OPS-PANEL // AUTH</h2>
+    <div id="login-box" class="card">
+      <h2>Airdrop Distributor</h2>
       <form id="login-form">
         <input id="login-password" type="password" placeholder="admin password" autocomplete="current-password" autofocus />
-        <button class="action" type="submit">[ LOG IN ]</button>
+        <button class="btn green full" type="submit">Log in</button>
       </form>
       <div id="login-error"></div>
     </div>
@@ -22,241 +22,139 @@
 
   <!-- APP -->
   <div id="app-view" class="hidden">
-    <header>
-      <h1>ops-panel</h1>
-      <select id="project-select"></select>
-      <span id="master-dry" class="badge warn hidden">MASTER DRY RUN</span>
-      <span class="spacer"></span>
-      <span id="ws-status">ws: connecting</span>
-      <button id="autodrop-btn" class="action" style="margin:0">[ AUTODROP ]</button>
-      <button id="settings-btn" class="action" style="margin:0">[ SETTINGS ]</button>
-      <button id="logout-btn" class="action" style="margin:0">[ LOGOUT ]</button>
-    </header>
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1205" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Airdrop Distributor</h1>
+          <p>Swap ETH &rarr; token &rarr; auto-airdrop to holders</p>
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <button id="scheduler-pill" class="pill"><span class="dot"></span><span id="scheduler-text">off</span></button>
+      <button id="settings-btn" class="btn ghost sm">Settings</button>
+      <button id="logout-btn" class="btn ghost sm">Log out</button>
+    </div>
 
     <main>
-      <!-- MAIN — everything on one screen -->
-      <section id="view-main">
-        <div class="grid">
-          <div class="box stat">
-            <h2>ETH balance</h2>
-            <div class="value accent" id="d-eth">—</div>
-          </div>
-          <div class="box stat">
-            <h2>WETH balance</h2>
-            <div class="value" id="d-weth">—</div>
-          </div>
-          <div class="box stat">
-            <h2><span id="d-token-sym">TOKEN</span> balance</h2>
-            <div class="value" id="d-token">—</div>
-          </div>
-          <div class="box stat">
-            <h2>Claimable (net)</h2>
-            <div class="value amber" id="d-claimable">—</div>
-          </div>
+      <!-- ===================== DASHBOARD ===================== -->
+      <section id="view-dash">
+        <div id="no-job" class="card hidden" style="text-align:center; padding:40px">
+          <div class="big amber">No airdrop set up yet</div>
+          <p class="dim" style="margin:10px 0 18px">Add your wallet key and the two token addresses to start.</p>
+          <button class="btn amber" id="setup-btn">Set it up</button>
         </div>
 
-        <div class="box">
-          <h2>Wallet / claim state</h2>
-          <div class="kv" id="d-info"></div>
-          <div class="dim" id="d-timer" style="margin:8px 0"></div>
-          <div>
-            <button class="action" id="btn-open-settings">[ EDIT CONFIG ]</button>
-            <button class="action" id="btn-claim-dry">[ FORCE FEE CLAIM — DRY RUN ]</button>
-            <button class="action danger" id="btn-claim-live">[ FORCE FEE CLAIM — LIVE ]</button>
-            <button class="action" id="btn-airdrop-dry">[ FORCE AIRDROP — DRY RUN ]</button>
-            <button class="action danger" id="btn-airdrop-live">[ FORCE AIRDROP — LIVE ]</button>
+        <div id="dash-body" class="hidden">
+          <div class="grid-3">
+            <!-- wallet -->
+            <div class="card">
+              <h2>Wallet balance</h2>
+              <div class="big green mono" id="d-balance">—</div>
+              <div class="sub">Fund this wallet with ETH to run rounds</div>
+              <div class="chip"><span class="mono" id="d-wallet">—</span><button class="btn ghost sm" id="copy-wallet" style="padding:2px 8px">copy</button></div>
+            </div>
+            <!-- countdown -->
+            <div class="card">
+              <h2>Next distribution in</h2>
+              <div class="big amber mono" id="d-countdown">—</div>
+              <div class="progress"><div id="d-progress"></div></div>
+              <div class="btn-row" style="margin-top:16px">
+                <button class="btn amber" id="trigger-btn">Trigger round</button>
+                <button class="btn ghost sm" id="preview-btn">Preview (dry)</button>
+              </div>
+            </div>
+            <!-- summary -->
+            <div class="card">
+              <h2>Setup</h2>
+              <div class="kv-row"><span class="k">Airdropping</span><span class="v mono" id="d-drop">—</span></div>
+              <div class="kv-row"><span class="k">To holders of</span><span class="v mono" id="d-hold">—</span></div>
+              <div class="kv-row"><span class="k">Min holding</span><span class="v" id="d-min">—</span></div>
+              <div class="kv-row"><span class="k">Every</span><span class="v" id="d-interval">—</span></div>
+              <div class="kv-row"><span class="k">Last round</span><span class="v" id="d-last">—</span></div>
+            </div>
           </div>
-        </div>
 
-        <div class="box">
-          <h2>Console</h2>
-          <div id="feed"></div>
-        </div>
-
-        <div class="box">
-          <h2>Totals (live only)</h2>
-          <div class="kv" id="d-stats"></div>
-        </div>
-
-        <div class="box">
-          <h2>Holders <span id="h-count" class="dim"></span></h2>
-          <label class="field"><span>min balance (raw units)</span><input id="h-min" type="text" placeholder="0" /></label>
-          <label class="field"><span>top N (blank = all)</span><input id="h-topn" type="text" placeholder="" /></label>
-          <button class="action" id="btn-snapshot">[ SNAPSHOT ]</button>
-          <button class="action" id="btn-holders-refresh">[ REFRESH VIEW ]</button>
-          <div class="dim" id="h-info"></div>
-          <table>
-            <thead><tr><th>#</th><th>address</th><th>balance</th><th>share</th></tr></thead>
-            <tbody id="h-rows"></tbody>
-          </table>
-        </div>
-
-        <div class="box">
-          <h2>Trigger round</h2>
-          <label class="field"><span>mode</span>
-            <select id="r-mode">
-              <option value="eth">airdrop ETH</option>
-              <option value="buyback">buyback token &rarr; airdrop</option>
-              <option value="token">airdrop token from wallet</option>
-            </select>
-          </label>
-          <label class="field" id="r-budget-field"><span>budget (ETH)</span><input id="r-budget" type="text" placeholder="0.01" /></label>
-          <label class="field hidden" id="r-tokenamt-field"><span>token amount (raw units)</span><input id="r-tokenamt" type="text" /></label>
-          <label class="field"><span>distribution</span>
-            <select id="r-dist">
-              <option value="pro-rata">pro-rata</option>
-              <option value="flat">flat</option>
-            </select>
-          </label>
-          <label class="field"><span>top N (blank = all)</span><input id="r-topn" type="text" /></label>
-          <label class="field"><span>min balance (raw units)</span><input id="r-min" type="text" /></label>
-          <div>
-            <button class="action" id="btn-round-dry">[ PLAN ROUND — DRY RUN ]</button>
-            <button class="action danger" id="btn-round-live">[ PLAN ROUND — LIVE ]</button>
+          <div class="card">
+            <h2>Console</h2>
+            <div id="feed"></div>
           </div>
-        </div>
-
-        <div class="box">
-          <h2>Round history</h2>
-          <table>
-            <thead><tr><th>time</th><th>mode</th><th>asset</th><th>recipients</th><th>amount</th><th>failed</th><th>dry</th><th>tx</th></tr></thead>
-            <tbody id="r-rows"></tbody>
-          </table>
         </div>
       </section>
 
-      <!-- SETTINGS — config + keys, behind the header button -->
+      <!-- ===================== SETTINGS ===================== -->
       <section id="view-settings" class="hidden">
-        <button class="action" id="btn-settings-back" style="margin-bottom:12px">[ &larr; BACK ]</button>
+        <button class="btn ghost sm" id="settings-back" style="margin-bottom:16px">&larr; Back</button>
 
-        <div class="box">
-          <h2>Project config (applies immediately — no redeploy)</h2>
-          <div class="dim" style="margin-bottom:10px">
-            Saved values persist on the data volume and always win over Railway variables /
-            projects.json. Switching the token CA starts a fresh holder index automatically.
-            Blank fields are left unchanged.
-          </div>
-          <label class="field"><span>token CA</span><input id="c-token" type="text" placeholder="0x…" /></label>
-          <label class="field"><span>holders start block</span><input id="c-startblock" type="text" placeholder="token deploy block" /></label>
-          <label class="field"><span>treasury wallet</span><input id="c-treasury" type="text" placeholder="0x…" /></label>
-          <label class="field"><span>kumo wallet</span><input id="c-kumo" type="text" placeholder="0x… (blank only valid with 100% treasury)" /></label>
-          <label class="field"><span>treasury % (rest &rarr; kumo)</span><input id="c-pct" type="text" placeholder="0-100" /></label>
-          <label class="field"><span>key ref</span><input id="c-keyref" type="text" placeholder="env:PRIVATE_KEY or vault:&lt;id&gt;" /></label>
-          <label class="field"><span>claim enabled</span>
-            <select id="c-claimenabled"><option value="">(unchanged)</option><option value="true">true</option><option value="false">false</option></select>
+        <div class="card" style="max-width:640px">
+          <h2>Airdrop settings</h2>
+
+          <label class="f">
+            <span>Wallet private key <span class="hint">— the wallet that buys &amp; sends. Encrypted on save, never shown again.</span></span>
+            <div class="pk-wrap">
+              <input id="s-key" type="password" placeholder="0x… (leave blank to keep the current one)" autocomplete="off" />
+              <button type="button" class="eye" id="s-key-eye">show</button>
+            </div>
           </label>
-          <label class="field"><span>claim min (ETH)</span><input id="c-claimmin" type="text" placeholder="0.01" /></label>
-          <label class="field"><span>claim interval (minutes)</span><input id="c-claiminterval" type="text" placeholder="10" /></label>
-          <button class="action danger" id="btn-config-save">[ SAVE CONFIG ]</button>
-          <div id="c-result" class="dim"></div>
-        </div>
 
-        <div class="box">
-          <h2>Current effective config</h2>
-          <div class="kv" id="c-current"></div>
-        </div>
-
-        <div class="box">
-          <h2>Import key (encrypted at rest — AES-256-GCM)</h2>
-          <label class="field"><span>name</span><input id="k-name" type="text" placeholder="deployer" /></label>
-          <label class="field"><span>private key</span><input id="k-priv" type="password" placeholder="0x…" autocomplete="off" /></label>
-          <button class="action" id="btn-key-import">[ IMPORT ]</button>
-          <div id="k-result" class="dim"></div>
-          <div class="dim">The key is encrypted with KEY_SECRET and never displayed or returned again — only the derived address below. Use it as key ref "vault:&lt;id&gt;" in the config above.</div>
-        </div>
-
-        <div class="box">
-          <h2>Stored keys</h2>
-          <table>
-            <thead><tr><th>name</th><th>derived address</th><th>id (for keyRef)</th><th>created</th></tr></thead>
-            <tbody id="k-rows"></tbody>
-          </table>
-        </div>
-
-        <div class="box">
-          <h2>Add project (reuse this console for any token)</h2>
-          <div class="dim" style="margin-bottom:10px">
-            Robinhood Chain defaults are filled in automatically (RPC, WETH, Uniswap router, pons
-            locker auto-detect). Import the claim wallet's key above first, then reference it as
-            vault:&lt;id&gt;. New projects appear in the header dropdown immediately.
-          </div>
-          <label class="field"><span>id (short slug)</span><input id="np-id" type="text" placeholder="mytoken" /></label>
-          <label class="field"><span>name</span><input id="np-name" type="text" placeholder="My Token" /></label>
-          <label class="field"><span>token CA</span><input id="np-token" type="text" placeholder="0x…" /></label>
-          <label class="field"><span>deploy block</span><input id="np-startblock" type="text" placeholder="e.g. 18300000" /></label>
-          <label class="field"><span>treasury wallet</span><input id="np-treasury" type="text" placeholder="0x…" /></label>
-          <label class="field"><span>secondary wallet (optional)</span><input id="np-kumo" type="text" placeholder="0x… (gets the rest below 100%)" /></label>
-          <label class="field"><span>treasury % (default 100)</span><input id="np-pct" type="text" placeholder="100" /></label>
-          <label class="field"><span>key ref</span><input id="np-keyref" type="text" placeholder="vault:&lt;id&gt; or env:VAR" /></label>
-          <button class="action" id="btn-project-add">[ ADD PROJECT ]</button>
-          <div id="np-result" class="dim"></div>
-        </div>
-
-        <div class="box">
-          <h2>Remove this project</h2>
-          <div class="dim" style="margin-bottom:8px">
-            Only projects created from the panel can be removed here. Holder index and journal
-            entries stay on disk.
-          </div>
-          <button class="action danger" id="btn-project-remove">[ REMOVE CURRENT PROJECT ]</button>
-          <div id="np-remove-result" class="dim"></div>
-        </div>
-      </section>
-
-      <!-- AUTODROP — simplified: swap wallet ETH -> token -> holders. no fee claim. -->
-      <section id="view-autodrop" class="hidden">
-        <button class="action" id="btn-autodrop-back" style="margin-bottom:12px">[ &larr; BACK ]</button>
-
-        <div class="box">
-          <h2>New autodrop job</h2>
-          <div class="dim" style="margin-bottom:10px">
-            Fund the wallet with ETH however you like. Every interval: swap the ETH on Uniswap for
-            the airdrop token, send it pro-rata to holders of the hold token. Import the wallet's
-            key in SETTINGS first, then use vault:&lt;id&gt; here. Master DRY RUN applies — scheduled
-            runs stay dry until you flip it off.
-          </div>
-          <label class="field"><span>id (short slug)</span><input id="ad-id" type="text" placeholder="mydrop" /></label>
-          <label class="field"><span>wallet key ref</span><input id="ad-keyref" type="text" placeholder="vault:&lt;id&gt; or env:VAR" /></label>
-          <label class="field"><span>airdrop token CA (bought &amp; sent)</span><input id="ad-drop" type="text" placeholder="0x…" /></label>
-          <label class="field"><span>hold token CA (who qualifies)</span><input id="ad-hold" type="text" placeholder="0x…" /></label>
-          <label class="field"><span>min holding (whole units)</span><input id="ad-min" type="text" placeholder="0" /></label>
-          <label class="field"><span>hold token deploy block</span><input id="ad-startblock" type="text" placeholder="e.g. 18300000" /></label>
-          <label class="field"><span>interval (minutes)</span><input id="ad-interval" type="text" placeholder="10" /></label>
-          <label class="field"><span>min ETH per round</span><input id="ad-mineth" type="text" placeholder="0.005" /></label>
-          <label class="field"><span>pool fee tier</span>
-            <select id="ad-feetier">
-              <option value="10000">1% (pons tokens)</option>
-              <option value="3000">0.3%</option>
-              <option value="500">0.05%</option>
-            </select>
+          <label class="f">
+            <span>Token to airdrop <span class="hint">— bought on Uniswap and sent out</span></span>
+            <input id="s-drop" type="text" class="mono" placeholder="0x… contract address" />
           </label>
-          <label class="field"><span>max recipients</span><input id="ad-maxrec" type="text" placeholder="300" /></label>
-          <button class="action" id="btn-autodrop-add">[ CREATE JOB ]</button>
-          <div id="ad-result" class="dim"></div>
-        </div>
 
-        <div class="box">
-          <h2>Jobs</h2>
-          <table>
-            <thead><tr><th>id</th><th>wallet</th><th>airdrop token</th><th>hold token</th><th>min hold</th><th>every</th><th>status</th><th>last result</th><th>actions</th></tr></thead>
-            <tbody id="ad-rows"></tbody>
-          </table>
+          <label class="f">
+            <span>Hold token <span class="hint">— holders of this qualify to receive</span></span>
+            <input id="s-hold" type="text" class="mono" placeholder="0x… contract address" />
+          </label>
+
+          <div class="field-2">
+            <label class="f"><span>Min holding <span class="hint">(whole tokens)</span></span><input id="s-min" type="text" placeholder="0" /></label>
+            <label class="f"><span>Hold token deploy block</span><input id="s-startblock" type="text" placeholder="e.g. 18300000" /></label>
+          </div>
+
+          <div class="field-2">
+            <label class="f"><span>Interval (minutes)</span><input id="s-interval" type="text" placeholder="5" /></label>
+            <label class="f"><span>Min ETH per round</span><input id="s-mineth" type="text" placeholder="0.005" /></label>
+          </div>
+
+          <div class="field-2">
+            <label class="f"><span>Pool fee tier</span>
+              <select id="s-feetier">
+                <option value="10000">1% (pons tokens)</option>
+                <option value="3000">0.3%</option>
+                <option value="500">0.05%</option>
+              </select>
+            </label>
+            <label class="f"><span>Max recipients</span><input id="s-maxrec" type="text" placeholder="300" /></label>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn amber" id="save-btn">Save settings</button>
+            <button class="btn ghost" id="settings-cancel">Cancel</button>
+          </div>
+          <div id="s-result" class="dim" style="margin-top:12px; font-size:13px"></div>
         </div>
       </section>
     </main>
   </div>
 
-  <!-- CONFIRM MODAL -->
+  <!-- MODAL -->
   <div id="modal-overlay">
     <div id="modal">
-      <h3 id="modal-title">CONFIRM</h3>
-      <div id="modal-body"></div>
-      <div style="margin-top:14px">
-        <button class="action" id="modal-cancel">[ CANCEL ]</button>
-        <button class="action danger" id="modal-confirm">[ CONFIRM ]</button>
+      <h3 id="modal-title">Confirm</h3>
+      <div class="body" id="modal-body"></div>
+      <div class="btn-row">
+        <button class="btn ghost" id="modal-cancel">Cancel</button>
+        <button class="btn amber" id="modal-confirm">Confirm</button>
       </div>
     </div>
   </div>
+
+  <div id="toast" class="toast"></div>
 
   <script type="module" src="/app.js"></script>
 </body>

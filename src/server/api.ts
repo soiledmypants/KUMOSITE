@@ -502,6 +502,23 @@ export function apiRouter(state: AppState): Router {
     }),
   );
 
+  // upsert — create or update in place (the simple-UI settings save)
+  router.put(
+    "/autodrop",
+    wrap(async (req, res) => {
+      const r = autodrop.upsertJob((req.body ?? {}) as Record<string, unknown>);
+      send(res, { ok: true, ...r });
+    }),
+  );
+
+  router.get(
+    "/autodrop/:id/status",
+    wrap(async (req, res) => {
+      const s = await autodrop.getJobStatus(req.params.id ?? "");
+      send(res, s ?? { exists: false });
+    }),
+  );
+
   router.post(
     "/autodrop/:id/run",
     wrap(async (req, res) => {

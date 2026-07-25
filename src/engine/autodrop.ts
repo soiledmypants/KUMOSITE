@@ -21,6 +21,116 @@ const ERC20_ABI = parseAbi([
 ]);
 const DEAD = "0x000000000000000000000000000000000000dEaD";
 
+// two-hop routing for USDG-paired tokens (tokenized stocks): ETH -> USDG -> token.
+// single-hop WETH pairs (pons tokens) are tried first at the job's fee tier.
+const USDG = "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168" as `0x${string}`;
+const WETH_USDG_FEE = 100;
+const USDG_TOKEN_FEES = [500, 3000, 10000];
+
+const QUOTER_PATH_ABI = parseAbi([
+  "function quoteExactInput(bytes path, uint256 amountIn) returns (uint256 amountOut, uint160[] sqrtPriceX96AfterList, uint32[] initializedTicksCrossedList, uint256 gasEstimate)",
+]);
+const ROUTER_PATH_ABI = parseAbi([
+  "function exactInput((bytes path, address recipient, uint256 amountIn, uint256 amountOutMinimum) params) payable returns (uint256 amountOut)",
+  "function multicall(uint256 deadline, bytes[] data) payable returns (bytes[] results)",
+]);
+
+function encodePath(hops: { token: `0x${string}`; fee?: number }[]): `0x${string}` {
+  let out = "0x";
+  for (const hop of hops) {
+    out += hop.token.slice(2);
+    if (hop.fee !== undefined) out += hop.fee.toString(16).padStart(6, "0");
+  }
+  return out as `0x${string}`;
+}
+
+interface Route {
+  kind: "single" | "twohop";
+  label: string;
+  path?: `0x${string}`;
+  quotedOut: bigint;
+  minOut: bigint;
+}
+
+/** find a route for ETH -> airdropToken: single-hop WETH pair first, then USDG two-hop. */
+async function findRoute(base: ProjectRuntime, ethIn: bigint): Promise<Route> {
+  try {
+    const q = await quoteBuy(base, ethIn);
+    if (q.quotedOut > 0n) {
+      return { kind: "single", label: `ETH -(${base.swap.feeTier})-> token`, quotedOut: q.quotedOut, minOut: q.amountOutMinimum };
+    }
+  } catch {
+    // no direct WETH pool — fall through to the USDG route
+  }
+  let lastError = "no WETH pool and no USDG route";
+  for (const fee2 of USDG_TOKEN_FEES) {
+    const path = encodePath([
+      { token: base.weth, fee: WETH_USDG_FEE },
+      { token: USDG, fee: fee2 },
+      { token: base.tokenAddress },
+    ]);
+    try {
+      const { result } = await withRetry(
+        () =>
+          base.publicClient.simulateContract({
+            address: base.swap.quoter,
+            abi: QUOTER_PATH_ABI,
+            functionName: "quoteExactInput",
+            args: [path, ethIn],
+            account: base.botAddress,
+          }),
+        `autodrop.quotePath[${fee2}]`,
+        { retries: 1 },
+      );
+      const quotedOut = result[0] as bigint;
+      if (quotedOut > 0n) {
+        const minOut = (quotedOut * BigInt(10_000 - Math.round(base.swap.slippagePct * 100))) / 10_000n;
+        return { kind: "twohop", label: `ETH -(100)-> USDG -(${fee2})-> token`, path, quotedOut, minOut };
+      }
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : String(err);
+    }
+  }
+  throw new Error(`no swap route found for the airdrop token: ${lastError.slice(0, 120)}`);
+}
+
+/** execute the swap along the found route. returns the tx hash. */
+async function swapRoute(base: ProjectRuntime, route: Route, ethIn: bigint, roundId: string): Promise<`0x${string}`> {
+  if (route.kind === "single") {
+    const r = await buyToken(base, ethIn, { dryRun: false, roundId });
+    return r.txHash!;
+  }
+  const { encodeFunctionData } = await import("viem");
+  const inner = encodeFunctionData({
+    abi: ROUTER_PATH_ABI,
+    functionName: "exactInput",
+    args: [{ path: route.path!, recipient: base.botAddress, amountIn: ethIn, amountOutMinimum: route.minOut }],
+  });
+  const txHash = await base.sender.sendWithGasBump(
+    {
+      kind: "contract",
+      to: base.swap.router,
+      abi: ROUTER_PATH_ABI,
+      functionName: "multicall",
+      args: [BigInt(Math.floor(Date.now() / 1000) + 1200), [inner]],
+      value: ethIn,
+    },
+    `autodrop.swap2hop`,
+  );
+  journal.append({
+    type: "swap",
+    dryRun: false,
+    projectId: roundId.split("-").slice(0, 2).join("-"),
+    roundId,
+    token: base.tokenAddress,
+    amount: ethIn.toString(),
+    amountOut: route.quotedOut.toString(),
+    txHash,
+    detail: `buy via ${route.label}`,
+  });
+  return txHash;
+}
+
 export interface AutodropJob {
   id: string;
   keyRef: string;
@@ -167,15 +277,15 @@ export async function runJobOnce(id: string, opts: { dryRun: boolean }): Promise
     }
     const totalHeld = holders.reduce((a, h) => a + h.balance, 0n);
 
-    const quote = await quoteBuy(base, ethIn);
+    const route = await findRoute(base, ethIn);
     const shareOf = (pool: bigint, bal: bigint): bigint => (pool * bal) / totalHeld;
 
     if (dryRun) {
       const top = holders.slice(0, 10).map((h) => ({
         address: h.address,
-        amount: formatUnits(shareOf(quote.quotedOut, h.balance), dropDecimals),
+        amount: formatUnits(shareOf(route.quotedOut, h.balance), dropDecimals),
       }));
-      const detail = `PLAN: swap ${formatEther(ethIn)} ETH -> ~${formatUnits(quote.quotedOut, dropDecimals)} ${dropSymbol}, pay ${holders.length} holders`;
+      const detail = `PLAN: swap ${formatEther(ethIn)} ETH -> ~${formatUnits(route.quotedOut, dropDecimals)} ${dropSymbol} via ${route.label}, pay ${holders.length} holders`;
       s.lastResult = `dry-run: ${detail}`;
       journal.append({
         type: "round",
@@ -193,17 +303,17 @@ export async function runJobOnce(id: string, opts: { dryRun: boolean }): Promise
         phase: "ready",
         detail,
         ethIn: formatEther(ethIn),
-        quotedOut: formatUnits(quote.quotedOut, dropDecimals),
+        quotedOut: formatUnits(route.quotedOut, dropDecimals),
         airdropSymbol: dropSymbol,
         recipients: holders.length,
         top,
       };
     }
 
-    // LIVE: swap, then distribute the wallet's FULL airdrop-token balance
+    // LIVE: swap along the found route, then distribute the wallet's FULL airdrop-token balance
     await base.sender.refreshNonce();
     const roundId = `drop-${id}-${Date.now()}`;
-    await buyToken(base, ethIn, { dryRun: false, roundId });
+    await swapRoute(base, route, ethIn, roundId);
     const dropBalance = await withRetry(
       () => base.publicClient.readContract({ address: base.tokenAddress, abi: ERC20_ABI, functionName: "balanceOf", args: [wallet] }),
       `autodrop:${id}.dropBal`,
@@ -308,6 +418,54 @@ export function createJob(input: Partial<AutodropJob>): { id: string; wallet: st
   journal.append({ type: "config", dryRun: false, projectId: `drop-${id}`, token: views.base.tokenAddress, detail: `autodrop job "${id}" created` });
   emitEvent("config", { created: `drop-${id}` }, `drop-${id}`);
   return { id, wallet: views.base.botAddress };
+}
+
+/** create a job, or update it in place if the id already exists (settings save). */
+export function upsertJob(input: Partial<AutodropJob>): { id: string; wallet: string } {
+  const id = String(input.id ?? "").trim().toLowerCase();
+  const existing = states.get(id);
+  if (!existing) return createJob(input);
+
+  // merge onto the existing job so blank fields keep their current value
+  const merged: AutodropJob = {
+    ...existing.job,
+    ...Object.fromEntries(Object.entries(input).filter(([, v]) => v !== undefined && v !== "")),
+    id,
+  } as AutodropJob;
+  const keyRef = String(merged.keyRef ?? "").trim();
+  if (!keyRef.startsWith("env:") && !keyRef.startsWith("vault:")) {
+    throw new Error('keyRef required — import the wallet key first, then use "vault:<id>"');
+  }
+  const views = buildViews(merged); // validates + resolves key before committing
+  if (existing.timer) clearTimeout(existing.timer);
+  const s: JobState = { job: merged, ...views, busy: false, nextRunAt: null, lastResult: existing.lastResult };
+  states.set(id, s);
+  persist();
+  schedule(s);
+  journal.append({ type: "config", dryRun: false, projectId: `drop-${id}`, token: views.base.tokenAddress, detail: `autodrop job "${id}" updated` });
+  return { id, wallet: views.base.botAddress };
+}
+
+/** live status for one job: config + wallet ETH balance + timing. */
+export async function getJobStatus(id: string): Promise<Record<string, unknown> | null> {
+  const s = states.get(id);
+  if (!s) return null;
+  let ethBalance = "0";
+  try {
+    const bal = await s.base.publicClient.getBalance({ address: s.base.botAddress });
+    ethBalance = formatEther(bal);
+  } catch {
+    // rpc hiccup — report zeroed balance, don't throw
+  }
+  return {
+    ...s.job,
+    wallet: s.base.botAddress,
+    ethBalance,
+    nextRunAt: s.nextRunAt,
+    lastResult: s.lastResult,
+    busy: s.busy,
+    dryRunMaster: CONFIG.dryRun,
+  };
 }
 
 export function setJobEnabled(id: string, enabled: boolean): void {
