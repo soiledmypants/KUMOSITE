@@ -1,0 +1,22 @@
+# deps / builds
+node_modules/
+dist/
+packages/shared/dist/
+
+# env — NEVER commit real keys. .env lives locally + in Render/Netlify dashboards only.
+.env
+.env.*
+!.env.example
+
+# agent local data (sqlite fallback)
+data/
+
+# foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+contracts/lib/
+
+# misc
+*.log
+.DS_Store

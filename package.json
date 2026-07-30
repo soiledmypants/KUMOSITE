@@ -1,0 +1,31 @@
+{
+  "name": "kumosite-monorepo",
+  "version": "1.0.0",
+  "description": "kumo — site (apps/site), agent (apps/agent), shared types/constants (packages/shared), contracts (contracts/)",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/shared",
+    "apps/agent",
+    "apps/site"
+  ],
+  "scripts": {
+    "dev": "npm run build:shared && concurrently -n agent,site -c green,cyan \"npm run dev -w apps/agent\" \"cross-env VITE_KUMO_API=http://localhost:8787 npm run dev -w apps/site\"",
+    "dev:mock": "npm run build:shared && concurrently -n agent,site -c green,cyan \"npm run dev:mock -w apps/agent\" \"cross-env VITE_KUMO_API=http://localhost:8787 npm run dev -w apps/site\"",
+    "build:shared": "npm run build -w packages/shared",
+    "build:agent": "npm run build:shared && npm run build -w apps/agent",
+    "build:site": "npm run build -w apps/site",
+    "typecheck": "npm run build:shared && npm run typecheck -w apps/agent",
+    "test": "npm run build:shared && npm run test:staking && npm run test:twitter",
+    "test:staking": "npx -w apps/agent tsx src/staking/distribute.test.ts",
+    "test:twitter": "npx -w apps/agent tsx src/twitter/guardrails.test.ts && npx -w apps/agent tsx src/twitter/pipeline.test.ts",
+    "wallet:check": "npx -w apps/agent tsx scripts/wallet-check.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}

@@ -1,9 +1,13 @@
+# agent deploy: the Render service repoints from the old kumo-agent repo to
+# THIS repo (KUMOSITE) with rootDir apps/agent — see RUNBOOK.md for the click-by-click.
 services:
   - type: web
     name: kumo-agent
     runtime: node
     plan: starter
-    buildCommand: npm ci && npm run build
+    rootDir: apps/agent
+    # workspace install from the repo root: shared builds first (prepare), then the agent
+    buildCommand: cd ../.. && npm ci -w packages/shared -w apps/agent --include-workspace-root=false && npm run build:shared && npm run build -w apps/agent
     startCommand: node dist/index.js
     healthCheckPath: /status
     envVars:
@@ -11,22 +15,24 @@ services:
         value: 22.x # pin LTS — node 26 breaks better-sqlite3's native compile
       - key: PRIVATE_KEY
         sync: false # hot wallet key — set in the render dashboard, never in git
+      - key: CLAIMER_PRIVATE_KEY
+        sync: false # pons claim wallet (optional; unset -> PRIVATE_KEY claims)
       - key: KUMO_ADMIN_KEY
         generateValue: true
       - key: DATABASE_URL
         sync: false # neon postgres url (recommended); omit to fall back to sqlite
       - key: LLM_PROVIDER
-        value: anthropic # or "openai" (any openai-compatible endpoint via LLM_BASE_URL)
+        value: anthropic
       - key: ANTHROPIC_API_KEY
-        sync: false # optional: upgrades /chat + tweet composer from rule-based
+        sync: false
       - key: OPENAI_API_KEY
-        sync: false # only needed when LLM_PROVIDER=openai
+        sync: false
       - key: LLM_MODEL
-        value: "" # openai mode model, defaults to gpt-4o-mini
+        value: ""
       - key: LLM_BASE_URL
-        value: "" # openai-compatible base url, defaults to https://api.openai.com/v1
+        value: ""
       - key: PUBLIC_URL
-        value: https://api.imkumoagent.com # custom domain on this service
+        value: https://api.imkumoagent.com
       - key: RPC_URL
         value: https://rpc.mainnet.chain.robinhood.com
       - key: KUMO_MOCK
@@ -54,8 +60,12 @@ services:
       - key: BOOST_PCT
         value: "10"
       - key: KEEPER_DRY_RUN
-        value: "false" # true -> keeper plans rounds but never sends (safe launch rehearsal)
+        value: "false" # true -> keeper plans rounds but never sends (launch rehearsal)
       - key: GAS_RESERVE_ETH
         value: "0.02"
+      - key: CLAIM_ENABLED
+        value: "false" # pons fee claiming (folded in from ops-panel)
+      - key: CLAIM_DRY_RUN
+        value: "true"
       - key: CORS_ORIGINS
         value: "https://imkumoagent.com,https://www.imkumoagent.com"
