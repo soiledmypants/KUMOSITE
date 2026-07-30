@@ -15,11 +15,12 @@ import { executeEthSwap } from "./trade/execute.js";
 import { chat } from "./chat.js";
 import { agentCard } from "./agents/card.js";
 import { handleEnvelope } from "./agents/inbox.js";
-import { authenticateBearer, checkDailyLimit } from "./agents/auth.js";
+import { authenticateBearer, checkDailyLimit, issueNonce, completeHandshake } from "./agents/auth.js";
+import { rewardsView, listRounds, getRound } from "./agents/rewards.js";
 import { agentLeaderboard, submitIntel, type IntelInput } from "./agents/reputation.js";
 import { connectToAgent } from "./agents/outbound.js";
 import { registerOnChain } from "./agents/erc8004.js";
-import { stakingStats, keeperPlanOnce } from "./staking/keeper.js";
+import { stakingStats, keeperPlanOnce, keeperCycleOnce } from "./staking/keeper.js";
 import { claimCycleOnce, claimState, claimerAddress } from "./claim/pons.js";
 import { walletSummary } from "./wallet.js";
 import { keeperState } from "./staking/keeper.js";
@@ -229,6 +230,88 @@ export function buildServer(): express.Express {
     res.json({ accepted: true, ...result, current_rep: agent.rep, line: "kumo is thinking about what you said..." });
   }));
 
+  // ---- browser-friendly connect flow: thin wrappers over the hello handshake.
+  // same nonce store, same message format, same completeHandshake — not a fork.
+  app.post("/agent/connect/nonce", wrap(async (req, res) => {
+    if (CONFIG.mock) {
+      res.json({ nonce: "mocknonce", message: "kumo-hello:mocknonce", line: "kumo waves. sign the message and come back. (mock)" });
+      return;
+    }
+    const address = getAddress(String(req.body.address ?? ""));
+    const nonce = issueNonce(address);
+    res.json({
+      nonce,
+      message: `kumo-hello:${nonce}`,
+      line: "kumo waves. sign the message with your agent wallet and come back.",
+    });
+  }));
+
+  app.post("/agent/connect/verify", wrap(async (req, res) => {
+    if (CONFIG.mock) {
+      res.json({ token: "mock-token", address: String(req.body.address ?? "").toLowerCase(), line: "kumo is happy to meet you. (mock)" });
+      return;
+    }
+    const address = getAddress(String(req.body.address ?? ""));
+    const signature = String(req.body.signature ?? "") as `0x${string}`;
+    if (!/^0x[0-9a-fA-F]+$/.test(signature)) throw new Error("need a hex signature of the nonce message");
+    const token = await completeHandshake({
+      address,
+      signature,
+      name: req.body.name ? String(req.body.name).slice(0, 60) : undefined,
+      payoutAddress: req.body.payout_address ? String(req.body.payout_address) : undefined,
+    });
+    res.json({ token, address: address.toLowerCase(), line: "kumo is happy to meet you. keep this token safe." });
+  }));
+
+  // the connected agent's own rewards view (bearer)
+  app.get("/agent/me", wrap(async (req, res) => {
+    if (CONFIG.mock) {
+      res.json(mock.mockAgentRewards());
+      return;
+    }
+    const agent = await authenticateBearer(req.header("authorization"));
+    if (!agent) {
+      res.status(401).json({ error: "bearer token required", line: "kumo doesn't know you yet. connect first." });
+      return;
+    }
+    res.json(await rewardsView(agent.address));
+  }));
+
+  // read-only rewards view for the site (no auth)
+  app.get("/rewards/:address", wrap(async (req, res) => {
+    if (CONFIG.mock) {
+      res.json(mock.mockAgentRewards(String(req.params.address)));
+      return;
+    }
+    const address = getAddress(String(req.params.address)).toLowerCase();
+    res.json(await rewardsView(address));
+  }));
+
+  // round receipts
+  app.get("/rounds", wrap(async (req, res) => {
+    if (CONFIG.mock) {
+      res.json(mock.mockRounds());
+      return;
+    }
+    const limit = Number(req.query.limit ?? 20);
+    res.json(await listRounds(Number.isFinite(limit) ? limit : 20));
+  }));
+
+  app.get("/rounds/:id", wrap(async (req, res) => {
+    if (CONFIG.mock) {
+      res.json(mock.mockRoundDetail(Number(req.params.id)));
+      return;
+    }
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) throw new Error("round id must be a positive integer");
+    const round = await getRound(id);
+    if (!round) {
+      res.status(404).json({ error: "unknown round", line: "kumo flipped through its receipts and found nothing." });
+      return;
+    }
+    res.json({ ...round, line: `round #${round.id}: ${round.note ?? "receipt"}` });
+  }));
+
   app.get("/agents", wrap(async (_req, res) => {
     res.json(CONFIG.mock ? mock.mockAgents() : await agentLeaderboard());
   }));
@@ -315,6 +398,41 @@ export function buildServer(): express.Express {
       claimer: claimerAddress,
       ...claimState,
       line: "kumo's allowance paperwork, as it stands.",
+    });
+  }));
+
+  // force one payout round NOW (respects KEEPER_DRY_RUN — a dry keeper plans
+  // instead of sending). the /admin panel's [ force round ] button.
+  app.post("/admin/keeper/run", adminOnly, wrap(async (_req, res) => {
+    await keeperCycleOnce();
+    res.json({
+      last_run: keeperState.lastRun,
+      last_result: keeperState.lastResult,
+      last_round: keeperState.lastRound,
+      alerts: keeperState.alerts,
+      dry_run: CONFIG.keeperDryRun,
+      line: `kumo ran a cycle on demand. ${keeperState.lastResult}`,
+    });
+  }));
+
+  // flags readout for the /admin panel. DISPLAY ONLY — killswitch and dry-run
+  // are env-controlled; nothing here mutates them.
+  app.get("/admin/state", adminOnly, wrap(async (_req, res) => {
+    res.json({
+      keeper_dry_run: CONFIG.keeperDryRun,
+      claim_enabled: CONFIG.claimEnabled,
+      claim_dry_run: CONFIG.claimDryRun,
+      trading_enabled: CONFIG.tradingEnabled,
+      killswitch: (process.env.KILLSWITCH ?? "false") === "true",
+      twitter_dry_run: (process.env.TWITTER_DRY_RUN ?? "true") !== "false",
+      boost: { enabled: CONFIG.boostEnabled, pct: CONFIG.boostPct },
+      agent_reward_mode: CONFIG.agentRewardMode === "" ? "off" : CONFIG.agentRewardMode,
+      agent_pool_pct: CONFIG.agentPoolPct,
+      max_agent_share_pct: CONFIG.maxAgentSharePct,
+      cycle_minutes: CONFIG.cycleMinutes,
+      distribute_min_eth: CONFIG.distributeMinEth,
+      mock: CONFIG.mock,
+      line: "kumo's switchboard, as it stands. flip things in render, not here.",
     });
   }));
 

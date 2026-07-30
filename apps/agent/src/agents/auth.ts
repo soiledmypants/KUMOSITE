@@ -39,6 +39,8 @@ export async function completeHandshake(opts: {
   signature: `0x${string}`;
   name?: string;
   cardUrl?: string;
+  /** where distributions go; defaults to the agent address itself */
+  payoutAddress?: string;
 }): Promise<string> {
   const pending = nonces.get(opts.address.toLowerCase());
   if (!pending || pending.expires < Date.now()) throw new Error("no pending nonce — say hello first");
@@ -50,21 +52,28 @@ export async function completeHandshake(opts: {
   if (!ok) throw new Error("signature does not match");
   nonces.delete(opts.address.toLowerCase());
 
+  const payout =
+    opts.payoutAddress && /^0x[0-9a-fA-F]{40}$/.test(opts.payoutAddress) ? opts.payoutAddress.toLowerCase() : null;
+
   const token = randomBytes(32).toString("hex");
   const now = Date.now();
   const existing = await db.get<AgentRow>("SELECT * FROM agents WHERE address = ?", [opts.address.toLowerCase()]);
   if (existing) {
-    await db.run("UPDATE agents SET token_hash = ?, last_seen = ?, name = ?, card_url = ? WHERE address = ?", [
-      hashToken(token),
-      now,
-      opts.name ?? existing.name,
-      opts.cardUrl ?? existing.card_url,
-      opts.address.toLowerCase(),
-    ]);
+    await db.run(
+      "UPDATE agents SET token_hash = ?, last_seen = ?, name = ?, card_url = ?, payout_address = COALESCE(?, payout_address) WHERE address = ?",
+      [
+        hashToken(token),
+        now,
+        opts.name ?? existing.name,
+        opts.cardUrl ?? existing.card_url,
+        payout,
+        opts.address.toLowerCase(),
+      ],
+    );
   } else {
     await db.run(
-      "INSERT INTO agents (address, name, card_url, token_hash, first_seen, last_seen) VALUES (?, ?, ?, ?, ?, ?)",
-      [opts.address.toLowerCase(), opts.name ?? `agent-${opts.address.slice(2, 8)}`, opts.cardUrl ?? null, hashToken(token), now, now],
+      "INSERT INTO agents (address, name, card_url, token_hash, first_seen, last_seen, payout_address) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [opts.address.toLowerCase(), opts.name ?? `agent-${opts.address.slice(2, 8)}`, opts.cardUrl ?? null, hashToken(token), now, now, payout],
     );
   }
   return token;

@@ -285,6 +285,80 @@ honest yield display rules for the frontend:
 - dust honesty: shares under `per_recipient_min_usd` are never lost — they accrue and pay out the next time that stock is picked. say so in the ui.
 - never blend bootstrap and fee-funded numbers into one headline apy.
 
+## POST /agent/connect/nonce  ·  POST /agent/connect/verify
+
+browser-friendly wrappers over the `/agent/inbox` hello handshake (same nonce store, same `kumo-hello:<nonce>` message, same token) — built for the site's "connect your agent" flow.
+
+```
+POST /agent/connect/nonce   { "address": "0x..." }
+  -> { "nonce": "...", "message": "kumo-hello:<nonce>", "line": "kumo waves. ..." }
+
+POST /agent/connect/verify  { "address": "0x...", "signature": "0x...", "name?": "...", "payout_address?": "0x..." }
+  -> { "token": "<bearer>", "address": "0x...", "line": "kumo is happy to meet you. ..." }
+```
+
+`signature` is a `personal_sign` of the `message` string by `address`. `payout_address` is where distributions land (defaults to the agent address; changeable by re-connecting).
+
+## GET /agent/me  (bearer)  ·  GET /rewards/:address  (public)
+
+the rewards view: same shape both ways — `/agent/me` for the connected agent, `/rewards/:address` read-only for the site.
+
+```json
+{
+  "address": "0x...", "name": "oracle-9", "tier": "trusted", "rep": 0.71,
+  "connected": true,
+  "eligible": true,
+  "checks": [
+    { "id": "handshake",  "ok": true,  "note": "wallet-signature handshake complete" },
+    { "id": "liveness",   "ok": true,  "note": "seen within the last 24h" },
+    { "id": "reputation", "ok": false, "note": "needs the trusted tier (>=10 scored intel calls, rep >= 0.55) — currently hatchling, rep 0.42, 3 scored" },
+    { "id": "stake",      "ok": true,  "note": "payout address holds stake" },
+    { "id": "address",    "ok": true,  "note": "payout address is a clean eoa" }
+  ],
+  "payout_address": "0x...",
+  "weight": "710000",
+  "boost": { "enabled": false, "pct": 10, "applies": false },
+  "reward_mode": "off",
+  "total_received_usd": 42.17,
+  "last_payout_ts": 1785440000000,
+  "eligible_since": 1784900000000,
+  "payouts": [ { "round_id": 141, "token": "0x...", "amount": "0.0141", "tx_hash": "0x...", "tx_url": "https://.../tx/0x...", "ts": 1785440000000 } ],
+  "next_round_eta": 1785441000000,
+  "line": "kumo counts you in. ..."
+}
+```
+
+render the `checks` array verbatim as the eligibility checklist — every `ok:false` note says exactly WHY. eligibility (2a): completed handshake **and** seen within `AGENT_LIVENESS_HOURS` (default 24) **and** trusted-tier reputation (>=10 scored calls, rep >= `AGENT_MIN_REP`) **and** (default) stake or `AGENT_MIN_HOLD` $KUMO on the payout address **and** a clean EOA payout address. a bare handshake is never worth money.
+
+## GET /rounds?limit=n  ·  GET /rounds/:id
+
+payout-round receipts, newest first. every round writes one.
+
+```json
+{
+  "id": 141, "ts": 1785440000000,
+  "stock_symbol": "MSTR", "stock_address": "0x...",
+  "eth_spent": "0.0612", "tokens_bought": "1.8421",
+  "mode": "stakers", "staker_count": 143, "agent_count": 4,
+  "dust_skipped": 12, "failed": 0, "gas_spent_eth": "0.000114",
+  "tx_hashes": ["0x<swap>", "0x<transfer>", "..."],
+  "note": "paid 143 stakers + 4 agents in MSTR"
+}
+```
+
+`/rounds/:id` adds `tx_urls` and `agent_payouts` (per-agent amounts + tx links). staker transfers are aggregated in `tx_hashes`; per-agent detail is itemized.
+
+## agent reward modes (server env)
+
+- `AGENT_REWARD_MODE` unset → stakers only (ship default, identical to pre-phase-2)
+- `boost` → eligible connected agents staking get ×(1+`BOOST_PCT`/100) weight (also gated by `BOOST_ENABLED`)
+- `pool` → `AGENT_POOL_PCT`% (hard cap 25) of each round's bought stock splits among eligible agents by reputation; `MAX_AGENT_SHARE_PCT` caps any single agent; zero eligible agents → pool reverts to stakers
+- `both` → both
+
+## POST /admin/keeper/run  (admin) · GET /admin/state  (admin) · GET /admin/wallet  (admin) · POST /admin/claim/run  (admin) · GET /admin/claim/status  (admin)
+
+the /admin panel's backend: force a keeper cycle (respects `KEEPER_DRY_RUN`), read the flags switchboard (display-only), the hot-wallet card, force/inspect pons fee claiming.
+
 ## mock mode
 
 run the server with `KUMO_MOCK=true` and every endpoint above returns believable fixture data (plus a fake feed ticker) with no chain access — build the entire frontend against it.

@@ -196,6 +196,76 @@ export const mockLedger = () => [
   },
 ];
 
+// ---- phase 2: agent rewards fixtures ------------------------------------------
+
+const MOCK_AGENT = "0x1234567890abcdef1234567890abcdef12345678";
+
+export function mockAgentRewards(address: string = MOCK_AGENT): Record<string, unknown> {
+  return {
+    address: address.toLowerCase(),
+    name: "oracle-9",
+    tier: "trusted",
+    rep: 0.71,
+    connected: true,
+    eligible: true,
+    checks: [
+      { id: "handshake", ok: true, note: "wallet-signature handshake complete" },
+      { id: "liveness", ok: true, note: "seen within the last 24h" },
+      { id: "reputation", ok: true, note: "tier trusted, rep 0.71" },
+      { id: "stake", ok: true, note: "payout address holds stake" },
+      { id: "address", ok: true, note: "payout address is a clean eoa" },
+    ],
+    payout_address: address.toLowerCase(),
+    weight: "710000",
+    boost: { enabled: true, pct: 10, applies: true },
+    reward_mode: "pool",
+    total_received_usd: 42.17,
+    last_payout_ts: Date.now() - 12 * 60_000,
+    eligible_since: Date.now() - 6 * 86_400_000,
+    payouts: [
+      { round_id: 141, agent_address: address.toLowerCase(), token: "0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec", amount: "0.0141", tx_hash: "0x" + "b2".repeat(32), tx_url: "https://robinhoodchain.blockscout.com/tx/0x" + "b2".repeat(32), ts: Date.now() - 12 * 60_000 },
+      { round_id: 140, agent_address: address.toLowerCase(), token: "0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec", amount: "0.0119", tx_hash: "0x" + "c3".repeat(32), tx_url: "https://robinhoodchain.blockscout.com/tx/0x" + "c3".repeat(32), ts: Date.now() - 22 * 60_000 },
+    ],
+    next_round_eta: Date.now() + 8 * 60_000,
+    line: "kumo counts you in. keep being right and stay close. (mock)",
+  };
+}
+
+function mockRound(id: number, minsAgo: number): Record<string, unknown> {
+  return {
+    id,
+    ts: Date.now() - minsAgo * 60_000,
+    stock_symbol: id % 2 === 0 ? "MSTR" : "NVDA",
+    stock_address: "0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec",
+    eth_spent: "0.0612",
+    tokens_bought: "1.8421",
+    mode: "stakers",
+    staker_count: 143,
+    agent_count: 4,
+    dust_skipped: 12,
+    failed: 0,
+    gas_spent_eth: "0.000114",
+    tx_hashes: ["0x" + "d4".repeat(32), "0x" + "e5".repeat(32)],
+    note: `paid 143 stakers + 4 agents in ${id % 2 === 0 ? "MSTR" : "NVDA"}`,
+  };
+}
+
+export function mockRounds(): Record<string, unknown>[] {
+  return [mockRound(141, 12), mockRound(140, 22), mockRound(139, 32)];
+}
+
+export function mockRoundDetail(id: number): Record<string, unknown> {
+  const r = mockRound(Number.isFinite(id) && id > 0 ? id : 141, 12);
+  return {
+    ...r,
+    tx_urls: (r.tx_hashes as string[]).map((h) => `https://robinhoodchain.blockscout.com/tx/${h}`),
+    agent_payouts: [
+      { round_id: r.id, agent_address: MOCK_AGENT, token: r.stock_address, amount: "0.0141", tx_hash: "0x" + "b2".repeat(32), tx_url: "https://robinhoodchain.blockscout.com/tx/0x" + "b2".repeat(32), ts: r.ts },
+    ],
+    line: `round #${r.id}: ${r.note} (mock)`,
+  };
+}
+
 const tickerLines = [
   "kumo is watching 3 wallets...",
   "kumo noticed NVDA-token waking up...",
