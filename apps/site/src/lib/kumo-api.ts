@@ -29,6 +29,12 @@ import type { FeedEvent } from "@kumo/shared";
 
 // ---- shared client ----
 
+/** strict 0x + 40-hex check — mock placeholders (0xk0m0…) and junk never pass.
+ * only addresses passing this ever get a blockscout link. */
+export function isHexAddress(v: string | null | undefined): v is string {
+  return typeof v === "string" && /^0x[0-9a-fA-F]{40}$/.test(v);
+}
+
 export class KumoApiError extends Error {
   status: number;
   constructor(message: string, status: number) {

@@ -2,6 +2,7 @@
 
 kumo is a cute on-chain companion living on Robinhood Chain (4663). this repo is
 everything kumo: the site, the agent, the shared types, and the staking contract.
+kumo posts at [@imkumoagent](https://x.com/imkumoagent).
 
 ```
 apps/site/        the frontend (TanStack Start, static prerender) -> Netlify

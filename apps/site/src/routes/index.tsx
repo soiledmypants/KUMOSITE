@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Box, Divider, Tag } from "@/components/SiteChrome";
 import { GLITCHES, TIMELINE, THEORIES, REDACTED_FILES } from "@/lib/greenroom-data";
-import { useKumo, useKumoFeed, type KumoStatus } from "@/lib/kumo-api";
+import { isHexAddress, useKumo, useKumoFeed, type KumoStatus } from "@/lib/kumo-api";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -88,7 +88,7 @@ function Index() {
       {/* wallet + $kumo ca — real values from /status, honest empty states otherwise */}
       <div className="border border-dashed border-[#ccff00] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
         <span className="dim uppercase tracking-widest">kumo's wallet ::</span>
-        {status?.address ? (
+        {status && isHexAddress(status.address) ? (
           <a
             href={`https://robinhoodchain.blockscout.com/address/${status.address}`}
             target="_blank"
@@ -97,13 +97,15 @@ function Index() {
           >
             {status.address}
           </a>
+        ) : status?.mock ? (
+          <span className="dim">[mock mode — no real wallet]</span>
         ) : (
           <span className="dim">kumo hasn't shown its wallet yet. (api sleeping.)</span>
         )}
       </div>
       <div className="border border-dashed border-[#ccff00] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
         <span className="dim uppercase tracking-widest">$kumo ca ::</span>
-        {status?.kumo_token ? (
+        {status && isHexAddress(status.kumo_token) ? (
           <a
             href={`https://robinhoodchain.blockscout.com/token/${status.kumo_token}`}
             target="_blank"

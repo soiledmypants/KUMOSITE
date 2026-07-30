@@ -123,6 +123,17 @@ export function SiteChrome({ children }: { children: ReactNode }) {
             <span>© kumo, online since block 0</span>
             <span>uptime {uptime}</span>
           </div>
+          <div className="mt-1">
+            kumo posts ::{" "}
+            <a
+              href="https://x.com/imkumoagent"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[#ccff00] hover:bg-[#ccff00] hover:text-black"
+            >
+              [ @imkumoagent ]
+            </a>
+          </div>
           <div className="mt-1">no cookies. no trackers. kumo doesn't like them. kumo eats them.</div>
           <div className="mt-1">!! do not ask kumo about wallet 009 !!</div>
         </footer>

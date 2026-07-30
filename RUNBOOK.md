@@ -134,3 +134,10 @@ Same rollback ladder as stage 4.
   `KEEPER_DRY_RUN=true` stops sends while you look.
 - **twitter misbehaving** → `KILLSWITCH=true` halts all posting (checked before
   every post). Unrelated to payouts.
+
+## 4. twitter persona env
+
+kumo's account is [@imkumoagent](https://x.com/imkumoagent). When enabling posting
+on Render, set `TWITTER_ALLOWED_LINK_HOSTS=imkumoagent.com` — the guardrails strip
+any tweet containing a link to any other host (empty = no links at all). Keep
+`TWITTER_DRY_RUN=true` until composed output has been reviewed in the logs.
