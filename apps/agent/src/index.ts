@@ -11,6 +11,7 @@ import { scanWalletsOnce, walletCount } from "./scanner/wallets.js";
 import { scanMemecoinsOnce } from "./scanner/memecoins.js";
 import { scoreIntelOnce } from "./agents/reputation.js";
 import { keeperCycleOnce } from "./staking/keeper.js";
+import { claimCycleOnce } from "./claim/pons.js";
 import { startTwitter } from "./twitter/events.js";
 import { startMockTicker } from "./mock.js";
 
@@ -61,6 +62,12 @@ async function main(): Promise<void> {
   // payout keeper needs a wallet plus someone to pay (stakers or holders)
   if (CONFIG.stakingAddress || CONFIG.kumoToken) {
     loop("keeper", keeperCycleOnce, CONFIG.cycleMinutes * 60_000);
+  }
+  // pons fee claiming (the ETH source for the keeper's sweep)
+  if (CONFIG.claimEnabled && CONFIG.kumoToken) {
+    loop("claim", async () => {
+      await claimCycleOnce();
+    }, CONFIG.claimIntervalMinutes * 60_000);
   }
   startTwitter();
 }

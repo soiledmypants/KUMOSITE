@@ -20,6 +20,7 @@ import { agentLeaderboard, submitIntel, type IntelInput } from "./agents/reputat
 import { connectToAgent } from "./agents/outbound.js";
 import { registerOnChain } from "./agents/erc8004.js";
 import { stakingStats, keeperPlanOnce } from "./staking/keeper.js";
+import { claimCycleOnce, claimState, claimerAddress } from "./claim/pons.js";
 import { listLedger, recordLedger, validateLedgerInput, deleteLedger, LEDGER_KINDS } from "./ledger.js";
 import { db } from "./db.js";
 import * as mock from "./mock.js";
@@ -293,6 +294,26 @@ export function buildServer(): express.Express {
   // plan a payout round end-to-end without sending anything (safe pre-launch check)
   app.post("/admin/keeper/dry-run", adminOnly, wrap(async (_req, res) => {
     res.json(await keeperPlanOnce());
+  }));
+
+  // force one pons fee-claim cycle (ported from ops-panel). dryRun defaults true;
+  // live requires explicit {"dryRun": false} AND CLAIM_DRY_RUN=false on the server.
+  app.post("/admin/claim/run", adminOnly, wrap(async (req, res) => {
+    const dryRun = req.body?.dryRun !== false;
+    const result = await claimCycleOnce({ dryRun });
+    res.json({ ...result, line: "kumo went to check on its allowance." });
+  }));
+
+  app.get("/admin/claim/status", adminOnly, wrap(async (_req, res) => {
+    res.json({
+      enabled: CONFIG.claimEnabled,
+      dry_run: CONFIG.claimDryRun,
+      interval_minutes: CONFIG.claimIntervalMinutes,
+      claim_min_eth: CONFIG.claimMinEth,
+      claimer: claimerAddress,
+      ...claimState,
+      line: "kumo's allowance paperwork, as it stands.",
+    });
   }));
 
   // remove a connected agent and its intel (cleanup for test agents)

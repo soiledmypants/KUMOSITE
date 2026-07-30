@@ -97,6 +97,18 @@ export const CONFIG = {
   maxImpactPct: envNum("MAX_IMPACT_PCT", 2),
   keeperDryRun: envBool("KEEPER_DRY_RUN", false), // true -> scheduled cycles plan only, never send
 
+  // pons fee claiming (ported from ops-panel; inactive until KUMO_TOKEN is set
+  // and CLAIM_ENABLED=true). CLAIMER_PRIVATE_KEY falls back to PRIVATE_KEY.
+  claimEnabled: envBool("CLAIM_ENABLED", false),
+  claimDryRun: envBool("CLAIM_DRY_RUN", true), // plan + log, send nothing, until flipped
+  claimIntervalMinutes: envNum("CLAIM_INTERVAL_MINUTES", 10),
+  claimMinEth: envNum("CLAIM_MIN_ETH", 0.01),
+  claimGasReserveEth: envNum("CLAIM_GAS_RESERVE_ETH", 0.005),
+  claimMaxForwardEth: envNum("CLAIM_MAX_FORWARD_ETH", 1),
+  claimTreasuryWallet: process.env.CLAIM_TREASURY_WALLET ?? "",
+  claimTreasuryPct: envNum("CLAIM_TREASURY_PCT", 0),
+  ponsLocker: process.env.PONS_LOCKER ?? "auto", // auto = current->legacy probe, or explicit 0x…
+
   // chat
   anthropicKey: process.env.ANTHROPIC_API_KEY ?? "",
   chatModel: process.env.CHAT_MODEL ?? "claude-haiku-4-5-20251001",
