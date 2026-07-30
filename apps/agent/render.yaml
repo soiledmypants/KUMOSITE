@@ -1,0 +1,61 @@
+services:
+  - type: web
+    name: kumo-agent
+    runtime: node
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: node dist/index.js
+    healthCheckPath: /status
+    envVars:
+      - key: NODE_VERSION
+        value: 22.x # pin LTS — node 26 breaks better-sqlite3's native compile
+      - key: PRIVATE_KEY
+        sync: false # hot wallet key — set in the render dashboard, never in git
+      - key: KUMO_ADMIN_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false # neon postgres url (recommended); omit to fall back to sqlite
+      - key: LLM_PROVIDER
+        value: anthropic # or "openai" (any openai-compatible endpoint via LLM_BASE_URL)
+      - key: ANTHROPIC_API_KEY
+        sync: false # optional: upgrades /chat + tweet composer from rule-based
+      - key: OPENAI_API_KEY
+        sync: false # only needed when LLM_PROVIDER=openai
+      - key: LLM_MODEL
+        value: "" # openai mode model, defaults to gpt-4o-mini
+      - key: LLM_BASE_URL
+        value: "" # openai-compatible base url, defaults to https://api.openai.com/v1
+      - key: PUBLIC_URL
+        value: https://api.imkumoagent.com # custom domain on this service
+      - key: RPC_URL
+        value: https://rpc.mainnet.chain.robinhood.com
+      - key: KUMO_MOCK
+        value: "false"
+      - key: TRADING_ENABLED
+        value: "false"
+      - key: TRADE_MAX_ETH
+        value: "0.05"
+      - key: TRADE_DAILY_MAX_ETH
+        value: "0.25"
+      - key: KUMO_TOKEN
+        sync: false # $KUMO CA once launched
+      - key: STAKING_ADDRESS
+        sync: false # KumoMultiStaking CA once deployed
+      - key: KUMO_EPOCH_STOCK
+        value: auto
+      - key: CYCLE_MINUTES
+        value: "10"
+      - key: DISTRIBUTE_MIN_ETH
+        value: "0.05"
+      - key: PER_RECIPIENT_MIN_USD
+        value: "0.25"
+      - key: BOOST_ENABLED
+        value: "false" # boost is designed in but ships OFF
+      - key: BOOST_PCT
+        value: "10"
+      - key: KEEPER_DRY_RUN
+        value: "false" # true -> keeper plans rounds but never sends (safe launch rehearsal)
+      - key: GAS_RESERVE_ETH
+        value: "0.02"
+      - key: CORS_ORIGINS
+        value: "https://imkumoagent.com,https://www.imkumoagent.com"

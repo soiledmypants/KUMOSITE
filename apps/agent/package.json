@@ -1,0 +1,43 @@
+{
+  "name": "kumo-agent",
+  "version": "0.1.0",
+  "description": "kumo — a cute on-chain companion agent for robinhood chain",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "kumo": "./bin/kumo.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "dev:mock": "cross-env KUMO_MOCK=true tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "kumo": "node bin/kumo.js"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "pg": "^8.13.1",
+    "twitter-api-v2": "^1.29.0",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "^11.10.0"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}
