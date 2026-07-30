@@ -1,4 +1,6 @@
+# site deploy: Netlify keeps deploying from this repo, now scoped to apps/site.
 [build]
+  base = "apps/site"
   command = "npm run build"
   publish = "dist/client"
 

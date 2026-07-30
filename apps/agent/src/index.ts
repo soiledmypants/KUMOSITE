@@ -1,0 +1,102 @@
+// kumo wakes up here.
+import "dotenv/config";
+import { CONFIG } from "./config.js";
+import { initDb, db } from "./db.js";
+import { setFeedPersist } from "./feed.js";
+import { say, lines } from "./voice.js";
+import { buildServer } from "./server.js";
+import { initStocks, scanStocksOnce } from "./scanner/stocks.js";
+import { discoverStocks } from "./scanner/discovery.js";
+import { scanWalletsOnce, walletCount } from "./scanner/wallets.js";
+import { scanMemecoinsOnce } from "./scanner/memecoins.js";
+import { scoreIntelOnce } from "./agents/reputation.js";
+import { keeperCycleOnce } from "./staking/keeper.js";
+import { claimCycleOnce } from "./claim/pons.js";
+import { walletSummary, walletLine } from "./wallet.js";
+import { botAddress } from "./clients.js";
+import { startTwitter } from "./twitter/events.js";
+import { startMockTicker } from "./mock.js";
+
+function loop(label: string, fn: () => Promise<void>, ms: number): NodeJS.Timeout {
+  let running = false;
+  const tick = async () => {
+    if (running) return;
+    running = true;
+    try {
+      await fn();
+    } catch (err) {
+      console.error(`[kumo] ${label} loop error:`, (err as Error).message);
+    } finally {
+      running = false;
+    }
+  };
+  void tick();
+  const t = setInterval(() => void tick(), ms);
+  t.unref();
+  return t;
+}
+
+async function main(): Promise<void> {
+  await initDb();
+  setFeedPersist((ev) => {
+    void db.run("INSERT INTO feed_log (ts, kind, line) VALUES (?, ?, ?)", [ev.ts, ev.kind, ev.line]);
+  });
+
+  const app = buildServer();
+  app.listen(CONFIG.port, () => {
+    say("wake", lines.awake());
+    console.log(`[kumo] listening on :${CONFIG.port} (mock=${CONFIG.mock}, db=${db.kind})`);
+  });
+
+  if (CONFIG.mock) {
+    startMockTicker();
+    return;
+  }
+
+  await initStocks();
+  say("watch", lines.watching(await walletCount()));
+
+  // announce the active hot wallet so the right address is eyeballable in the
+  // render logs + feed (address + balances only — never the key)
+  if (botAddress) {
+    walletSummary()
+      .then((s) => {
+        say("wake", walletLine(s));
+        console.log(`[kumo] hot wallet ${s.address} — ${s.eth_balance} eth, ${s.stocks.length} stock(s), contract=${s.is_contract}`);
+      })
+      .catch((err) => console.error("[kumo] wallet summary failed:", (err as Error).message));
+  } else {
+    console.log("[kumo] no PRIVATE_KEY — read-only mode, kumo has no hands");
+  }
+
+  loop("wallets", scanWalletsOnce, CONFIG.walletScanMs);
+  loop("stocks", scanStocksOnce, CONFIG.stockScanMs);
+  loop("discovery", discoverStocks, CONFIG.stockDiscoveryMs);
+  loop("memecoins", scanMemecoinsOnce, CONFIG.memecoinScanMs);
+  loop("rep-scorer", scoreIntelOnce, CONFIG.repScoreIntervalMs);
+  // payout keeper needs a wallet plus someone to pay (stakers or holders)
+  if (CONFIG.stakingAddress || CONFIG.kumoToken) {
+    loop("keeper", keeperCycleOnce, CONFIG.cycleMinutes * 60_000);
+  }
+  // pons fee claiming (the ETH source for the keeper's sweep)
+  if (CONFIG.claimEnabled && CONFIG.kumoToken) {
+    loop("claim", async () => {
+      await claimCycleOnce();
+    }, CONFIG.claimIntervalMinutes * 60_000);
+  }
+  startTwitter();
+}
+
+process.on("SIGTERM", () => {
+  say("zzz", lines.sleeping());
+  setTimeout(() => process.exit(0), 300);
+});
+process.on("SIGINT", () => {
+  say("zzz", lines.sleeping());
+  setTimeout(() => process.exit(0), 300);
+});
+
+main().catch((err) => {
+  console.error("[kumo] failed to wake up:", err);
+  process.exit(1);
+});
