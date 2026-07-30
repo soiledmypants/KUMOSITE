@@ -21,6 +21,8 @@ export default defineConfig({
       crawlLinks: true,
     },
     // Setting `pages` replaces the default [{ path: "/" }], so "/" must stay listed.
-    pages: [{ path: "/" }, { path: "/sitemap.xml" }],
+    // /admin is deliberately unlinked from the nav (crawlLinks won't find it), so
+    // it needs an explicit entry to exist as a static page. It prerenders locked.
+    pages: [{ path: "/" }, { path: "/sitemap.xml" }, { path: "/admin" }],
   },
 });

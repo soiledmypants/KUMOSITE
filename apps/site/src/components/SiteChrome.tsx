@@ -149,7 +149,7 @@ export function Box({
   className = "",
 }: {
   title?: string;
-  meta?: string;
+  meta?: ReactNode;
   children: ReactNode;
   className?: string;
 }) {

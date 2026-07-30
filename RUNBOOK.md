@@ -42,6 +42,12 @@ override from the old layout, clear it so the toml wins.
 | `GAS_RESERVE_ETH` | `0.02` | keeper never spends below this |
 | `DISTRIBUTE_MIN_ETH` | `0.05` | below → "saving up" |
 | `CYCLE_MINUTES` | `10` | keeper cadence |
+| `AGENT_REWARD_MODE` | unset → `pool` (stage 4) | unset = stakers-only; `boost`/`pool`/`both` |
+| `AGENT_POOL_PCT` | `5` → `10` | % of each round to eligible agents, HARD cap 25 |
+| `AGENT_LIVENESS_HOURS` | `24` | dead agents stop earning |
+| `AGENT_MIN_REP` | `0.55` | + trusted tier (>=10 scored calls) required |
+| `AGENT_REQUIRE_STAKE` | `true` | payout address must stake or hold `AGENT_MIN_HOLD` $KUMO |
+| `MAX_AGENT_SHARE_PCT` | `20` | single-agent cap inside the pool |
 
 Local verification before trusting any of it:
 

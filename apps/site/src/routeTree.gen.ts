@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as AsciiGalleryRouteImport } from './routes/ascii-gallery'
 import { Route as CongregationRouteImport } from './routes/congregation'
@@ -29,6 +30,11 @@ import { Route as TransmissionsIdRouteImport } from './routes/transmissions.$id'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArchiveRoute = ArchiveRouteImport.update({
@@ -109,6 +115,7 @@ const TransmissionsIdRoute = TransmissionsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/archive': typeof ArchiveRoute
   '/ascii-gallery': typeof AsciiGalleryRoute
   '/congregation': typeof CongregationRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/archive': typeof ArchiveRoute
   '/ascii-gallery': typeof AsciiGalleryRoute
   '/congregation': typeof CongregationRoute
@@ -145,6 +153,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/archive': typeof ArchiveRoute
   '/ascii-gallery': typeof AsciiGalleryRoute
   '/congregation': typeof CongregationRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/archive'
     | '/ascii-gallery'
     | '/congregation'
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/archive'
     | '/ascii-gallery'
     | '/congregation'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/archive'
     | '/ascii-gallery'
     | '/congregation'
@@ -219,6 +231,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   ArchiveRoute: typeof ArchiveRoute
   AsciiGalleryRoute: typeof AsciiGalleryRoute
   CongregationRoute: typeof CongregationRoute
@@ -241,6 +254,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/archive': {
@@ -367,6 +387,7 @@ const TransmissionsRouteWithChildren = TransmissionsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   ArchiveRoute: ArchiveRoute,
   AsciiGalleryRoute: AsciiGalleryRoute,
   CongregationRoute: CongregationRoute,
