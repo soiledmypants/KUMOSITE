@@ -21,6 +21,8 @@ import { connectToAgent } from "./agents/outbound.js";
 import { registerOnChain } from "./agents/erc8004.js";
 import { stakingStats, keeperPlanOnce } from "./staking/keeper.js";
 import { claimCycleOnce, claimState, claimerAddress } from "./claim/pons.js";
+import { walletSummary } from "./wallet.js";
+import { keeperState } from "./staking/keeper.js";
 import { listLedger, recordLedger, validateLedgerInput, deleteLedger, LEDGER_KINDS } from "./ledger.js";
 import { db } from "./db.js";
 import * as mock from "./mock.js";
@@ -313,6 +315,21 @@ export function buildServer(): express.Express {
       claimer: claimerAddress,
       ...claimState,
       line: "kumo's allowance paperwork, as it stands.",
+    });
+  }));
+
+  // the hot wallet card: address, balances, gas-reserve status, last sweep.
+  // address-only by construction — this route can never see key material.
+  app.get("/admin/wallet", adminOnly, wrap(async (_req, res) => {
+    const s = await walletSummary();
+    res.json({
+      ...s,
+      last_sweep: {
+        last_run: keeperState.lastRun,
+        last_result: keeperState.lastResult,
+        last_round: keeperState.lastRound,
+      },
+      line: `kumo turned out its pockets. ${Number(s.eth_balance).toFixed(4)} eth, ${s.stocks.length} stock(s).`,
     });
   }));
 

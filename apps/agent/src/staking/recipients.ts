@@ -50,13 +50,15 @@ async function isContract(address: string): Promise<boolean> {
   return result;
 }
 
-function systemAddress(addr: string): boolean {
+/** system addresses never receive airdrops: zero/dead, the staking contract,
+ * and the hot wallet itself. `bot` is injectable for tests. */
+export function systemAddress(addr: string, bot: string | null = botAddress): boolean {
   const a = addr.toLowerCase();
   return (
     a === ZERO ||
     a === DEAD ||
     a === CONFIG.stakingAddress.toLowerCase() ||
-    (botAddress !== null && a === botAddress.toLowerCase())
+    (bot !== null && a === bot.toLowerCase())
   );
 }
 

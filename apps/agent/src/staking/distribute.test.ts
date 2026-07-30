@@ -73,6 +73,17 @@ const C = "0xcccccccccccccccccccccccccccccccccccccccc" as const;
   check("unknown price -> min disabled, still pays", r3.paid.length === 1);
 }
 
+// 6. the hot wallet (and other system addresses) never receive airdrops
+{
+  const { systemAddress } = await import("./recipients.js");
+  const fakeBot = "0x1111111111111111111111111111111111111111";
+  check("hot wallet excluded from recipients", systemAddress(fakeBot, fakeBot));
+  check("hot wallet exclusion is case-insensitive", systemAddress(fakeBot.toUpperCase().replace("0X", "0x"), fakeBot));
+  check("zero address excluded", systemAddress("0x0000000000000000000000000000000000000000", fakeBot));
+  check("dead address excluded", systemAddress("0x000000000000000000000000000000000000dead", fakeBot));
+  check("normal staker not excluded", !systemAddress(A, fakeBot));
+}
+
 if (failed > 0) {
   console.error(`\n${failed} share-math case(s) FAILED`);
   process.exit(1);

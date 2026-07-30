@@ -12,6 +12,8 @@ import { scanMemecoinsOnce } from "./scanner/memecoins.js";
 import { scoreIntelOnce } from "./agents/reputation.js";
 import { keeperCycleOnce } from "./staking/keeper.js";
 import { claimCycleOnce } from "./claim/pons.js";
+import { walletSummary, walletLine } from "./wallet.js";
+import { botAddress } from "./clients.js";
 import { startTwitter } from "./twitter/events.js";
 import { startMockTicker } from "./mock.js";
 
@@ -53,6 +55,19 @@ async function main(): Promise<void> {
 
   await initStocks();
   say("watch", lines.watching(await walletCount()));
+
+  // announce the active hot wallet so the right address is eyeballable in the
+  // render logs + feed (address + balances only — never the key)
+  if (botAddress) {
+    walletSummary()
+      .then((s) => {
+        say("wake", walletLine(s));
+        console.log(`[kumo] hot wallet ${s.address} — ${s.eth_balance} eth, ${s.stocks.length} stock(s), contract=${s.is_contract}`);
+      })
+      .catch((err) => console.error("[kumo] wallet summary failed:", (err as Error).message));
+  } else {
+    console.log("[kumo] no PRIVATE_KEY — read-only mode, kumo has no hands");
+  }
 
   loop("wallets", scanWalletsOnce, CONFIG.walletScanMs);
   loop("stocks", scanStocksOnce, CONFIG.stockScanMs);
