@@ -1,5 +1,10 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import { defineChain, getAddress, type Address } from "viem";
+import { ADDRESSES, CHAIN_ID, RPC_URL, EXPLORER_BASE, FEE_TIERS } from "@kumo/shared";
+
+// workspace-aware env loading: apps/agent/.env first, then the monorepo root
+// .env (first value wins — dotenv never overwrites what's already set).
+dotenv.config({ path: [".env", "../../.env"] });
 
 function addr(v: string): Address {
   return getAddress(v);
@@ -24,10 +29,10 @@ function envBool(name: string, fallback: boolean): boolean {
 }
 
 export const CONFIG = {
-  // chain
-  chainId: envNum("CHAIN_ID", 4663),
-  rpcUrl: process.env.RPC_URL ?? "https://rpc.mainnet.chain.robinhood.com",
-  explorerBase: process.env.EXPLORER_BASE ?? "https://robinhoodchain.blockscout.com",
+  // chain (defaults live in @kumo/shared — the single copy)
+  chainId: envNum("CHAIN_ID", CHAIN_ID),
+  rpcUrl: process.env.RPC_URL ?? RPC_URL,
+  explorerBase: process.env.EXPLORER_BASE ?? EXPLORER_BASE,
 
   // server
   port: envNum("PORT", 8787),
@@ -42,26 +47,24 @@ export const CONFIG = {
   databaseUrl: process.env.DATABASE_URL ?? "",
   dataDir: process.env.DATA_DIR ?? "data",
 
-  // core addresses (verified on chain 4663, july 2026)
-  weth: envAddr("WETH", "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73"),
-  usdg: envAddr("USDG", "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168"),
-  uniV3Factory: envAddr("UNI_V3_FACTORY", "0x1f7d7550b1b028f7571e69a784071f0205fd2efa"),
-  swapRouter02: envAddr("SWAP_ROUTER_V3", "0xcaf681a66d020601342297493863e78c959e5cb2"),
-  quoterV2: envAddr("QUOTER_V3", "0x33e885ed0ec9bf04ecfb19341582aadcb4c8a9e7"),
-  erc8004Registry: envAddr("ERC8004_REGISTRY", "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"),
+  // core addresses (verified on chain 4663, july 2026 — defaults in @kumo/shared)
+  weth: envAddr("WETH", ADDRESSES.weth),
+  usdg: envAddr("USDG", ADDRESSES.usdg),
+  uniV3Factory: envAddr("UNI_V3_FACTORY", ADDRESSES.uniV3Factory),
+  swapRouter02: envAddr("SWAP_ROUTER_V3", ADDRESSES.swapRouter02),
+  quoterV2: envAddr("QUOTER_V3", ADDRESSES.quoterV2),
+  erc8004Registry: envAddr("ERC8004_REGISTRY", ADDRESSES.erc8004Registry),
 
   // stock tokens (nvda verified via geckoterminal; extend via STOCK_TOKENS="SYM:0x..,SYM:0x..")
-  stockTokens: parseStockTokens(
-    process.env.STOCK_TOKENS ?? "NVDA:0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec",
-  ),
-  nvdaUsdgPool: envAddr("NVDA_USDG_POOL", "0xd4eb21209c4d6093f80b5b84f5c45cc093ea14a3"),
+  stockTokens: parseStockTokens(process.env.STOCK_TOKENS ?? `NVDA:${ADDRESSES.nvda}`),
+  nvdaUsdgPool: envAddr("NVDA_USDG_POOL", ADDRESSES.nvdaUsdgPool),
   // optional chainlink AggregatorV3 feeds: "SYM:0xfeed,SYM:0xfeed"
   chainlinkFeeds: parseStockTokens(process.env.CHAINLINK_FEEDS ?? ""),
 
   // fee tiers
-  wethUsdgFeeTier: envNum("WETH_USDG_FEE_TIER", 100),
-  usdgStockFeeTier: envNum("USDG_STOCK_FEE_TIER", 500),
-  defaultFeeTiers: [500, 3000, 10000],
+  wethUsdgFeeTier: envNum("WETH_USDG_FEE_TIER", FEE_TIERS.wethUsdg),
+  usdgStockFeeTier: envNum("USDG_STOCK_FEE_TIER", FEE_TIERS.usdgStock),
+  defaultFeeTiers: [...FEE_TIERS.defaults],
 
   // trading
   tradingEnabled: envBool("TRADING_ENABLED", false),

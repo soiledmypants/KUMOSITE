@@ -27,10 +27,12 @@ import { withRetry } from "../rpc.js";
 import { recordLedger } from "../ledger.js";
 import { say } from "../voice.js";
 
-// verified pons lockers on chain 4663 (ops-panel README, verified on blockscout)
+import { ADDRESSES } from "@kumo/shared";
+
+// verified pons lockers on chain 4663 (single copy lives in @kumo/shared)
 export const PONS_LOCKERS = {
-  current: "0x736D76699C26D0d966744cAe304C000d471f7F35" as Address, // block 8991118+, protocol 30%
-  legacy: "0x31ca5E101941A93A7DD6d0497928700625CF54B5" as Address, // block 8600612+, protocol 10%
+  current: ADDRESSES.ponsLockerCurrent as Address,
+  legacy: ADDRESSES.ponsLockerLegacy as Address,
 };
 
 export const LOCKER_ABI = parseAbi([

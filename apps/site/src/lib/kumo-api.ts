@@ -12,111 +12,20 @@ export const LINES = {
   thinking: "kumo is thinking...",
 } as const;
 
-// ---- response shapes (docs/API.md in the kumo repo) ----
-
-export type KumoStatus = {
-  state: string;
-  uptime_s: number;
-  watching: number;
-  agents_connected: number;
-  signals_today: number;
-  trading_enabled: boolean;
-  mock: boolean;
-  address?: string | null;
-  chain_id: number;
-  /** $KUMO contract address once launched; null pre-launch */
-  kumo_token?: string | null;
-};
-
-export type FeedEvent = { ts: number; kind: string; line: string };
-
-export type KumoSignal = {
-  id: string;
-  ts: number;
-  kind: "buy" | "avoid" | "watch";
-  subject: { type: string; address?: string; symbol?: string };
-  strength: number;
-  sources?: { kumo?: number; contributors?: number };
-  line: string;
-};
-
-export type KumoAgent = {
-  name: string;
-  address: string;
-  rep: number;
-  tier: string;
-  contributions: number;
-  hit_rate: number;
-};
-
-export type StockRank = {
-  symbol: string;
-  address: string;
-  price_usd: number | null;
-  ta_score: number;
-  short_momentum_pct: number | null;
-  long_momentum_pct: number | null;
-  volume_spike: number | null;
-  volatility_pct: number | null;
-  liquidity_usd: number | null;
-  scored_at: number;
-};
-
-// GET /ledger — kumo's money movements, newest first (live shape, docs/API.md)
-export type LedgerEntry = {
-  id: number;
-  ts: number;
-  kind: "claim" | "forward" | "buyback" | "reward_fund" | "trade" | "airdrop" | string;
-  txHash: string;
-  chainExplorerUrl: string;
-  assetIn: string | null;
-  amountIn: string | null;
-  assetOut: string | null;
-  amountOut: string | null;
-  from: string | null;
-  to: string | null;
-  source: string;
-  note: string;
-};
-
-// GET /staking/stats (live shape, docs/API.md)
-export type StakingStats = {
-  pool?: string | null;
-  model?: string;
-  round_stock?: string | null;
-  screen?: string | null;
-  keeper?: {
-    last_run?: number | null;
-    last_result?: string;
-    last_round?: {
-      ts: number;
-      stock: string;
-      recipients: number;
-      skippedDust: number;
-      totalSent: string;
-      gasSpentEth: string;
-    } | null;
-    alerts?: string[];
-    cycle_minutes?: number;
-    distribute_min_eth?: number;
-    per_recipient_min_usd?: number;
-    dry_run?: boolean;
-  };
-  boost?: { enabled: boolean; pct: number };
-  airdrops_7d?: Array<{ asset_out: string; rounds: number; total: number }>;
-  onchain?: {
-    totalStaked?: string;
-    bootstrapStreams?: Array<{
-      symbol: string;
-      token?: string;
-      rewardRateScaled?: string;
-      periodFinish?: number;
-      notifiedTotal?: string;
-      claimedTotal?: string;
-    }>;
-  } | null;
-  journal?: Array<{ ts?: number; eth_spent?: string; token?: string; amount?: string; tx_hashes?: string; note?: string }>;
-};
+// ---- response shapes: the single copy lives in @kumo/shared (packages/shared),
+// re-exported here so existing `@/lib/kumo-api` imports keep working.
+export type {
+  KumoStatus,
+  FeedEvent,
+  KumoSignal,
+  KumoAgent,
+  StockRank,
+  LedgerEntry,
+  LedgerKind,
+  StakingStats,
+  RoundPlan,
+} from "@kumo/shared";
+import type { FeedEvent } from "@kumo/shared";
 
 // ---- shared client ----
 

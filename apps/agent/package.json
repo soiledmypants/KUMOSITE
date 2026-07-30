@@ -23,7 +23,8 @@
     "express": "^4.21.2",
     "pg": "^8.13.1",
     "twitter-api-v2": "^1.29.0",
-    "viem": "^2.21.0"
+    "viem": "^2.21.0",
+    "@kumo/shared": "*"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",

@@ -7,6 +7,7 @@
 // contract's reward stream. the contract remains the stake registry + the
 // KUMO bootstrap stream.
 import { encodeFunctionData, formatEther, formatUnits, parseAbi, parseEther, type Address } from "viem";
+import type { RoundPlan } from "@kumo/shared";
 import { CONFIG } from "../config.js";
 import { publicClient, botAddress } from "../clients.js";
 import { withRetry } from "../rpc.js";
@@ -90,39 +91,9 @@ async function quoteRoundBuy(
   return { path, quotedOut: qFull, impactPct, minOut };
 }
 
-/** a fully-planned (never-sent) payout round: what kumo WOULD do right now. */
-export interface RoundPlan {
-  ts: number;
-  dry: true;
-  phase: "no_wallet" | "saving_up" | "screen_fail" | "impact_abort" | "no_recipients" | "ready";
-  note: string;
-  wallet: string | null;
-  balance_eth: string;
-  gas_reserve_eth: number;
-  distributable_eth: string;
-  distribute_min_eth: number;
-  claim_note: string;
-  pick?: { symbol: string; address: string; passes_screen: boolean; screen_note: string; ta_score: number | null };
-  planned_buy?: {
-    route: string;
-    amount_in_eth: string;
-    quoted_out: string;
-    min_out: string;
-    impact_pct: number;
-    max_impact_pct: number;
-  };
-  planned_distribution?: {
-    mode: string;
-    recipients: number;
-    boosted: number;
-    skipped_dust: number;
-    total_planned: string;
-    per_recipient_min_usd: number;
-    boost_enabled: boolean;
-    top: { address: string; amount: string; boosted: boolean }[];
-  };
-  planned_ledger?: Record<string, unknown>[];
-}
+// RoundPlan (the fully-planned, never-sent payout round) is a wire type shared
+// with the site — the single copy lives in @kumo/shared.
+export type { RoundPlan };
 
 /** plan a round end-to-end without sending anything. safe to call any time. */
 export async function keeperPlanOnce(): Promise<RoundPlan> {

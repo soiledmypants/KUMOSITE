@@ -2,12 +2,12 @@
 // txs (buybacks, reward funding, trades) and txs reported by sibling bots via
 // POST /ledger. every NEW entry also emits a kumo-voice feed line, so the live
 // feed and the ledger stay in sync automatically. deduped on tx hash.
+import { LEDGER_KINDS, type LedgerKind } from "@kumo/shared";
 import { db } from "./db.js";
 import { txUrl } from "./config.js";
 import { say, type FeedKind } from "./voice.js";
 
-export const LEDGER_KINDS = ["claim", "forward", "buyback", "reward_fund", "trade", "airdrop"] as const;
-export type LedgerKind = (typeof LEDGER_KINDS)[number];
+export { LEDGER_KINDS, type LedgerKind };
 
 export interface LedgerInput {
   ts?: number;
