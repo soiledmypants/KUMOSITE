@@ -138,5 +138,69 @@ export interface RoundPlan {
     boost_enabled: boolean;
     top: { address: string; amount: string; boosted: boolean }[];
   };
+  planned_agent_pool?: {
+    mode: string; // off | boost | pool | both
+    pool_pct: number;
+    eligible_agents: number;
+    amount: string;
+    skipped_dust: number;
+    top: { address: string; agent?: string; amount: string }[];
+  };
   planned_ledger?: Record<string, unknown>[];
 }
+
+// ---- round receipts + agent rewards (phase 2) ----
+
+export type RoundReceipt = {
+  id: number;
+  ts: number;
+  stock_symbol: string;
+  stock_address: string;
+  eth_spent: string;
+  tokens_bought: string;
+  mode: string; // stakers | holders
+  staker_count: number;
+  agent_count: number;
+  dust_skipped: number;
+  failed: number;
+  gas_spent_eth: string | null;
+  tx_hashes: string[];
+  note: string | null;
+};
+
+export type AgentPayout = {
+  round_id: number;
+  agent_address: string;
+  token: string;
+  amount: string;
+  tx_hash: string;
+  tx_url: string;
+  ts: number;
+};
+
+export type EligibilityCheck = {
+  id: "handshake" | "liveness" | "reputation" | "stake" | "address";
+  ok: boolean;
+  note: string;
+};
+
+/** GET /agent/me and GET /rewards/:address */
+export type AgentRewards = {
+  address: string;
+  name: string | null;
+  tier: string | null;
+  rep: number | null;
+  connected: boolean;
+  eligible: boolean;
+  checks: EligibilityCheck[];
+  payout_address: string | null;
+  weight: string; // scaled rep weight as string
+  boost: { enabled: boolean; pct: number; applies: boolean };
+  reward_mode: string; // off | boost | pool | both
+  total_received_usd: number;
+  last_payout_ts: number | null;
+  eligible_since: number | null;
+  payouts: AgentPayout[];
+  next_round_eta: number | null; // ms epoch of the next keeper cycle, null if keeper idle
+  line: string;
+};

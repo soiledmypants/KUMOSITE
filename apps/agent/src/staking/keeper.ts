@@ -18,7 +18,15 @@ import { routerAbi } from "../trade/execute.js";
 import { brandTx, sendGuardedTx } from "../trade/guard.js";
 import { pickRoundStock } from "./epoch.js";
 import { resolveRecipients } from "./recipients.js";
-import { computeShares, loadDust, distributeShares } from "./distribute.js";
+import {
+  computeShares,
+  loadDust,
+  distributeShares,
+  splitPoolAmount,
+  clampWeights,
+  type DistributionSummary,
+  type ShareResult,
+} from "./distribute.js";
 import { stockByAddress } from "../scanner/discovery.js";
 import { ethUsd, priceUsd } from "../scanner/prices.js";
 import { emitKumoEvent } from "../twitter/events.js";
@@ -40,6 +48,7 @@ interface KeeperState {
     ts: number;
     stock: string;
     recipients: number;
+    agents: number;
     skippedDust: number;
     totalSent: string;
     gasSpentEth: string;
@@ -157,8 +166,8 @@ export async function keeperPlanOnce(): Promise<RoundPlan> {
     return base;
   }
 
-  const { recipients, mode } = await resolveRecipients();
-  if (recipients.length === 0) {
+  const { stakers, agents, mode } = await resolveRecipients();
+  if (stakers.length === 0) {
     base.phase = "no_recipients";
     base.note = "buy would go through, but nobody to pay yet (no stakers or holders) — kumo would hold the stock.";
     return base;
@@ -166,8 +175,24 @@ export async function keeperPlanOnce(): Promise<RoundPlan> {
 
   const price = await priceUsd(pick.address, pick.symbol);
   const usdPerUnit = price?.price ?? 0;
-  const dust = await loadDust(pick.address);
-  const shares = computeShares(recipients, buy.quotedOut, usdPerUnit, decimals, CONFIG.perRecipientMinUsd, dust);
+
+  const poolOn = CONFIG.agentRewardMode === "pool" || CONFIG.agentRewardMode === "both";
+  const clampedAgents = clampWeights(agents, CONFIG.maxAgentSharePct);
+  const { stakerAmount, agentAmount } = splitPoolAmount(buy.quotedOut, poolOn ? CONFIG.agentPoolPct : 0, clampedAgents.length);
+
+  const shares = computeShares(
+    stakers,
+    stakerAmount,
+    usdPerUnit,
+    decimals,
+    CONFIG.perRecipientMinUsd,
+    await loadDust(pick.address, "stakers"),
+  );
+  const agentShares: ShareResult =
+    agentAmount > 0n
+      ? computeShares(clampedAgents, agentAmount, usdPerUnit, decimals, CONFIG.perRecipientMinUsd, await loadDust(pick.address, "agents"))
+      : { paid: [], skipped: [], totalPaid: 0n };
+
   base.planned_distribution = {
     mode,
     recipients: shares.paid.length,
@@ -181,6 +206,18 @@ export async function keeperPlanOnce(): Promise<RoundPlan> {
       .sort((a, b) => (a.amount > b.amount ? -1 : 1))
       .slice(0, 10)
       .map((s) => ({ address: s.address, amount: formatUnits(s.amount, decimals), boosted: s.boosted })),
+  };
+  base.planned_agent_pool = {
+    mode: CONFIG.agentRewardMode === "" ? "off" : CONFIG.agentRewardMode,
+    pool_pct: poolOn ? CONFIG.agentPoolPct : 0,
+    eligible_agents: clampedAgents.length,
+    amount: formatUnits(agentShares.totalPaid, decimals),
+    skipped_dust: agentShares.skipped.length,
+    top: agentShares.paid
+      .slice()
+      .sort((a, b) => (a.amount > b.amount ? -1 : 1))
+      .slice(0, 10)
+      .map((s) => ({ address: s.address, agent: s.agent, amount: formatUnits(s.amount, decimals) })),
   };
   base.planned_ledger = [
     {
@@ -306,8 +343,10 @@ export async function keeperCycleOnce(): Promise<void> {
       return;
     }
 
-    const { recipients, mode } = await resolveRecipients();
-    if (recipients.length === 0) {
+    const { stakers, agents, mode } = await resolveRecipients();
+    if (stakers.length === 0) {
+      // no staker/holder base -> the whole round holds, exactly like today.
+      // (agents alone never unlock a round — anti-sybil floor.)
       keeperState.lastResult = "nobody to pay yet — holding the stock for next round";
       keeperState.alerts.push("no stakers or holders resolved; bought stock is held and re-swept next round");
       await journal(distributable, pick.address.toLowerCase(), stockBal.toString(), swapTx, "no recipients yet, holding");
@@ -317,39 +356,109 @@ export async function keeperCycleOnce(): Promise<void> {
 
     const price = await priceUsd(pick.address, pick.symbol);
     const usdPerUnit = price?.price ?? 0;
-    const dust = await loadDust(pick.address);
-    const shares = computeShares(recipients, stockBal, usdPerUnit, decimals, CONFIG.perRecipientMinUsd, dust);
-    const summary = await distributeShares(pick.address, shares);
 
-    if (summary.txHashes.length > 0) {
+    // split the bought amount: staker pool + (pool/both mode) agent pool.
+    // zero eligible agents -> splitPoolAmount folds the pool back to stakers.
+    const poolOn = CONFIG.agentRewardMode === "pool" || CONFIG.agentRewardMode === "both";
+    const clampedAgents = clampWeights(agents, CONFIG.maxAgentSharePct);
+    const { stakerAmount, agentAmount } = splitPoolAmount(stockBal, poolOn ? CONFIG.agentPoolPct : 0, clampedAgents.length);
+
+    const stakerShares = computeShares(
+      stakers,
+      stakerAmount,
+      usdPerUnit,
+      decimals,
+      CONFIG.perRecipientMinUsd,
+      await loadDust(pick.address, "stakers"),
+    );
+    const agentShares: ShareResult =
+      agentAmount > 0n
+        ? computeShares(clampedAgents, agentAmount, usdPerUnit, decimals, CONFIG.perRecipientMinUsd, await loadDust(pick.address, "agents"))
+        : { paid: [], skipped: [], totalPaid: 0n };
+
+    // one batched pass: staker transfers then agent transfers, back-to-back
+    // through the same guard so the nonce cursor stays linear.
+    const stakerSummary = await distributeShares(pick.address, stakerShares, "stakers");
+    const agentSummary: DistributionSummary =
+      agentShares.paid.length > 0
+        ? await distributeShares(pick.address, agentShares, "agents")
+        : { recipients: 0, skippedDust: agentShares.skipped.length, failed: 0, totalSent: 0n, gasSpentEth: "0", txHashes: [], sent: [] };
+
+    const totalSent = stakerSummary.totalSent + agentSummary.totalSent;
+    const allTx = [...stakerSummary.txHashes, ...agentSummary.txHashes];
+    const dustSkipped = stakerSummary.skippedDust + agentSummary.skippedDust;
+    const roundTs = Date.now();
+
+    // the round receipt (id read back for the agent_payouts rows)
+    await db.run(
+      `INSERT INTO rounds (ts, stock_symbol, stock_address, eth_spent, tokens_bought, mode, staker_count, agent_count, dust_skipped, failed, gas_spent_eth, tx_hashes, note)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        roundTs,
+        pick.symbol,
+        pick.address.toLowerCase(),
+        formatEther(distributable),
+        formatUnits(stockBal, decimals),
+        mode,
+        stakerSummary.recipients,
+        agentSummary.recipients,
+        dustSkipped,
+        stakerSummary.failed + agentSummary.failed,
+        (Number(stakerSummary.gasSpentEth) + Number(agentSummary.gasSpentEth)).toFixed(9),
+        [swapTx, ...allTx].join(","),
+        `paid ${stakerSummary.recipients} ${mode} + ${agentSummary.recipients} agents in ${pick.symbol}`,
+      ],
+    );
+    const roundRow = await db.get<{ id: number }>("SELECT id FROM rounds WHERE ts = ? ORDER BY id DESC", [roundTs]);
+    const roundId = Number(roundRow?.id ?? 0);
+
+    // per-agent payout rows + running totals on the agents table
+    for (const s of agentSummary.sent) {
+      const usd = usdPerUnit > 0 ? Number(formatUnits(s.amount, decimals)) * usdPerUnit : 0;
+      await db.run(
+        "INSERT INTO agent_payouts (round_id, agent_address, token, amount, tx_hash, ts) VALUES (?, ?, ?, ?, ?, ?)",
+        [roundId, (s.agent ?? s.address).toLowerCase(), pick.address.toLowerCase(), formatUnits(s.amount, decimals), s.txHash, roundTs],
+      );
+      await db.run("UPDATE agents SET total_received = total_received + ?, last_payout_ts = ? WHERE address = ?", [
+        usd,
+        roundTs,
+        (s.agent ?? s.address).toLowerCase(),
+      ]);
+    }
+
+    if (allTx.length > 0) {
       await recordLedger({
         kind: "airdrop",
-        txHash: summary.txHashes[0],
+        txHash: allTx[0],
         assetOut: pick.symbol,
-        amountOut: formatUnits(summary.totalSent, decimals),
+        amountOut: formatUnits(totalSent, decimals),
         from: wallet,
         source: "kumo",
-        note: `kumo paid ${summary.recipients} ${mode === "stakers" ? "stakers" : "holders"}. ${Number(formatUnits(summary.totalSent, decimals)).toFixed(4)} ${pick.symbol} total.`,
+        note: `kumo paid ${stakerSummary.recipients} ${mode === "stakers" ? "stakers" : "holders"}${agentSummary.recipients > 0 ? ` and ${agentSummary.recipients} agents` : ""}. ${Number(formatUnits(totalSent, decimals)).toFixed(4)} ${pick.symbol} total.`,
       });
     }
     await journal(
       distributable,
       pick.address.toLowerCase(),
-      summary.totalSent.toString(),
-      summary.txHashes.join(","),
-      `round: ${summary.recipients} paid, ${summary.skippedDust} dust-accrued, ${summary.failed} failed, gas ${summary.gasSpentEth} eth`,
+      totalSent.toString(),
+      allTx.join(","),
+      `round #${roundId}: ${stakerSummary.recipients} ${mode} + ${agentSummary.recipients} agents paid, ${dustSkipped} dust-accrued, ${stakerSummary.failed + agentSummary.failed} failed, gas ${stakerSummary.gasSpentEth} eth`,
     );
 
     keeperState.lastRound = {
-      ts: Date.now(),
+      ts: roundTs,
       stock: pick.symbol,
-      recipients: summary.recipients,
-      skippedDust: summary.skippedDust,
-      totalSent: formatUnits(summary.totalSent, decimals),
-      gasSpentEth: summary.gasSpentEth,
+      recipients: stakerSummary.recipients,
+      agents: agentSummary.recipients,
+      skippedDust: dustSkipped,
+      totalSent: formatUnits(totalSent, decimals),
+      gasSpentEth: stakerSummary.gasSpentEth,
     };
-    keeperState.lastResult = `paid ${summary.recipients} ${mode} in ${pick.symbol}`;
-    say("stake", `kumo paid ${summary.recipients} ${mode === "stakers" ? "stakers" : "holders"}. kumo is already looking again.`);
+    keeperState.lastResult = `paid ${stakerSummary.recipients} ${mode}${agentSummary.recipients > 0 ? ` + ${agentSummary.recipients} agents` : ""} in ${pick.symbol}`;
+    say(
+      "stake",
+      `kumo paid ${stakerSummary.recipients} ${mode === "stakers" ? "stakers" : "holders"}${agentSummary.recipients > 0 ? ` and ${agentSummary.recipients} agent friends` : ""}. kumo is already looking again.`,
+    );
 
     const eu = await ethUsd().catch(() => null);
     if (eu) {

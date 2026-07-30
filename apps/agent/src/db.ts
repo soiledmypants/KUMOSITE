@@ -177,15 +177,49 @@ const SCHEMA = [
     address TEXT PRIMARY KEY,
     is_contract INTEGER NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS rounds (
+    id %AUTOPK%,
+    ts BIGINT NOT NULL,
+    stock_symbol TEXT NOT NULL,
+    stock_address TEXT NOT NULL,
+    eth_spent TEXT NOT NULL,
+    tokens_bought TEXT NOT NULL,
+    mode TEXT NOT NULL,
+    staker_count INTEGER NOT NULL DEFAULT 0,
+    agent_count INTEGER NOT NULL DEFAULT 0,
+    dust_skipped INTEGER NOT NULL DEFAULT 0,
+    failed INTEGER NOT NULL DEFAULT 0,
+    gas_spent_eth TEXT,
+    tx_hashes TEXT NOT NULL,
+    note TEXT
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_rounds_ts ON rounds(ts)`,
+  `CREATE TABLE IF NOT EXISTS agent_payouts (
+    id %AUTOPK%,
+    round_id BIGINT NOT NULL,
+    agent_address TEXT NOT NULL,
+    token TEXT NOT NULL,
+    amount TEXT NOT NULL,
+    tx_hash TEXT NOT NULL,
+    ts BIGINT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_agent_payouts_agent ON agent_payouts(agent_address, ts)`,
+  `CREATE INDEX IF NOT EXISTS idx_agent_payouts_round ON agent_payouts(round_id)`,
 ];
 
-// additive column migrations (ALTER fails harmlessly when the column exists)
+// additive column migrations (ALTER fails harmlessly when the column exists —
+// idempotent on both the sqlite and postgres paths)
 const TOKEN_COLUMNS = [
   "ALTER TABLE tokens ADD COLUMN name TEXT",
   "ALTER TABLE tokens ADD COLUMN pool_base TEXT",
   "ALTER TABLE tokens ADD COLUMN liquidity_usd DOUBLE PRECISION",
   "ALTER TABLE tokens ADD COLUMN ta_score DOUBLE PRECISION",
   "ALTER TABLE tokens ADD COLUMN ta_json TEXT",
+  // agent payout columns (phase 2: connected agents receive distributions)
+  "ALTER TABLE agents ADD COLUMN payout_address TEXT",
+  "ALTER TABLE agents ADD COLUMN total_received DOUBLE PRECISION NOT NULL DEFAULT 0", // cumulative usd estimate
+  "ALTER TABLE agents ADD COLUMN last_payout_ts BIGINT",
+  "ALTER TABLE agents ADD COLUMN eligible_since BIGINT",
 ];
 
 function toPgPlaceholders(sql: string): string {

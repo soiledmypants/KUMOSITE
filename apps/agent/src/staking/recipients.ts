@@ -23,8 +23,10 @@ const MAX_CHUNKS = 50;
 
 export interface Recipient {
   address: Address;
-  weight: bigint; // raw stake / holding units, boost applied
+  weight: bigint; // raw stake / holding units (stakers) or scaled rep (agents), boost applied
   boosted: boolean;
+  /** set on agent-pool recipients: the agent identity address (payouts may go elsewhere) */
+  agent?: string;
 }
 
 async function isContract(address: string): Promise<boolean> {
@@ -176,31 +178,198 @@ async function holderRecipients(): Promise<Recipient[]> {
   return out;
 }
 
-/** resolve this round's recipients (with agent boost applied) */
-export async function resolveRecipients(): Promise<{ recipients: Recipient[]; mode: "stakers" | "holders" | "none" }> {
-  let recipients: Recipient[] = [];
+// ---- agent eligibility (2a anti-sybil) --------------------------------------
+// a bare handshake is never worth money on its own. every check is reported
+// individually so the dashboard can show exactly WHY an agent is ineligible.
+
+export interface EligibilityCheck {
+  id: "handshake" | "liveness" | "reputation" | "stake" | "address";
+  ok: boolean;
+  note: string;
+}
+
+export interface AgentEligibility {
+  eligible: boolean;
+  checks: EligibilityCheck[];
+  payoutAddress: string;
+  weight: bigint; // scaled rep (rep × 1e6); 0 when ineligible
+}
+
+interface AgentDbRow {
+  address: string;
+  name: string;
+  token_hash: string | null;
+  last_seen: number;
+  rep: number;
+  n_scored: number;
+  tier: string;
+  payout_address: string | null;
+  eligible_since: number | null;
+}
+
+const stakingBalanceAbi = parseAbi(["function balanceOf(address) view returns (uint256)"]);
+
+export async function agentEligibility(a: AgentDbRow): Promise<AgentEligibility> {
+  const checks: EligibilityCheck[] = [];
+  const payoutAddress = (a.payout_address && /^0x[0-9a-fA-F]{40}$/.test(a.payout_address) ? a.payout_address : a.address).toLowerCase();
+
+  checks.push({
+    id: "handshake",
+    ok: a.token_hash !== null,
+    note: a.token_hash !== null ? "wallet-signature handshake complete" : "no handshake — say hello and sign the nonce",
+  });
+
+  const livenessMs = CONFIG.agentLivenessHours * 3600_000;
+  const alive = Date.now() - Number(a.last_seen) <= livenessMs;
+  checks.push({
+    id: "liveness",
+    ok: alive,
+    note: alive
+      ? `seen within the last ${CONFIG.agentLivenessHours}h`
+      : `dead air — last seen over ${CONFIG.agentLivenessHours}h ago. dead agents stop earning.`,
+  });
+
+  const trustedTier = a.tier === "trusted" || a.tier === "inner-circle";
+  const repOk = trustedTier && Number(a.rep) >= CONFIG.agentMinRep;
+  checks.push({
+    id: "reputation",
+    ok: repOk,
+    note: repOk
+      ? `tier ${a.tier}, rep ${Number(a.rep).toFixed(2)}`
+      : `needs the trusted tier (>=10 scored intel calls, rep >= ${CONFIG.agentMinRep}) — currently ${a.tier}, rep ${Number(a.rep).toFixed(2)}, ${Number(a.n_scored)} scored`,
+  });
+
+  let stakeOk = true;
+  let stakeNote = "stake requirement off";
+  if (CONFIG.agentRequireStake) {
+    stakeOk = false;
+    stakeNote = "no staking contract or $KUMO configured yet — stake check cannot pass";
+    if (CONFIG.stakingAddress) {
+      try {
+        const staked = await withRetry(
+          () =>
+            publicClient.readContract({
+              address: CONFIG.stakingAddress as Address,
+              abi: stakingBalanceAbi,
+              functionName: "balanceOf",
+              args: [payoutAddress as Address],
+            }),
+          "agents.stakeOf",
+          { retries: 1 },
+        );
+        if (staked > 0n) {
+          stakeOk = true;
+          stakeNote = "payout address holds stake";
+        } else {
+          stakeNote = "payout address holds no stake in KumoMultiStaking";
+        }
+      } catch {
+        stakeNote = "stake read failed — treated as unstaked this round";
+      }
+    }
+    if (!stakeOk && CONFIG.kumoToken) {
+      try {
+        const bal = await withRetry(
+          () =>
+            publicClient.readContract({
+              address: CONFIG.kumoToken as Address,
+              abi: erc20Abi,
+              functionName: "balanceOf",
+              args: [payoutAddress as Address],
+            }),
+          "agents.kumoBal",
+          { retries: 1 },
+        );
+        const minRaw = BigInt(Math.round(CONFIG.agentMinHold * 1e6)) * 10n ** 12n; // whole units -> raw (18 dec)
+        if (bal > minRaw) {
+          stakeOk = true;
+          stakeNote = `payout address holds > ${CONFIG.agentMinHold} $KUMO`;
+        } else if (!CONFIG.stakingAddress) {
+          stakeNote = `payout address holds <= ${CONFIG.agentMinHold} $KUMO`;
+        }
+      } catch {
+        // keep the staking note
+      }
+    }
+  }
+  checks.push({ id: "stake", ok: stakeOk, note: stakeNote });
+
+  const sys = systemAddress(payoutAddress);
+  const contract = sys ? false : await isContract(payoutAddress);
+  checks.push({
+    id: "address",
+    ok: !sys && !contract,
+    note: sys ? "payout address is a system address" : contract ? "payout address is a contract" : "payout address is a clean eoa",
+  });
+
+  const eligible = checks.every((c) => c.ok);
+  return {
+    eligible,
+    checks,
+    payoutAddress,
+    weight: eligible ? BigInt(Math.max(1, Math.round(Number(a.rep) * 1_000_000))) : 0n,
+  };
+}
+
+/** eligible connected agents as pool recipients, rep-weighted. maintains eligible_since. */
+export async function agentRecipients(): Promise<Recipient[]> {
+  const rows = await db.all<AgentDbRow>("SELECT * FROM agents");
+  const out: Recipient[] = [];
+  const now = Date.now();
+  for (const a of rows) {
+    const e = await agentEligibility(a);
+    if (e.eligible) {
+      if (!a.eligible_since) {
+        await db.run("UPDATE agents SET eligible_since = ? WHERE address = ?", [now, a.address]);
+      }
+      out.push({ address: e.payoutAddress as Address, weight: e.weight, boosted: false, agent: a.address });
+    } else if (a.eligible_since) {
+      await db.run("UPDATE agents SET eligible_since = NULL WHERE address = ?", [a.address]);
+    }
+  }
+  return out;
+}
+
+export interface ResolvedRecipients {
+  stakers: Recipient[];
+  agents: Recipient[];
+  mode: "stakers" | "holders" | "none";
+}
+
+/** resolve this round's recipients: staker pool (with boost) + eligible-agent pool */
+export async function resolveRecipients(): Promise<ResolvedRecipients> {
+  let stakers: Recipient[] = [];
   let mode: "stakers" | "holders" | "none" = "none";
   if (CONFIG.stakingAddress) {
-    recipients = await stakerRecipients();
+    stakers = await stakerRecipients();
     mode = "stakers";
   }
-  if (recipients.length === 0 && CONFIG.kumoToken) {
-    recipients = await holderRecipients();
-    mode = recipients.length > 0 ? "holders" : mode;
+  if (stakers.length === 0 && CONFIG.kumoToken) {
+    stakers = await holderRecipients();
+    mode = stakers.length > 0 ? "holders" : mode;
   }
-  if (recipients.length === 0) return { recipients: [], mode: recipients.length ? mode : "none" };
 
-  // connected-agent boost within the round (designed in, ships OFF until BOOST_ENABLED=true)
-  if (CONFIG.boostEnabled && CONFIG.boostPct > 0) {
-    const agents = await db.all<{ address: string }>("SELECT address FROM agents");
-    const agentSet = new Set(agents.map((a) => a.address.toLowerCase()));
+  // the agent pool only exists in pool/both mode
+  const poolMode = CONFIG.agentRewardMode === "pool" || CONFIG.agentRewardMode === "both";
+  const agents = poolMode ? await agentRecipients() : [];
+
+  // connected-agent boost within the staker pool. 2a change (approved): boost
+  // now only matches ELIGIBLE agents — a bare or dead handshake boosts nothing.
+  const boostMode = CONFIG.agentRewardMode === "" || CONFIG.agentRewardMode === "boost" || CONFIG.agentRewardMode === "both";
+  if (boostMode && CONFIG.boostEnabled && CONFIG.boostPct > 0 && stakers.length > 0) {
+    const eligibleAgents = poolMode ? agents : await agentRecipients();
+    const matchSet = new Set<string>();
+    for (const a of eligibleAgents) {
+      matchSet.add(a.address.toLowerCase());
+      if (a.agent) matchSet.add(a.agent.toLowerCase());
+    }
     const boostNum = BigInt(Math.round((1 + CONFIG.boostPct / 100) * 10_000));
-    for (const r of recipients) {
-      if (agentSet.has(r.address.toLowerCase())) {
+    for (const r of stakers) {
+      if (matchSet.has(r.address.toLowerCase())) {
         r.weight = (r.weight * boostNum) / 10_000n;
         r.boosted = true;
       }
     }
   }
-  return { recipients, mode };
+  return { stakers, agents, mode };
 }

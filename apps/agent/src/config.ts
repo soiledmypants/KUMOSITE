@@ -96,6 +96,17 @@ export const CONFIG = {
   perRecipientMinUsd: envNum("PER_RECIPIENT_MIN_USD", 0.25),
   boostEnabled: envBool("BOOST_ENABLED", false), // connected-agent boost is designed but ships OFF
   boostPct: envNum("BOOST_PCT", 10),
+
+  // connected-agent rewards (2a anti-sybil). AGENT_REWARD_MODE unset -> stakers
+  // only, identical to today. a bare handshake is never worth money on its own:
+  // eligibility needs handshake + liveness + trusted-tier rep + (by default) stake.
+  agentRewardMode: parseRewardMode(process.env.AGENT_REWARD_MODE ?? ""),
+  agentPoolPct: Math.min(Math.max(envNum("AGENT_POOL_PCT", 10), 0), 25), // HARD cap 25
+  agentLivenessHours: envNum("AGENT_LIVENESS_HOURS", 24),
+  agentMinRep: envNum("AGENT_MIN_REP", 0.55), // matches the 'trusted' tier floor that gates early signals
+  agentRequireStake: envBool("AGENT_REQUIRE_STAKE", true),
+  agentMinHold: envNum("AGENT_MIN_HOLD", 0), // whole $KUMO units, used when not staked
+  maxAgentSharePct: Math.min(Math.max(envNum("MAX_AGENT_SHARE_PCT", 20), 1), 100),
   gasReserveEth: envNum("GAS_RESERVE_ETH", 0.02),
   maxImpactPct: envNum("MAX_IMPACT_PCT", 2),
   keeperDryRun: envBool("KEEPER_DRY_RUN", false), // true -> scheduled cycles plan only, never send
@@ -120,6 +131,14 @@ export const CONFIG = {
   txWaitMs: envNum("TX_WAIT_MS", 90_000),
   gasBumpPct: envNum("GAS_BUMP_PCT", 25),
 } as const;
+
+export type AgentRewardMode = "" | "boost" | "pool" | "both";
+
+function parseRewardMode(raw: string): AgentRewardMode {
+  const v = raw.trim().toLowerCase();
+  if (v === "" || v === "boost" || v === "pool" || v === "both") return v as AgentRewardMode;
+  throw new Error(`AGENT_REWARD_MODE must be unset, "boost", "pool", or "both" — got "${raw}"`);
+}
 
 function parseStockTokens(raw: string): { symbol: string; address: Address }[] {
   if (!raw.trim()) return [];

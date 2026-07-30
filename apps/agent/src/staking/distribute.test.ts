@@ -1,5 +1,5 @@
 // share-math assertions: `npx tsx src/staking/distribute.test.ts`
-import { computeShares } from "./distribute.js";
+import { computeShares, splitPoolAmount, clampWeights, dustKey } from "./distribute.js";
 import type { Recipient } from "./recipients.js";
 
 let failed = 0;
@@ -82,6 +82,62 @@ const C = "0xcccccccccccccccccccccccccccccccccccccccc" as const;
   check("zero address excluded", systemAddress("0x0000000000000000000000000000000000000000", fakeBot));
   check("dead address excluded", systemAddress("0x000000000000000000000000000000000000dead", fakeBot));
   check("normal staker not excluded", !systemAddress(A, fakeBot));
+}
+
+// 7. agent pool split: pct carve-out, hard cap, zero-agents fallback
+{
+  const s1 = splitPoolAmount(10_000n, 10, 5);
+  check("pool split 10% carved", s1.agentAmount === 1_000n && s1.stakerAmount === 9_000n);
+  const s2 = splitPoolAmount(10_000n, 40, 5); // over the hard cap
+  check("pool pct hard-capped at 25", s2.agentAmount === 2_500n);
+  const s3 = splitPoolAmount(10_000n, 10, 0); // nobody eligible
+  check("zero eligible agents -> pool reverts to stakers", s3.agentAmount === 0n && s3.stakerAmount === 10_000n);
+  const s4 = splitPoolAmount(0n, 10, 5);
+  check("zero total -> zero pool", s4.agentAmount === 0n && s4.stakerAmount === 0n);
+}
+
+// 8. MAX_AGENT_SHARE_PCT clamping
+{
+  const whale: Recipient[] = [
+    { address: A, weight: 1_000_000n, boosted: false }, // would take ~91%
+    { address: B, weight: 50_000n, boosted: false },
+    { address: C, weight: 50_000n, boosted: false },
+    { address: "0xdddddddddddddddddddddddddddddddddddddddd", weight: 50_000n, boosted: false },
+    { address: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", weight: 50_000n, boosted: false },
+  ];
+  const clamped = clampWeights(whale, 20);
+  const total = clamped.reduce((a, r) => a + r.weight, 0n);
+  const whaleShare = Number((clamped[0].weight * 10_000n) / total) / 100;
+  check("single agent clamped to ~max share", whaleShare <= 21);
+  check("clamp conserves the others", clamped[1].weight === 50_000n);
+  // unsatisfiable cap (2 agents, 20% max) -> equal split fallback
+  const two = clampWeights(
+    [
+      { address: A, weight: 900n, boosted: false },
+      { address: B, weight: 100n, boosted: false },
+    ],
+    20,
+  );
+  check("unsatisfiable cap -> equal split", two[0].weight === two[1].weight);
+}
+
+// 9. dust keys are pool-scoped: same address+token never collides across pools
+{
+  const t = "0xD0601ce157DB5bdc3162bbAC2A2c8AF5320d9EEC";
+  check("staker dust key is the bare token", dustKey(t) === t.toLowerCase());
+  check("agent dust key is suffixed", dustKey(t, "agents") === `${t.toLowerCase()}:agents`);
+  check("keys differ", dustKey(t, "stakers") !== dustKey(t, "agents"));
+}
+
+// 10. dust carry stays inside its pool: agent dust re-adds only via the agent map
+{
+  const rec: Recipient[] = [{ address: A, weight: 100n, boosted: false, agent: "0xagent" } as Recipient];
+  const agentDust = new Map<string, bigint>([[A.toLowerCase(), 500n]]);
+  const withDust = computeShares(rec, 1_000n, 0, 18, 0, agentDust);
+  const withoutDust = computeShares(rec, 1_000n, 0, 18, 0, new Map());
+  check("agent-pool dust re-added in its own pool", withDust.paid[0].amount === 1_500n);
+  check("staker pass unaffected without its own dust", withoutDust.paid[0].amount === 1_000n);
+  check("agent identity carried onto the share", withDust.paid[0].agent === "0xagent");
 }
 
 if (failed > 0) {
