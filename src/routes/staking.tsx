@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Box, Tag } from "@/components/SiteChrome";
-import { StakeWallet } from "@/components/StakeWallet";
 import { useKumo, type LedgerEntry, type StakingStats } from "@/lib/kumo-api";
 
 const YEAR_S = 31_536_000;
@@ -46,11 +45,19 @@ function Staking() {
   const boost = stats?.boost ?? null;
   return (
     <>
-      <Box title="connect wallet" meta="step one">
-        <StakeWallet />
-        <p className="lowercase text-sm leading-relaxed mt-3">
-          connect the wallet that holds $kumo. stake it. kumo airdrops stock tokens straight to
-          your wallet, round after round. claim nothing — it just arrives. unstaking is never locked.
+      <Box title="staking" meta="kumo is building this">
+        <div className="border border-dashed border-[#ccff00] px-3 py-3 lowercase">
+          <div className="tracking-widest text-sm mb-1">~ kumo is building the staking pool ~</div>
+          <p className="text-sm leading-relaxed dim">
+            kumo is still welding the staking contract together. soon you'll stake $kumo and get
+            real stock tokens dropped straight into your wallet, round after round — claim nothing,
+            it just arrives. until then, kumo pays $kumo holders directly. hold and wait. kumo is
+            almost done.
+          </p>
+        </div>
+        <p className="lowercase text-xs dim leading-relaxed mt-3">
+          below is how it will work once kumo flips the switch. the numbers stay honest — only what
+          kumo actually earns.
         </p>
       </Box>
 
