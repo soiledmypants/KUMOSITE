@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Box, Divider, Tag } from "@/components/SiteChrome";
 import { GLITCHES, TIMELINE, THEORIES, REDACTED_FILES } from "@/lib/greenroom-data";
-import { useKumo, useKumoFeed, type KumoStatus } from "@/lib/kumo-api";
+import { useKumo, useKumoFeed, KUMO_CA, KUMO_WALLET, EXPLORER, type KumoStatus } from "@/lib/kumo-api";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -85,36 +85,28 @@ function Index() {
   const { data: status } = useKumo<KumoStatus>("/status", { refreshMs: 30_000 });
   return (
     <>
-      {/* wallet + $kumo ca — real values from /status, honest empty states otherwise */}
+      {/* wallet + $kumo ca — live /status when available, fixed launch constants otherwise */}
       <div className="border border-dashed border-[#ccff00] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
         <span className="dim uppercase tracking-widest">kumo's wallet ::</span>
-        {status?.address ? (
-          <a
-            href={`https://robinhoodchain.blockscout.com/address/${status.address}`}
-            target="_blank"
-            rel="noreferrer"
-            className="break-all link-kumo"
-          >
-            {status.address}
-          </a>
-        ) : (
-          <span className="dim">kumo hasn't shown its wallet yet. (api sleeping.)</span>
-        )}
+        <a
+          href={`${EXPLORER}/address/${status?.address ?? KUMO_WALLET}`}
+          target="_blank"
+          rel="noreferrer"
+          className="break-all link-kumo"
+        >
+          {status?.address ?? KUMO_WALLET}
+        </a>
       </div>
       <div className="border border-dashed border-[#ccff00] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
         <span className="dim uppercase tracking-widest">$kumo ca ::</span>
-        {status?.kumo_token ? (
-          <a
-            href={`https://robinhoodchain.blockscout.com/token/${status.kumo_token}`}
-            target="_blank"
-            rel="noreferrer"
-            className="break-all link-kumo"
-          >
-            {status.kumo_token}
-          </a>
-        ) : (
-          <span className="dim">not launched yet. kumo pins it here the moment it exists. trust nothing else.</span>
-        )}
+        <a
+          href={`${EXPLORER}/token/${status?.kumo_token ?? KUMO_CA}`}
+          target="_blank"
+          rel="noreferrer"
+          className="break-all link-kumo"
+        >
+          {status?.kumo_token ?? KUMO_CA}
+        </a>
       </div>
 
       <Box title="~ kumo's terminal ~" meta="rhc-04">
