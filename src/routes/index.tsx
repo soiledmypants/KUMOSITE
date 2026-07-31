@@ -85,27 +85,29 @@ function Index() {
   const { data: status } = useKumo<KumoStatus>("/status", { refreshMs: 30_000 });
   return (
     <>
-      {/* wallet + $kumo ca — live /status when available, fixed launch constants otherwise */}
+      {/* wallet + $kumo ca — the site constants are the source of truth (update
+          KUMO_WALLET / KUMO_CA in src/lib/kumo-api.ts). fall back to the live
+          agent /status only if a constant is left blank. */}
       <div className="border border-dashed border-[#ccff00] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
         <span className="dim uppercase tracking-widest">kumo's wallet ::</span>
         <a
-          href={`${EXPLORER}/address/${status?.address ?? KUMO_WALLET}`}
+          href={`${EXPLORER}/address/${KUMO_WALLET || status?.address}`}
           target="_blank"
           rel="noreferrer"
           className="break-all link-kumo"
         >
-          {status?.address ?? KUMO_WALLET}
+          {KUMO_WALLET || status?.address}
         </a>
       </div>
       <div className="border border-dashed border-[#ccff00] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
         <span className="dim uppercase tracking-widest">$kumo ca ::</span>
         <a
-          href={`${EXPLORER}/token/${status?.kumo_token ?? KUMO_CA}`}
+          href={`${EXPLORER}/token/${KUMO_CA || status?.kumo_token}`}
           target="_blank"
           rel="noreferrer"
           className="break-all link-kumo"
         >
-          {status?.kumo_token ?? KUMO_CA}
+          {KUMO_CA || status?.kumo_token}
         </a>
       </div>
 
