@@ -119,8 +119,16 @@ export function SiteChrome({ children }: { children: ReactNode }) {
         <main className="space-y-4">{children}</main>
 
         <footer className="mt-8 box p-3 text-[10px] sm:text-xs dim lowercase">
-          <div className="flex flex-wrap justify-between gap-2">
+          <div className="flex flex-wrap justify-between gap-2 items-center">
             <span>© kumo, online since block 0</span>
+            <a
+              href="https://x.com/imkumoagent"
+              target="_blank"
+              rel="noreferrer"
+              className="link-kumo uppercase tracking-widest"
+            >
+              [ x / twitter ]
+            </a>
             <span>uptime {uptime}</span>
           </div>
           <div className="mt-1">no cookies. no trackers. kumo doesn't like them. kumo eats them.</div>

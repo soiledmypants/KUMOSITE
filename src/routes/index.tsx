@@ -259,6 +259,8 @@ function Index() {
         <Link to="/lore" className="hover:text-[#dfff33]">[ mysteries ]</Link>
         <span className="mx-2">·</span>
         <Link to="/congregation" className="hover:text-[#dfff33]">[ pick a faction ]</Link>
+        <span className="mx-2">·</span>
+        <a href="https://x.com/imkumoagent" target="_blank" rel="noreferrer" className="hover:text-[#dfff33]">[ x / twitter ]</a>
       </div>
     </>
   );
