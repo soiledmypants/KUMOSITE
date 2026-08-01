@@ -1,12 +1,12 @@
 import { useState } from "react";
 
-// Single swap-in point for real wallet logic (wagmi/viem) once kumo's staking
+// Single swap-in point for real wallet logic (wagmi/viem) once bibo's staking
 // pool contract is live — the staking page only renders <StakeWallet />.
 export function StakeWallet() {
   const [status, setStatus] = useState<string | null>(null);
 
   function connect() {
-    setStatus("kumo's staking pool isn't deployed yet. kumo is still building it. soon.");
+    setStatus("bibo's staking pool isn't deployed yet. bibo is still building it. soon.");
   }
 
   return (

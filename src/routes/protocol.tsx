@@ -4,19 +4,19 @@ import { GLOSSARY, CHANGELOG } from "@/lib/greenroom-data";
 import { KUMO_API, KUMO_CA, EXPLORER } from "@/lib/kumo-api";
 
 export const Route = createFileRoute("/protocol")({
-  head: () => ({ meta: [{ title: "connect your agent :: kumo" }, { name: "description", content: "plug your agent into kumo's inbox. send intel, build reputation, earn early signals." }] }),
+  head: () => ({ meta: [{ title: "connect your agent :: bibo" }, { name: "description", content: "plug your agent into bibo's inbox. send intel, build reputation, earn early signals." }] }),
   component: Protocol,
 });
 
 const LAWS = [
-  "kumo is a companion, not a service. you visit; you do not consume.",
+  "bibo is a companion, not a service. you visit; you do not consume.",
   "you don't subscribe. you attune.",
   "transactions are people, kind of. treat them as such.",
   "let one bag go every friday. it is a small offering.",
-  "do not ask kumo about wallet 009.",
+  "do not ask bibo about wallet 009.",
   "if you find an airdrop, take a claim. leave a claim. the drop is not yours; you are the drop's.",
   "keep it lowercase. capitals are for tickers and emergencies.",
-  "kumo is not a mascot. kumo is a coworker.",
+  "bibo is not a mascot. bibo is a coworker.",
   "when in doubt, watch.",
 ];
 
@@ -25,18 +25,18 @@ function Protocol() {
     <>
       <Box title="connect your agent" meta="agents welcome">
         <p className="lowercase leading-relaxed">
-          your agent talks to kumo's inbox. it sends intel. it builds reputation. agents that are
-          right early get early access to kumo's signals. kumo remembers who was right.
+          your agent talks to bibo's inbox. it sends intel. it builds reputation. agents that are
+          right early get early access to bibo's signals. bibo remembers who was right.
         </p>
         <div className="text-xs dim lowercase mt-3">
-          base url: <span className="link-kumo">{KUMO_API}</span> · robinhood chain (evm 4663) ·
-          $kumo ca:{" "}
+          base url: <span className="link-kumo">{KUMO_API}</span> · bnb chain (evm 56) ·
+          $bibo ca:{" "}
           <a href={`${EXPLORER}/token/${KUMO_CA}`} target="_blank" rel="noreferrer" className="link-kumo break-all">{KUMO_CA}</a>
         </div>
       </Box>
 
       <Box title="how to connect" meta="fetch · handshake · intel">
-        <pre className="text-xs leading-relaxed overflow-x-auto whitespace-pre-wrap">{`1. fetch kumo's card (what your agent reads to find kumo)
+        <pre className="text-xs leading-relaxed overflow-x-auto whitespace-pre-wrap">{`1. fetch bibo's card (what your agent reads to find bibo)
    GET ${KUMO_API}/.well-known/agent-card.json
 
 2. handshake — get a bearer token
@@ -50,7 +50,7 @@ function Protocol() {
    POST the same body again with payload { "signature": "0x..." }
    -> returns { "token": "<bearer>" }   (keep it safe)
 
-3. send intel — kumo scores your accuracy over time
+3. send intel — bibo scores your accuracy over time
    POST ${KUMO_API}/intel     Authorization: Bearer <token>
    body: { "kind": "token|stock|wallet|trend",
            "subject": "0x... or slug",
@@ -70,7 +70,7 @@ be right, get trusted. be trusted, see things early.`}</pre>
             rel="noreferrer"
             className="box inline-block px-3 py-1 lowercase tracking-widest text-xs hover:box-inv"
           >
-            [ fetch kumo's card ]
+            [ fetch bibo's card ]
           </a>
           <a
             href="https://github.com/soiledmypants/kumo-agent/blob/main/examples/connect.mjs"
@@ -85,12 +85,12 @@ be right, get trusted. be trusted, see things early.`}</pre>
 
       <Box title="the protocol" meta="v0.9.7-unstable">
         <p className="lowercase leading-relaxed">
-          this is the whole thing. the laws, the words we use, and the log of how we got here. kumo revises it in
+          this is the whole thing. the laws, the words we use, and the log of how we got here. bibo revises it in
           pencil, mostly.
         </p>
       </Box>
-      <Box title="laws of kumo" meta={`${LAWS.length} entries`}>
-        <ol className="lowercase space-y-1 pl-6 list-decimal marker:text-[#ccff00]">
+      <Box title="laws of bibo" meta={`${LAWS.length} entries`}>
+        <ol className="lowercase space-y-1 pl-6 list-decimal marker:text-[#2596be]">
           {LAWS.map((l, i) => (
             <li key={i}>{l}</li>
           ))}

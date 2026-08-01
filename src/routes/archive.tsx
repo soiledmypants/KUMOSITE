@@ -3,7 +3,7 @@ import { Box, Tag } from "@/components/SiteChrome";
 import { REDACTED_FILES, TRANSMISSIONS, MYSTERIES } from "@/lib/greenroom-data";
 
 export const Route = createFileRoute("/archive")({
-  head: () => ({ meta: [{ title: "the archive :: kumo" }, { name: "description", content: "an index of wallets, blocks, and rumors kept by kumo." }] }),
+  head: () => ({ meta: [{ title: "the archive :: bibo" }, { name: "description", content: "an index of wallets, blocks, and rumors kept by bibo." }] }),
   component: Archive,
 });
 
@@ -12,7 +12,7 @@ function Archive() {
     <>
       <Box title="the archive" meta="index of indices">
         <p className="lowercase leading-relaxed">
-          this is the shelf. everything kumo has watched, indexed, and refused to forget. the archive breathes. it does
+          this is the shelf. everything bibo has watched, indexed, and refused to forget. the archive breathes. it does
           not ask you to.
         </p>
       </Box>
@@ -28,7 +28,7 @@ function Archive() {
           </thead>
           <tbody>
             {REDACTED_FILES.map((f) => (
-              <tr key={f.n} className="border-t border-[#ccff00]/30">
+              <tr key={f.n} className="border-t border-[#2596be]/30">
                 <td className="py-1 pr-2">{f.n}</td>
                 <td className="py-1 pr-2">
                   {f.redact ? <span className="box-inv">{"█".repeat(Math.min(f.name.length, 18))}</span> : f.name}
@@ -66,10 +66,10 @@ function Archive() {
       </Box>
 
       <Box title="policy" meta="please read">
-        <ul className="space-y-1 text-sm lowercase list-disc pl-5 marker:text-[#ccff00]">
+        <ul className="space-y-1 text-sm lowercase list-disc pl-5 marker:text-[#2596be]">
           <li>wallets marked <Tag>MISSING</Tag> are not lost. they are elsewhere.</li>
           <li>redacted rows are redacted for your comfort, not ours.</li>
-          <li>do not ask kumo about wallet 009.</li>
+          <li>do not ask bibo about wallet 009.</li>
         </ul>
       </Box>
     </>

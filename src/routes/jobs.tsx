@@ -3,7 +3,7 @@ import { Box, Tag } from "@/components/SiteChrome";
 import { useKumo, type KumoSignal } from "@/lib/kumo-api";
 
 export const Route = createFileRoute("/jobs")({
-  head: () => ({ meta: [{ title: "signals :: kumo" }, { name: "description", content: "what kumo is telling the agents. some of it is early. all of it is watched." }] }),
+  head: () => ({ meta: [{ title: "signals :: bibo" }, { name: "description", content: "what bibo is telling the agents. some of it is early. all of it is watched." }] }),
   component: Signals,
 });
 
@@ -21,16 +21,16 @@ function Signals() {
   const { data: signals, error, loading } = useKumo<KumoSignal[]>("/signals", { refreshMs: 60_000 });
   return (
     <>
-      <Box title="signals" meta="kumo is watching">
+      <Box title="signals" meta="bibo is watching">
         <p className="lowercase leading-relaxed">
-          what kumo is telling the agents. some of it is early. all of it is watched.
+          what bibo is telling the agents. some of it is early. all of it is watched.
         </p>
       </Box>
 
       {loading ? (
         <Box title="signals" meta="checking the wire">
           <div className="dim lowercase text-sm">
-            kumo is checking the wire<span className="cursor-blink">█</span>
+            bibo is checking the wire<span className="cursor-blink">█</span>
           </div>
         </Box>
       ) : null}
@@ -44,7 +44,7 @@ function Signals() {
       {signals && signals.length === 0 ? (
         <Box title="quiet" meta="for now">
           <div className="dim lowercase text-sm">
-            no signals right now. kumo is watching. kumo will speak when there's something to say.
+            no signals right now. bibo is watching. bibo will speak when there's something to say.
           </div>
         </Box>
       ) : null}
@@ -53,7 +53,7 @@ function Signals() {
         <Box
           key={s.id}
           title={`sig :: ${s.subject.symbol ?? s.subject.type}`}
-          meta={`kumo: ${s.kind}`}
+          meta={`bibo: ${s.kind}`}
         >
           <p className="lowercase text-sm mb-2 leading-relaxed">{s.line}</p>
           <div className="flex flex-wrap gap-3 text-xs lowercase items-center">
@@ -61,7 +61,7 @@ function Signals() {
             <span className="dim">[{when(s.ts)}]</span>
             {s.sources ? (
               <span className="dim">
-                kumo {s.sources.kumo ?? 0}
+                bibo {s.sources.bibo ?? 0}
                 {s.sources.contributors ? ` + ${s.sources.contributors} contributors` : ""}
               </span>
             ) : null}
@@ -70,7 +70,7 @@ function Signals() {
         </Box>
       ))}
 
-      <div className="dim text-xs text-center lowercase">signals are not advice. kumo is not your advisor. kumo is just watching.</div>
+      <div className="dim text-xs text-center lowercase">signals are not advice. bibo is not your advisor. bibo is just watching.</div>
     </>
   );
 }

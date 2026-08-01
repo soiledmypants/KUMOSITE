@@ -3,7 +3,7 @@ import { Box } from "@/components/SiteChrome";
 import { useKumo, type StockRank } from "@/lib/kumo-api";
 
 export const Route = createFileRoute("/stocks")({
-  head: () => ({ meta: [{ title: "the chart room :: kumo" }, { name: "description", content: "kumo's live ta rankings for every tokenized stock on robinhood chain." }] }),
+  head: () => ({ meta: [{ title: "the chart room :: bibo" }, { name: "description", content: "bibo's live ta rankings for every tokenized stock on bnb chain." }] }),
   component: Stocks,
 });
 
@@ -30,21 +30,21 @@ function Stocks() {
     <>
       <Box title="the chart room" meta={stocks ? `${stocks.length} stocks scored` : "warming up"}>
         <p className="lowercase leading-relaxed">
-          kumo reads the charts so you don't have to. every tokenized stock on the chain, scored
+          bibo reads the charts so you don't have to. every tokenized stock on the chain, scored
           every five minutes — momentum, volume, liquidity, and a volatility penalty. the top of
-          this table is what kumo buys for stakers whenever a round fires.
+          this table is what bibo buys for stakers whenever a round fires.
         </p>
       </Box>
 
-      <Box title="ta rankings" meta="best first · refreshes with kumo">
+      <Box title="ta rankings" meta="best first · refreshes with bibo">
         {loading ? (
           <div className="dim lowercase text-sm">
-            kumo is running the numbers<span className="cursor-blink">█</span>
+            bibo is running the numbers<span className="cursor-blink">█</span>
           </div>
         ) : null}
         {error ? <div className="dim lowercase text-sm">{error}</div> : null}
         {stocks && stocks.length === 0 ? (
-          <div className="dim lowercase text-sm">no scores yet. kumo's history is still warming up.</div>
+          <div className="dim lowercase text-sm">no scores yet. bibo's history is still warming up.</div>
         ) : null}
         {stocks && stocks.length > 0 ? (
           <div className="overflow-x-auto">
@@ -64,7 +64,7 @@ function Stocks() {
               </thead>
               <tbody>
                 {stocks.map((s, i) => (
-                  <tr key={s.address || s.symbol} className="border-t border-[#ccff00]/30">
+                  <tr key={s.address || s.symbol} className="border-t border-[#2596be]/30">
                     <td className="py-1 pr-3 dim">{String(i + 1).padStart(2, "0")}</td>
                     <td className="py-1 pr-3">{s.symbol}</td>
                     <td className="py-1 pr-3">{s.price_usd != null ? `$${s.price_usd.toFixed(2)}` : "—"}</td>
@@ -87,12 +87,12 @@ function Stocks() {
           </div>
         ) : null}
         <div className="text-xs dim lowercase mt-3">
-          a price of — means the pool is too shallow to price honestly, so kumo doesn't.
+          a price of — means the pool is too shallow to price honestly, so bibo doesn't.
         </div>
       </Box>
 
       <div className="dim text-xs text-center lowercase">
-        scores are not advice. kumo is not your advisor. kumo just really likes charts.
+        scores are not advice. bibo is not your advisor. bibo just really likes charts.
       </div>
     </>
   );

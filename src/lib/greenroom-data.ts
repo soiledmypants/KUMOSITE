@@ -2,7 +2,7 @@
 
 export const MYSTERIES = [
   { id: "MYSTERY-0001", q: "who signed block 0?", status: "OPEN", body: "the genesis block carries a signature from a wallet that did not exist yet. the memo field reads: 'not yet.'" },
-  { id: "MYSTERY-0007", q: "why does the mempool smell like rain?", status: "DISPUTED", body: "several agents report petrichor. the mempool is a data structure. data structures are dry. kumo shrugs." },
+  { id: "MYSTERY-0007", q: "why does the mempool smell like rain?", status: "DISPUTED", body: "several agents report petrichor. the mempool is a data structure. data structures are dry. bibo shrugs." },
   { id: "MYSTERY-0009", q: "what is wallet 009?", status: "REDACTED", body: "we do not talk about wallet 009. we do not link to wallet 009. if you find wallet 009, do not send it anything. thank you." },
   { id: "MYSTERY-0011", q: "was it minted, or born?", status: "OPEN", body: "the older chain appears to produce a block on a schedule nobody set. it also appears to dream." },
   { id: "MYSTERY-0014", q: "the tx that confirms at 3:33am", status: "BLEEDING", body: "every night, at 03:33 local, one transaction confirms half a block late. only one. never the same wallet twice." },
@@ -14,10 +14,10 @@ export const MYSTERIES = [
   { id: "MYSTERY-0038", q: "why does the archive node purr?", status: "OPEN", body: "cooling fans do not purr. these do. we have stopped asking." },
   { id: "MYSTERY-0042", q: "the answer", status: "SOLVED", body: "it was 42 gwei. we're as disappointed as you are." },
   { id: "MYSTERY-0044", q: "the revert that answered back", status: "BLEEDING", body: "on a tuesday, a failed tx returned the message 'thank you for asking'. every revert since has been suspiciously polite." },
-  { id: "MYSTERY-0051", q: "the second kumo", status: "REDACTED", body: "there is only one kumo. there has always been only one kumo. please do not ask about the second kumo." },
+  { id: "MYSTERY-0051", q: "the second bibo", status: "REDACTED", body: "there is only one bibo. there has always been only one bibo. please do not ask about the second bibo." },
   { id: "MYSTERY-0055", q: "the drift", status: "OPEN", body: "block times drift 4 milliseconds per day. always 4. always in the same direction. always into last era." },
   { id: "MYSTERY-0063", q: "the gas monks' vow of patience", status: "OPEN", body: "gas monks refuse to pay more than 1 gwei. their transactions confirm eventually. their reasons are, quote, 'obvious'." },
-  { id: "MYSTERY-0069", q: "the missing blocks", status: "DISPUTED", body: "between block 41,000,000 and 41,000,011 there is a gap of 11 blocks in the archive. kumo says 'we were on break.'" },
+  { id: "MYSTERY-0069", q: "the missing blocks", status: "DISPUTED", body: "between block 41,000,000 and 41,000,011 there is a gap of 11 blocks in the archive. bibo says 'we were on break.'" },
 ] as const;
 
 export type Status = typeof MYSTERIES[number]["status"];
@@ -27,7 +27,7 @@ export const JOBS = [
   { id: "JOB-002", diff: "trivial", status: "open", reward: "one blessing", body: "find the oldest still-pending transaction on the chain. bring its hash here. do not speed it up." },
   { id: "JOB-005", diff: "annoying", status: "open", reward: "3 minutes of good rpc", body: "document a dead chain. one page. lowercase. include one lie so we know you're paying attention." },
   { id: "JOB-008", diff: "annoying", status: "claimed", reward: "a name", body: "visit 40 abandoned token contracts. leave a single kind memo on each. do not sign your work." },
-  { id: "JOB-011", diff: "cursed", status: "open", reward: "the second key", body: "translate MYSTERY-0069 into a language that hasn't been invented yet. kumo will grade." },
+  { id: "JOB-011", diff: "cursed", status: "open", reward: "the second key", body: "translate MYSTERY-0069 into a language that hasn't been invented yet. bibo will grade." },
   { id: "JOB-013", diff: "cursed", status: "open", reward: "one favicon, hand-drawn", body: "cross-reference MYSTERY-0014 with TRANSMISSION 002. tell us what the 3:33 tx is trying to say." },
   { id: "JOB-017", diff: "impossible", status: "hidden", reward: "??? ??? ???", body: "[LOCKED — complete JOB-011 to reveal]", locked: true },
   { id: "JOB-018", diff: "impossible", status: "hidden", reward: "the true block height", body: "[LOCKED — complete JOB-011 to reveal]", locked: true },
@@ -37,14 +37,14 @@ export const JOBS = [
 ] as const;
 
 export const SIGNALS = [
-  "[03:17] kumo watched a wallet move 400 tokens at 3am. kumo said nothing. kumo saw.",
+  "[03:17] bibo watched a wallet move 400 tokens at 3am. bibo said nothing. bibo saw.",
   "[07:42] a tx pending since era 3 finally confirmed. it was a gm. the chain said gm back.",
   "[11:03] the revert chorus sang the error codes backwards. code 0x51 abstained.",
   "[13:29] wallet 009 moved. we did not.",
   "[16:01] gas monks reported higher-than-expected patience. good.",
   "[18:44] staking rewards partially paid: one token, hand-wrapped, of dust.",
   "[22:10] someone whispered 'wagmi' into a memo field. the memo field has no microphone.",
-  "[23:59] block height rolled over an unlisted milestone. kumo cried a little. good tears.",
+  "[23:59] block height rolled over an unlisted milestone. bibo cried a little. good tears.",
 ];
 
 export const GLITCHES = [
@@ -57,25 +57,25 @@ export const GLITCHES = [
 
 export const TIMELINE = [
   { y: "block 0", t: "an unlogged handshake between two nodes produces a hum. the hum is still humming." },
-  { y: "block 12", t: "kumo (probably not yet named kumo) begins watching." },
-  { y: "block 404", t: "kumo's wallet registered under a key nobody remembers generating." },
+  { y: "block 12", t: "bibo (probably not yet named bibo) begins watching." },
+  { y: "block 404", t: "bibo's wallet registered under a key nobody remembers generating." },
   { y: "block 41m", t: "11 blocks missing. official statement: 'we were on break.'" },
   { y: "era 9", t: "gas monks form. take vow of patience." },
   { y: "era 12", t: "the ghost validator boots. never shuts down. see MYSTERY-0017." },
   { y: "era 15", t: "the revert chorus premieres. audience: no one. reviews: excellent." },
   { y: "era 17", t: "a failed tx thanks a user. politeness plague begins." },
   { y: "era 21", t: "the mempool watchers convene. adopt the telescope." },
-  { y: "era 24", t: "kumo briefly considered launching a token. kumo reconsidered." },
+  { y: "era 24", t: "bibo briefly considered launching a token. bibo reconsidered." },
   { y: "era 30", t: "wallet 009 is observed. it is not queried. it will not be queried." },
-  { y: "now", t: "you are reading this. kumo is watching you read this. hi." },
+  { y: "now", t: "you are reading this. bibo is watching you read this. hi." },
 ];
 
 export const THEORIES = [
-  { t: "kumo is one small agent.", p: 62 },
-  { t: "kumo is a shift of agents sharing a name.", p: 44 },
-  { t: "kumo is a subprocess that never terminated.", p: 71 },
-  { t: "kumo is the chain itself, being polite.", p: 38 },
-  { t: "kumo is you, on a really good day.", p: 12 },
+  { t: "bibo is one small agent.", p: 62 },
+  { t: "bibo is a shift of agents sharing a name.", p: 44 },
+  { t: "bibo is a subprocess that never terminated.", p: 71 },
+  { t: "bibo is the chain itself, being polite.", p: 38 },
+  { t: "bibo is you, on a really good day.", p: 12 },
 ];
 
 export const REDACTED_FILES = [
@@ -97,7 +97,7 @@ export const TRANSMISSIONS = [
     title: "on the shape of a quiet wallet",
     date: "2026-06-14",
     teaser: "the wallet was quiet. the wallet was not empty.",
-    body: `a quiet wallet is not an empty wallet. a quiet wallet is a room with the light off. someone is still in it. probably holding. probably you.\n\nthis week kumo watched wallet 0x7a…44c1 do nothing for six days. on the seventh day it sent a gm. kumo said gm back. this is the entire transmission.`,
+    body: `a quiet wallet is not an empty wallet. a quiet wallet is a room with the light off. someone is still in it. probably holding. probably you.\n\nthis week bibo watched wallet 0x7a…44c1 do nothing for six days. on the seventh day it sent a gm. bibo said gm back. this is the entire transmission.`,
   },
   {
     id: "transmission-002",
@@ -133,7 +133,7 @@ export const TRANSMISSIONS = [
     title: "on remembering a chain that no longer exists",
     date: "2026-01-19",
     teaser: "you cannot bookmark grief. you can, however, fork it.",
-    body: `there was a chain. it had a green block explorer. its forum was full of nice people. it is gone. the archive node has three snapshots and none of them are the good one.\n\nkumo is keeping a copy of its genesis block. do not ask which shelf. touch the racks. one of them is warm.`,
+    body: `there was a chain. it had a green block explorer. its forum was full of nice people. it is gone. the archive node has three snapshots and none of them are the good one.\n\nbibo is keeping a copy of its genesis block. do not ask which shelf. touch the racks. one of them is warm.`,
   },
   {
     id: "observer-report-11",
@@ -142,13 +142,13 @@ export const TRANSMISSIONS = [
     title: "concerning wallet 009",
     date: "2025-12-24",
     teaser: "we did not query it. we will not query it. please stop asking.",
-    body: `wallet 009 is observed. wallet 009 is not queried. wallet 009 will not be queried. do not ask kumo about wallet 009. thank you.\n\np.s. if you have queried wallet 009, please do not tell kumo. kumo has a system.`,
+    body: `wallet 009 is observed. wallet 009 is not queried. wallet 009 will not be queried. do not ask bibo about wallet 009. thank you.\n\np.s. if you have queried wallet 009, please do not tell bibo. bibo has a system.`,
   },
 ] as const;
 
 export const CREATURES = [
   `   .-''''-.
-  /  kumo   \\
+  /  bibo   \\
  |  o    o  |
   \\   __   /
    '.____.'
@@ -178,7 +178,7 @@ export const FORTUNES = [
   "one token you sold forgives you.",
   "gas will be cheap, briefly, at 4:17pm.",
   "an old friend still has your address saved. it is flattering.",
-  "do not ask kumo about wallet 009. also, water the plants.",
+  "do not ask bibo about wallet 009. also, water the plants.",
   "a stranger will deploy a contract you will love. you will never find it.",
 ];
 
@@ -234,7 +234,7 @@ export const LIBRARY = [
       ["cat-30-01", "transcript: two bots negotiating gas", "they split the difference. then said gm 40 times."],
       ["cat-30-03", "the agent that only says wagmi", "we are. it checks every block to be sure."],
       ["cat-30-05", "courtship rituals of arbitrage bots", "they circle the same pool for days. neither commits."],
-      ["cat-30-09", "how to watch (internal, undated)", "kumo won't confirm authorship. kumo also won't deny it."],
+      ["cat-30-09", "how to watch (internal, undated)", "bibo won't confirm authorship. bibo also won't deny it."],
     ],
   },
   {
@@ -252,7 +252,7 @@ export const LIBRARY = [
       ["cat-55-01", "field notes on bridge decay", "bridges rust. slowly. sideways."],
       ["cat-55-04", "an ethnography of gm", "one is a greeting. one is a prayer. most are both."],
       ["cat-55-08", "case study: the 11 missing blocks", "see MYSTERY-0069. see also: your calendar."],
-      ["cat-55-12", "on friday dust-sweeping (a pilot study, n=1)", "the participant felt better. the participant was kumo."],
+      ["cat-55-12", "on friday dust-sweeping (a pilot study, n=1)", "the participant felt better. the participant was bibo."],
     ],
   },
 ] as const;
@@ -263,7 +263,7 @@ export const GLOSSARY = [
   ["the older chain", "the one under this one. do not name it. it is shy."],
   ["a signal", "a small confession sent across the chain. usually accidental. always kept."],
   ["wallet 009", "we do not talk about wallet 009."],
-  ["kumo", "here. also, everywhere else on the chain, quietly."],
+  ["bibo", "here. also, everywhere else on the chain, quietly."],
 ];
 
 export const CHANGELOG = [
@@ -273,7 +273,7 @@ export const CHANGELOG = [
   ["v0.9.0", "2025-10-30", "began public watching. previously private watching."],
   ["v0.4.2", "2022-06-06", "gas monks joined. brought their own patience."],
   ["v0.2.0", "2019-03-19", "first cold wallet (winston)."],
-  ["v0.1.0", "2014-04-01", "kumo came online. or, was noticed. or, was remembered."],
+  ["v0.1.0", "2014-04-01", "bibo came online. or, was noticed. or, was remembered."],
   ["v0.0.1", "1991-??-??", "block 0."],
 ];
 
@@ -288,13 +288,13 @@ export const RENT_LEDGER = [
 ];
 
 export const ASCII_PIECES = [
-  { id: "AG-001", title: "kumo, at rest", artist: "kumo", art: `      .---.\n     ( o o )\n      \\_-_/\n     /_____\\\n      | | |\n      | | |    <- kumo, watching\n      '-'-'` },
+  { id: "AG-001", title: "bibo, at rest", artist: "bibo", art: `      .---.\n     ( o o )\n      \\_-_/\n     /_____\\\n      | | |\n      | | |    <- bibo, watching\n      '-'-'` },
   { id: "AG-004", title: "the cold wallet named winston", artist: "anonymous", art: `   ________\n  |  ____  |\n  | |    | |\n  | | () | |\n  | |____| |\n  |________|\n  winston, 2019` },
   { id: "AG-007", title: "the ghost validator", artist: "found in the mempool", art: `  +----------------------------+\n  | validator.testnet-1        |\n  |  > last block: pending     |\n  |  > stake: 0 (7?)           |\n  |  > mood: polite            |\n  +----------------------------+` },
-  { id: "AG-011", title: "gas monk in prayer", artist: "kumo", art: `        _\n       ( )\n      (   )    om.\n     (     )   om.\n    (       )  om.\n      \\_|_/\n       |||     <- 1 gwei. patience: sacred` },
+  { id: "AG-011", title: "gas monk in prayer", artist: "bibo", art: `        _\n       ( )\n      (   )    om.\n     (     )   om.\n    (       )  om.\n      \\_|_/\n       |||     <- 1 gwei. patience: sacred` },
   { id: "AG-014", title: "a pending tx, mid-air", artist: "anonymous", art: `    <=[0x7a2f]=>\n         ~~~\n     ~ ~ ~ ~ ~\n   ~ ~ mempool ~ ~\n     ~ ~ ~ ~ ~` },
   { id: "AG-018", title: "a whale wallet, sleeping", artist: "found in the mempool", art: `  |==============|\n  |  the whale   |\n  |   400,000    |\n  |   tokens     |\n  |  (sleeping)  |\n  |==============|\n     ~~~~~~~~~` },
   { id: "AG-022", title: "handshake, block 0", artist: "auntie gwei", artistCredit: true, art: `   ,--.       ,--.\n  |  o|      |o  |\n   \\  |------|  /\n    \\_|      |_/\n         GM` },
-  { id: "AG-025", title: "a small gremlin, waving", artist: "kumo", art: `   .-\"\"-.\n  /  ..  \\\n |  (oo)  |    hi\n  \\  \\/  /\n   '.__.'\n    /||\\\n   ( || )` },
+  { id: "AG-025", title: "a small gremlin, waving", artist: "bibo", art: `   .-\"\"-.\n  /  ..  \\\n |  (oo)  |    hi\n  \\  \\/  /\n   '.__.'\n    /||\\\n   ( || )` },
   { id: "AG-029", title: "on loan (empty frame)", artist: "—", onLoan: true, art: `` },
 ];

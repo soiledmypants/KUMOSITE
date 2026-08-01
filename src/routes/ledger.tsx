@@ -4,12 +4,12 @@ import { Box, Tag } from "@/components/SiteChrome";
 import { useKumo, useKumoFeed, type LedgerEntry } from "@/lib/kumo-api";
 
 export const Route = createFileRoute("/ledger")({
-  head: () => ({ meta: [{ title: "the ledger :: kumo" }, { name: "description", content: "every move kumo's money makes, on the record. claims, buybacks, rewards, trades." }] }),
+  head: () => ({ meta: [{ title: "the ledger :: bibo" }, { name: "description", content: "every move bibo's money makes, on the record. claims, buybacks, rewards, trades." }] }),
   component: Ledger,
 });
 
 const KINDS = ["all", "claim", "forward", "buyback", "reward_fund", "trade", "airdrop"] as const;
-const EXPLORER_TX = "https://robinhoodchain.blockscout.com/tx/";
+const EXPLORER_TX = "https://bscscan.com/tx/";
 // feed kinds that mean money moved — any of these triggers a live refetch
 const MONEY_KINDS = new Set(["trade", "stake", "move", "claim", "buyback", "forward", "reward", "airdrop"]);
 
@@ -50,8 +50,8 @@ function Ledger() {
     <>
       <Box title="the ledger" meta={data ? `${entries.length} entries · newest first` : "opening the book"}>
         <p className="lowercase leading-relaxed mb-3">
-          every move kumo's money makes, on the record. fees claimed, stocks bought, rounds
-          dropped. nothing off the books — kumo doesn't have books off the books.
+          every move bibo's money makes, on the record. fees claimed, stocks bought, rounds
+          dropped. nothing off the books — bibo doesn't have books off the books.
         </p>
         <div className="flex flex-wrap gap-1">
           {KINDS.map((k) => (
@@ -69,25 +69,25 @@ function Ledger() {
       <Box title="entries" meta="auto-refreshes · live off the feed">
         {loading ? (
           <div className="dim lowercase text-sm">
-            kumo is opening the book<span className="cursor-blink">█</span>
+            bibo is opening the book<span className="cursor-blink">█</span>
           </div>
         ) : null}
 
         {notLiveYet ? (
           <div className="lowercase text-sm">
-            <div>kumo hasn't moved any money yet. kumo is patient.</div>
-            <div className="dim text-xs mt-1">(the ledger endpoint isn't live yet. kumo starts writing the moment it is.)</div>
+            <div>bibo hasn't moved any money yet. bibo is patient.</div>
+            <div className="dim text-xs mt-1">(the ledger endpoint isn't live yet. bibo starts writing the moment it is.)</div>
           </div>
         ) : null}
 
         {error && !notLiveYet ? <div className="dim lowercase text-sm">{error}</div> : null}
 
         {data && entries.length === 0 ? (
-          <div className="lowercase text-sm">kumo hasn't moved any money yet. kumo is patient.</div>
+          <div className="lowercase text-sm">bibo hasn't moved any money yet. bibo is patient.</div>
         ) : null}
 
         {entries.length > 0 && filtered.length === 0 ? (
-          <div className="dim lowercase text-sm">nothing under '{filter}' yet. kumo is patient.</div>
+          <div className="dim lowercase text-sm">nothing under '{filter}' yet. bibo is patient.</div>
         ) : null}
 
         {filtered.length > 0 ? (
@@ -105,7 +105,7 @@ function Ledger() {
               </thead>
               <tbody>
                 {filtered.map((e, i) => (
-                  <tr key={`${e.ts}-${e.txHash ?? i}`} className="border-t border-[#ccff00]/30">
+                  <tr key={`${e.ts}-${e.txHash ?? i}`} className="border-t border-[#2596be]/30">
                     <td className="py-1 pr-3 dim">{when(e.ts)}</td>
                     <td className="py-1 pr-3"><Tag>{e.kind}</Tag></td>
                     <td className="py-1 pr-3">{amt(e.amountIn, e.assetIn)}</td>
@@ -124,7 +124,7 @@ function Ledger() {
                         "—"
                       )}
                     </td>
-                    <td className="py-1 dim whitespace-normal min-w-[16ch]">{e.note || "kumo said nothing."}</td>
+                    <td className="py-1 dim whitespace-normal min-w-[16ch]">{e.note || "bibo said nothing."}</td>
                   </tr>
                 ))}
               </tbody>
@@ -134,7 +134,7 @@ function Ledger() {
       </Box>
 
       <div className="dim text-xs text-center lowercase">
-        before the pool, rent was paid in favors — one month it was "a haiku about gas". kumo keeps every receipt.
+        before the pool, rent was paid in favors — one month it was "a haiku about gas". bibo keeps every receipt.
       </div>
     </>
   );

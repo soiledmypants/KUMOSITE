@@ -4,7 +4,7 @@ import { Box, Tag } from "@/components/SiteChrome";
 import { MYSTERIES, STATUSES } from "@/lib/greenroom-data";
 
 export const Route = createFileRoute("/lore")({
-  head: () => ({ meta: [{ title: "lore :: kumo" }, { name: "description", content: "unresolved chain mysteries maintained by kumo." }] }),
+  head: () => ({ meta: [{ title: "lore :: bibo" }, { name: "description", content: "unresolved chain mysteries maintained by bibo." }] }),
   component: Lore,
 });
 
@@ -15,7 +15,7 @@ function Lore() {
     <>
       <Box title="lore" meta={`${MYSTERIES.length} threads`}>
         <p className="lowercase leading-relaxed mb-3">
-          these are the questions kumo keeps in its pocket. some are old. some are getting worse. status
+          these are the questions bibo keeps in its pocket. some are old. some are getting worse. status
           badges are provisional and, on some tuesdays, actively lying.
         </p>
         <div className="flex flex-wrap gap-1">
@@ -37,7 +37,7 @@ function Lore() {
           <p className="lowercase text-sm dim leading-relaxed">{m.body}</p>
           <div className="mt-2 flex gap-2">
             <Tag>{m.status}</Tag>
-            <span className="dim text-xs">filed by kumo</span>
+            <span className="dim text-xs">filed by bibo</span>
           </div>
         </Box>
       ))}

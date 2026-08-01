@@ -25,8 +25,8 @@ function NotFoundComponent() {
         ██║╚██████╔╝     ██║
         ╚═╝ ╚═════╝      ╚═╝`}</pre>
         <h1 className="uppercase tracking-widest">block not found</h1>
-        <p className="dim mt-2 lowercase text-sm">the page you're looking for dropped out of the mempool. kumo will pick it up on the next sync.</p>
-        <div className="mt-4"><Link to="/" className="box inline-block px-3 py-1 hover:box-inv">[ return to kumo ]</Link></div>
+        <p className="dim mt-2 lowercase text-sm">the page you're looking for dropped out of the mempool. bibo will pick it up on the next sync.</p>
+        <div className="mt-4"><Link to="/" className="box inline-block px-3 py-1 hover:box-inv">[ return to bibo ]</Link></div>
       </div>
     </SiteChrome>
   );
@@ -43,7 +43,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <SiteChrome>
       <div className="box p-6">
         <div className="uppercase tracking-widest">!! tx reverted !!</div>
-        <p className="dim mt-2 text-sm lowercase">a packet fell out of the mempool. kumo is re-syncing. try again in a moment.</p>
+        <p className="dim mt-2 text-sm lowercase">a packet fell out of the mempool. bibo is re-syncing. try again in a moment.</p>
         <pre className="text-xs mt-3 opacity-60">{String(error?.message || "unknown fault")}</pre>
         <div className="mt-4 flex gap-2">
           <button onClick={() => { router.invalidate(); reset(); }} className="box px-3 py-1 hover:box-inv">[ retry ]</button>
@@ -59,15 +59,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "KUMO" },
-      { name: "description", content: "a tiny on-chain companion on Robinhood Chain" },
-      { name: "author", content: "kumo" },
-      { property: "og:title", content: "KUMO" },
-      { property: "og:description", content: "a tiny on-chain companion on Robinhood Chain" },
+      { title: "BIBO" },
+      { name: "description", content: "a tiny on-chain companion on BNB Chain" },
+      { name: "author", content: "bibo" },
+      { property: "og:title", content: "BIBO" },
+      { property: "og:description", content: "a tiny on-chain companion on BNB Chain" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "KUMO" },
-      { name: "twitter:description", content: "a tiny on-chain companion on Robinhood Chain" },
+      { name: "twitter:title", content: "BIBO" },
+      { name: "twitter:description", content: "a tiny on-chain companion on BNB Chain" },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d56f920b-2a20-47be-a323-92e3091f4064/id-preview-08a88d74--0e02100e-d2fc-49bd-9d1b-51b4c8969bec.lovable.app-1783797657586.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d56f920b-2a20-47be-a323-92e3091f4064/id-preview-08a88d74--0e02100e-d2fc-49bd-9d1b-51b4c8969bec.lovable.app-1783797657586.png" },
     ],

@@ -1,25 +1,25 @@
 import { useCallback, useEffect, useState } from "react";
 
-// kumo's agent API. Override with VITE_KUMO_API; otherwise the production
+// bibo's agent API. Override with VITE_KUMO_API; otherwise the production
 // agent in builds, a local agent in dev.
 export const KUMO_API: string =
   import.meta.env.VITE_KUMO_API ||
   (import.meta.env.DEV ? "http://localhost:3000" : "https://api.imkumoagent.com");
 
-// Fixed launch constants — the official $KUMO contract + kumo's wallet.
+// Fixed launch constants — the official $BIBO contract + bibo's wallet.
 // The site prefers the live /status values when the agent reports them, and
 // falls back to these so the CA/wallet always show. Update on rotation/launch.
 export const KUMO_CA = "0xcc4f7abf7e917111ef7c13bb071a8a67dfce6bd7";
 export const KUMO_WALLET = "0x78c6DafA45a6e76Ac997A8aFC438Be5912E99E1B";
-export const EXPLORER = "https://robinhoodchain.blockscout.com";
+export const EXPLORER = "https://bscscan.com";
 
 export const LINES = {
-  offline: "kumo is sleeping... (the api didn't pick up. kumo naps until it returns.)",
-  retry: "kumo didn't hear that. kumo is trying again.",
-  thinking: "kumo is thinking...",
+  offline: "bibo is sleeping... (the api didn't pick up. bibo naps until it returns.)",
+  retry: "bibo didn't hear that. bibo is trying again.",
+  thinking: "bibo is thinking...",
 } as const;
 
-// ---- response shapes (docs/API.md in the kumo repo) ----
+// ---- response shapes (docs/API.md in the bibo repo) ----
 
 export type KumoStatus = {
   state: string;
@@ -31,7 +31,7 @@ export type KumoStatus = {
   mock: boolean;
   address?: string | null;
   chain_id: number;
-  /** $KUMO contract address once launched; null pre-launch */
+  /** $BIBO contract address once launched; null pre-launch */
   kumo_token?: string | null;
 };
 
@@ -43,7 +43,7 @@ export type KumoSignal = {
   kind: "buy" | "avoid" | "watch";
   subject: { type: string; address?: string; symbol?: string };
   strength: number;
-  sources?: { kumo?: number; contributors?: number };
+  sources?: { bibo?: number; contributors?: number };
   line: string;
 };
 
@@ -69,7 +69,7 @@ export type StockRank = {
   scored_at: number;
 };
 
-// GET /ledger — kumo's money movements, newest first (live shape, docs/API.md)
+// GET /ledger — bibo's money movements, newest first (live shape, docs/API.md)
 export type LedgerEntry = {
   id: number;
   ts: number;

@@ -7,8 +7,8 @@ import type { MockStockAnalysis, StockStatus } from "@/lib/stock-universe";
 export const Route = createFileRoute("/thinking")({
   head: () => ({
     meta: [
-      { title: "kumo thinking :: kumo" },
-      { name: "description", content: "watch kumo scan and rank every tokenized stock on robinhood chain in real time." },
+      { title: "bibo thinking :: bibo" },
+      { name: "description", content: "watch bibo scan and rank every tokenized stock on bnb chain in real time." },
     ],
   }),
   component: Thinking,
@@ -60,11 +60,11 @@ function ThoughtFeed({ lines }: { lines: string[] }) {
   return (
     <div
       ref={ref}
-      className="bg-black/40 border border-[#ccff00]/30 h-40 overflow-y-auto p-2 text-[11px] sm:text-xs leading-relaxed"
+      className="bg-black/40 border border-[#2596be]/30 h-40 overflow-y-auto p-2 text-[11px] sm:text-xs leading-relaxed"
     >
       {lines.map((l, i) => (
         <div key={i} className="lowercase">
-          <span className="dim mr-2">kumo&gt;</span>
+          <span className="dim mr-2">bibo&gt;</span>
           {l}
           {i === lines.length - 1 ? <span className="cursor-blink">█</span> : null}
         </div>
@@ -92,14 +92,14 @@ function Thinking() {
 
   return (
     <>
-      <Box title="kumo thinking" meta="simulated scan">
+      <Box title="bibo thinking" meta="simulated scan">
         <div className="flex flex-wrap items-center gap-2 mb-2">
           <span className="box-inv px-2 py-[2px] text-[10px] uppercase tracking-widest">simulated scan</span>
-          <span className="dim text-xs lowercase">not real market analysis — kumo is rehearsing.</span>
+          <span className="dim text-xs lowercase">not real market analysis — bibo is rehearsing.</span>
         </div>
         <p className="lowercase leading-relaxed text-sm">
-          kumo reads every tokenized stock on robinhood chain and keeps a running score for each. the
-          board reshuffles as the numbers move. the top of it is who kumo would buy if a round fired
+          bibo reads every tokenized stock on bnb chain and keeps a running score for each. the
+          board reshuffles as the numbers move. the top of it is who bibo would buy if a round fired
           right now.
         </p>
       </Box>
@@ -121,7 +121,7 @@ function Thinking() {
                 <div className="font-mono text-lg">[{bar(confidence)}]</div>
               </div>
               <div className="text-xs dim lowercase mt-3">
-                kumo's numbers point here right now. the pick can change before the round locks.
+                bibo's numbers point here right now. the pick can change before the round locks.
               </div>
             </div>
           ) : (
@@ -169,7 +169,7 @@ function Thinking() {
       </div>
 
       {/* 3: thought feed */}
-      <Box title="kumo thought feed" meta="scanning…">
+      <Box title="bibo thought feed" meta="scanning…">
         <ThoughtFeed lines={thoughts} />
       </Box>
 
@@ -179,7 +179,7 @@ function Thinking() {
       </Box>
 
       {/* 2: top ranked */}
-      <Box title="top ranked" meta="best first · updates as kumo scans">
+      <Box title="top ranked" meta="best first · updates as bibo scans">
         <div className="overflow-x-auto">
           <table className="w-full text-xs lowercase whitespace-nowrap">
             <thead className="dim uppercase tracking-widest">
@@ -204,7 +204,7 @@ function Thinking() {
       </Box>
 
       {/* recent rounds */}
-      <Box title="recent purchases" meta="what kumo bought">
+      <Box title="recent purchases" meta="what bibo bought">
         <RecentRounds rounds={recentRounds} />
       </Box>
 
@@ -214,7 +214,7 @@ function Thinking() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="search symbol or company…"
-          className="w-full bg-black border border-[#ccff00]/40 px-3 py-2 text-sm lowercase mb-3 outline-none focus:border-[#ccff00]"
+          className="w-full bg-black border border-[#2596be]/40 px-3 py-2 text-sm lowercase mb-3 outline-none focus:border-[#2596be]"
         />
         <div className="overflow-x-auto max-h-[420px] overflow-y-auto">
           <table className="w-full text-xs lowercase whitespace-nowrap">
@@ -229,7 +229,7 @@ function Thinking() {
             </thead>
             <tbody>
               {filtered.map((r) => (
-                <tr key={r.contract} className="border-t border-[#ccff00]/20">
+                <tr key={r.contract} className="border-t border-[#2596be]/20">
                   <td className="py-1 pr-3">{r.name.toLowerCase()}</td>
                   <td className="py-1 pr-3">{r.symbol}</td>
                   <td className="py-1 pr-3"><Copyable text={r.contract} /></td>
@@ -248,7 +248,7 @@ function Thinking() {
       </Box>
 
       <div className="dim text-xs text-center lowercase">
-        simulated scan. mock data, not real market analysis. kumo is not your advisor.
+        simulated scan. mock data, not real market analysis. bibo is not your advisor.
       </div>
     </>
   );
@@ -302,17 +302,17 @@ function DecisionLock({
         </div>
         <div className="text-2xl font-mono">{fmtCountdown(remainingMs)}</div>
       </div>
-      <div className="h-2 bg-[#ccff00]/15 mt-3">
+      <div className="h-2 bg-[#2596be]/15 mt-3">
         <div
-          className={`h-full ${locking ? "bg-[#ccff00]" : "bg-[#ccff00]/60"} transition-all duration-1000`}
+          className={`h-full ${locking ? "bg-[#2596be]" : "bg-[#2596be]/60"} transition-all duration-1000`}
           style={{ width: `${pct}%` }}
         />
       </div>
       <div className="text-xs dim lowercase mt-2">
         {locking ? (
-          <>leader frozen at <span className="text-[#ccff00]">{sym}</span>. no more changes this round.</>
+          <>leader frozen at <span className="text-[#2596be]">{sym}</span>. no more changes this round.</>
         ) : (
-          <>current pick: <span className="text-[#ccff00]">{sym}</span>. can still change until it locks.</>
+          <>current pick: <span className="text-[#2596be]">{sym}</span>. can still change until it locks.</>
         )}
       </div>
     </Box>
@@ -374,19 +374,19 @@ function RunnerUp({
     <div className="text-sm lowercase">
       <div className="text-xl tracking-wide">{runnerUp.symbol}</div>
       <div className="dim text-xs mt-1">
-        lost by <span className="text-[#ccff00]">{gap.toFixed(1)} points</span>
+        lost by <span className="text-[#2596be]">{gap.toFixed(1)} points</span>
       </div>
       <div className="mt-3 space-y-2 font-mono text-xs">
         <div>
           <div className="flex justify-between"><span>{leader.symbol}</span><span>{lead}</span></div>
-          <div className="h-2 bg-[#ccff00]/15 mt-1">
-            <div className="h-full bg-[#ccff00] transition-all duration-1000" style={{ width: w(lead) }} />
+          <div className="h-2 bg-[#2596be]/15 mt-1">
+            <div className="h-full bg-[#2596be] transition-all duration-1000" style={{ width: w(lead) }} />
           </div>
         </div>
         <div>
           <div className="flex justify-between"><span>{runnerUp.symbol}</span><span>{run}</span></div>
-          <div className="h-2 bg-[#ccff00]/15 mt-1">
-            <div className="h-full bg-[#ccff00]/50 transition-all duration-1000" style={{ width: w(run) }} />
+          <div className="h-2 bg-[#2596be]/15 mt-1">
+            <div className="h-full bg-[#2596be]/50 transition-all duration-1000" style={{ width: w(run) }} />
           </div>
         </div>
       </div>
@@ -396,7 +396,7 @@ function RunnerUp({
 
 function LeaderHistory({ marks }: { marks: { time: string; symbol: string; conviction: number; current?: boolean }[] }) {
   if (marks.length === 0) {
-    return <div className="dim lowercase text-sm">kumo is forming its first read<span className="cursor-blink">█</span></div>;
+    return <div className="dim lowercase text-sm">bibo is forming its first read<span className="cursor-blink">█</span></div>;
   }
   const ordered = [...marks].reverse(); // newest first
   return (
@@ -422,7 +422,7 @@ function RecentRounds({ rounds }: { rounds: { round: number; symbol: string; sta
   return (
     <div className="space-y-2">
       {rounds.map((r) => (
-        <div key={r.round} className="flex items-center justify-between border-t border-[#ccff00]/20 py-2 first:border-t-0">
+        <div key={r.round} className="flex items-center justify-between border-t border-[#2596be]/20 py-2 first:border-t-0">
           <div className="lowercase">
             <span className="dim mr-2">round {r.round}</span>
             {r.state === "buying" ? (
@@ -444,7 +444,7 @@ function RecentRounds({ rounds }: { rounds: { round: number; symbol: string; sta
 
 function Row({ rank, r }: { rank: number; r: MockStockAnalysis }) {
   return (
-    <tr className="border-t border-[#ccff00]/30">
+    <tr className="border-t border-[#2596be]/30">
       <td className="py-1 pr-3 dim">{String(rank + 1).padStart(2, "0")}</td>
       <td className="py-1 pr-3">
         <span className="mr-2">{r.symbol}</span>

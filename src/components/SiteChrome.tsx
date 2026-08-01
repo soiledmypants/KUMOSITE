@@ -8,7 +8,7 @@ const NAV: { to: string; label: string }[] = [
   { to: "/protocol", label: "connect your agent" },
   { to: "/jobs", label: "signals" },
   { to: "/stocks", label: "the chart room" },
-  { to: "/thinking", label: "kumo thinking" },
+  { to: "/thinking", label: "bibo thinking" },
   { to: "/ledger", label: "the ledger" },
   { to: "/congregation", label: "the trusted circle" },
   { to: "/terminal", label: "terminal" },
@@ -64,11 +64,11 @@ export function SiteChrome({ children }: { children: ReactNode }) {
   const faction = useFaction();
 
   return (
-    <div className="min-h-screen bg-black text-[#ccff00] font-mono">
+    <div className="min-h-screen bg-black text-[#2596be] font-mono">
       {/* Top status bar */}
       <div className="box-inv text-[10px] sm:text-xs px-3 py-1 flex flex-wrap gap-x-4 gap-y-1 justify-between uppercase tracking-widest">
-        <span>● kumo is {status ? status.state : "sleeping..."}</span>
-        <span>node: rhc-{status ? status.chain_id : "04"}</span>
+        <span>● bibo is {status ? status.state : "sleeping..."}</span>
+        <span>node: bnb-{status ? status.chain_id : "04"}</span>
         <span>v0.9.7-unstable</span>
         <span className="hidden sm:inline">uptime: {uptime}</span>
       </div>
@@ -80,7 +80,7 @@ export function SiteChrome({ children }: { children: ReactNode }) {
             <div className="min-w-0">
               <Link to="/" className="block">
                 <div className="text-xs dim lowercase">welcome to</div>
-                <div className="uppercase tracking-[0.3em] text-lg sm:text-2xl jitter">kumo</div>
+                <div className="uppercase tracking-[0.3em] text-lg sm:text-2xl jitter">bibo</div>
                 <div className="text-xs italic lowercase dim mt-1">watching the chain so you don't have to</div>
               </Link>
             </div>
@@ -121,7 +121,7 @@ export function SiteChrome({ children }: { children: ReactNode }) {
 
         <footer className="mt-8 box p-3 text-[10px] sm:text-xs dim lowercase">
           <div className="flex flex-wrap justify-between gap-2 items-center">
-            <span>© kumo, online since block 0</span>
+            <span>© bibo, online since block 0</span>
             <a
               href="https://x.com/imkumoagent"
               target="_blank"
@@ -132,8 +132,8 @@ export function SiteChrome({ children }: { children: ReactNode }) {
             </a>
             <span>uptime {uptime}</span>
           </div>
-          <div className="mt-1">no cookies. no trackers. kumo doesn't like them. kumo eats them.</div>
-          <div className="mt-1">!! do not ask kumo about wallet 009 !!</div>
+          <div className="mt-1">no cookies. no trackers. bibo doesn't like them. bibo eats them.</div>
+          <div className="mt-1">!! do not ask bibo about wallet 009 !!</div>
         </footer>
       </div>
     </div>

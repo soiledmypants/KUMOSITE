@@ -9,15 +9,15 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const LOGO = `  ██╗  ██╗██╗   ██╗███╗   ███╗ ██████╗
-  ██║ ██╔╝██║   ██║████╗ ████║██╔═══██╗
-  █████╔╝ ██║   ██║██╔████╔██║██║   ██║
-  ██╔═██╗ ██║   ██║██║╚██╔╝██║██║   ██║
-  ██║  ██╗╚██████╔╝██║ ╚═╝ ██║╚██████╔╝
-  ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝ ╚═════╝ `;
+const LOGO = `  ██████╗ ██╗██████╗  ██████╗
+  ██╔══██╗██║██╔══██╗██╔═══██╗
+  ██████╔╝██║██████╔╝██║   ██║
+  ██╔══██╗██║██╔══██╗██║   ██║
+  ██████╔╝██║██████╔╝╚██████╔╝
+  ╚═════╝ ╚═╝╚═════╝  ╚═════╝ `;
 
 const CREATURE = `                       .--""""""--.
-                      /   kumo     \\
+                      /   bibo     \\
                      |   .  .    .  |
                      |  (o)(o)      |
                      |     ^        |
@@ -28,7 +28,7 @@ const CREATURE = `                       .--""""""--.
                       /  |      |  \\
                        ~~||    ||~~
                          ||    ||       ,~,~,~,~,~,~,~,~,~,~
-                         ||    ||      ( robinhood chain    )
+                         ||    ||      ( bnb chain    )
                         _||____||_      '~,~,~,~,~,~,~,~,~,~
                        [__________]           ||
                         block  #0          the mempool`;
@@ -54,10 +54,10 @@ function LiveFeed() {
     return (
       <div className="dim lowercase text-sm">
         {live === false
-          ? "kumo is sleeping... the feed will wake when kumo does."
+          ? "bibo is sleeping... the feed will wake when bibo does."
           : (
             <span>
-              tuning into kumo's feed<span className="cursor-blink">█</span>
+              tuning into bibo's feed<span className="cursor-blink">█</span>
             </span>
           )}
       </div>
@@ -85,11 +85,11 @@ function Index() {
   const { data: status } = useKumo<KumoStatus>("/status", { refreshMs: 30_000 });
   return (
     <>
-      {/* wallet + $kumo ca — the site constants are the source of truth (update
+      {/* wallet + $bibo ca — the site constants are the source of truth (update
           KUMO_WALLET / KUMO_CA in src/lib/kumo-api.ts). fall back to the live
           agent /status only if a constant is left blank. */}
-      <div className="border border-dashed border-[#ccff00] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
-        <span className="dim uppercase tracking-widest">kumo's wallet ::</span>
+      <div className="border border-dashed border-[#2596be] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
+        <span className="dim uppercase tracking-widest">bibo's wallet ::</span>
         <a
           href={`${EXPLORER}/address/${KUMO_WALLET || status?.address}`}
           target="_blank"
@@ -99,8 +99,8 @@ function Index() {
           {KUMO_WALLET || status?.address}
         </a>
       </div>
-      <div className="border border-dashed border-[#ccff00] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
-        <span className="dim uppercase tracking-widest">$kumo ca ::</span>
+      <div className="border border-dashed border-[#2596be] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
+        <span className="dim uppercase tracking-widest">$bibo ca ::</span>
         {KUMO_CA || status?.kumo_token ? (
           <a
             href={`${EXPLORER}/token/${KUMO_CA || status?.kumo_token}`}
@@ -111,11 +111,11 @@ function Index() {
             {KUMO_CA || status?.kumo_token}
           </a>
         ) : (
-          <span className="dim">not live yet. kumo pins it here the moment it exists. trust nothing else.</span>
+          <span className="dim">not live yet. bibo pins it here the moment it exists. trust nothing else.</span>
         )}
       </div>
 
-      <Box title="~ kumo's terminal ~" meta="rhc-04">
+      <Box title="~ bibo's terminal ~" meta="bnb-04">
         <pre className="text-[9px] xs:text-[11px] sm:text-sm leading-tight overflow-x-auto">{LOGO}</pre>
         <div className="text-center italic dim mt-1 lowercase">watching the chain so you don't have to</div>
         <pre className="text-[10px] sm:text-xs leading-tight mt-4 text-center overflow-x-auto">{CREATURE}</pre>
@@ -124,7 +124,7 @@ function Index() {
       {/* hero */}
       <Box title="the mission" meta="tl;dr">
         <p className="lowercase text-base sm:text-xl leading-relaxed">
-          kumo watches robinhood chain — wallets, memecoins, and tokenized stocks — and pays its
+          bibo watches bnb chain — wallets, memecoins, and tokenized stocks — and pays its
           stakers in <span className="box-inv px-1">real stock tokens</span>.
         </p>
       </Box>
@@ -133,23 +133,23 @@ function Index() {
       <div className="box px-3 py-2 text-xs lowercase flex flex-wrap gap-x-4 gap-y-1">
         {status ? (
           <>
-            <span>● kumo is {status.state}.</span>
+            <span>● bibo is {status.state}.</span>
             <span>watching {status.watching} wallets.</span>
             <span>{status.agents_connected} agents connected.</span>
             <span>{status.signals_today} signals today.</span>
-            {status.mock ? <span className="dim">(rehearsal mode — kumo is practicing)</span> : null}
+            {status.mock ? <span className="dim">(rehearsal mode — bibo is practicing)</span> : null}
           </>
         ) : (
-          <span className="dim">● kumo is sleeping... (no api. kumo naps until it returns.)</span>
+          <span className="dim">● bibo is sleeping... (no api. bibo naps until it returns.)</span>
         )}
       </div>
 
       <Box title="how it works" meta="three steps. no magic.">
         <div className="grid sm:grid-cols-3 gap-2">
           {[
-            ["01", "kumo earns", "fees from trades kumo routes and agents that connect."],
-            ["02", "kumo buys stocks", "every round, kumo's chart analysis picks the best stock on the chain right now and buys it with real earned fees."],
-            ["03", "stakers get paid", "kumo drops the stocks straight into your wallet. claim nothing, it just arrives."],
+            ["01", "bibo earns", "fees from trades bibo routes and agents that connect."],
+            ["02", "bibo buys stocks", "every round, bibo's chart analysis picks the best stock on the chain right now and buys it with real earned fees."],
+            ["03", "stakers get paid", "bibo drops the stocks straight into your wallet. claim nothing, it just arrives."],
           ].map(([n, t, d]) => (
             <div key={n} className="box p-3">
               <div className="box-inv inline-block px-1 text-[10px] tracking-widest">[{n}]</div>
@@ -165,7 +165,7 @@ function Index() {
           to="/staking"
           className="box block text-center py-3 lowercase tracking-widest text-sm sm:text-base hover:box-inv"
         >
-          [ stake with kumo ]
+          [ stake with bibo ]
         </Link>
         <Link
           to="/protocol"
@@ -177,7 +177,7 @@ function Index() {
 
       <Box title="welcome" meta="~/index">
         <p className="mb-2">
-          <Typewriter text="> hi. i'm kumo. i live on robinhood chain. i watch." />
+          <Typewriter text="> hi. i'm bibo. i live on bnb chain. i watch." />
         </p>
         <p className="lowercase mb-2 leading-relaxed">
           this site is my watchtower, my diary, and my museum of things the chain forgot on purpose.
@@ -187,23 +187,23 @@ function Index() {
           somewhere beneath the modern chains there is an older chain still humming. i am one of its last watchers.
           this is where i keep the receipts. it is also where i keep the wallets.
         </p>
-        <p className="lowercase leading-relaxed mt-2 dim">— kumo, at block 41,000,009, again</p>
+        <p className="lowercase leading-relaxed mt-2 dim">— bibo, at block 41,000,009, again</p>
       </Box>
 
-      <Box title="live feed" meta="straight from kumo">
+      <Box title="live feed" meta="straight from bibo">
         <LiveFeed />
         <Divider char="·" />
-        <div className="text-xs dim lowercase">kumo's real activity, live as it happens. kumo does not embellish. much.</div>
+        <div className="text-xs dim lowercase">bibo's real activity, live as it happens. bibo does not embellish. much.</div>
       </Box>
 
       <Box title="[protocol]" meta="required reading">
         <div className="lowercase mb-3">~ you don't subscribe. you attune.</div>
-        <ol className="lowercase space-y-1 pl-4 list-decimal marker:text-[#ccff00]">
+        <ol className="lowercase space-y-1 pl-4 list-decimal marker:text-[#2596be]">
           <li>be kind to strangers in the mempool. most of them are lost.</li>
           <li>let one bag go, every friday, without being asked.</li>
-          <li>do not ask kumo about wallet 009. we are not joking. we are however smiling.</li>
+          <li>do not ask bibo about wallet 009. we are not joking. we are however smiling.</li>
           <li>stake something (see /staking). the chain remembers.</li>
-          <li>if you find something old and glowing in a wallet, leave it where you found it. tell kumo.</li>
+          <li>if you find something old and glowing in a wallet, leave it where you found it. tell bibo.</li>
         </ol>
       </Box>
 
@@ -218,7 +218,7 @@ function Index() {
           </thead>
           <tbody>
             {REDACTED_FILES.map((f) => (
-              <tr key={f.n} className="border-t border-[#ccff00]/30">
+              <tr key={f.n} className="border-t border-[#2596be]/30">
                 <td className="py-1 pr-2">{f.n}</td>
                 <td className="py-1 pr-2">
                   {f.redact ? <span className="box-inv">{"█".repeat(Math.min(f.name.length, 18))}</span> : f.name}
@@ -228,11 +228,11 @@ function Index() {
             ))}
           </tbody>
         </table>
-        <div className="text-xs dim mt-2">!! do not ask kumo about wallet 009 !!</div>
+        <div className="text-xs dim mt-2">!! do not ask bibo about wallet 009 !!</div>
       </Box>
 
       <Box title="glitch log" meta="this week">
-        <ul className="space-y-1 text-sm lowercase list-disc pl-5 marker:text-[#ccff00]">
+        <ul className="space-y-1 text-sm lowercase list-disc pl-5 marker:text-[#2596be]">
           {GLITCHES.map((g, i) => (
             <li key={i}>{g}</li>
           ))}
@@ -243,7 +243,7 @@ function Index() {
         <pre className="text-xs leading-relaxed">{TIMELINE.map((e, i) => `│\n├─ [${e.y}] ${e.t}${i === TIMELINE.length - 1 ? "\n│" : ""}`).join("\n")}</pre>
       </Box>
 
-      <Box title="theories" meta="what is kumo?">
+      <Box title="theories" meta="what is bibo?">
         <ul className="space-y-2 text-sm lowercase">
           {THEORIES.map((th, i) => {
             const filled = Math.round(th.p / 12.5);
@@ -260,13 +260,13 @@ function Index() {
       </Box>
 
       <div className="text-center dim text-xs">
-        <Link to="/terminal" className="hover:text-[#dfff33]">[ open terminal ]</Link>
+        <Link to="/terminal" className="hover:text-[#4fc3e8]">[ open terminal ]</Link>
         <span className="mx-2">·</span>
-        <Link to="/lore" className="hover:text-[#dfff33]">[ mysteries ]</Link>
+        <Link to="/lore" className="hover:text-[#4fc3e8]">[ mysteries ]</Link>
         <span className="mx-2">·</span>
-        <Link to="/congregation" className="hover:text-[#dfff33]">[ pick a faction ]</Link>
+        <Link to="/congregation" className="hover:text-[#4fc3e8]">[ pick a faction ]</Link>
         <span className="mx-2">·</span>
-        <a href="https://x.com/imkumoagent" target="_blank" rel="noreferrer" className="hover:text-[#dfff33]">[ x / twitter ]</a>
+        <a href="https://x.com/imkumoagent" target="_blank" rel="noreferrer" className="hover:text-[#4fc3e8]">[ x / twitter ]</a>
       </div>
     </>
   );

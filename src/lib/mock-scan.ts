@@ -1,4 +1,4 @@
-// SIMULATED scan + decision engine for the "kumo thinking" panel. Everything
+// SIMULATED scan + decision engine for the "bibo thinking" panel. Everything
 // here is fake — no price feeds, no chain reads, no trading. It produces a
 // believable, gently evolving board plus a per-round decision lifecycle so the
 // page feels like an agent thinking before each purchase. Swap this module for

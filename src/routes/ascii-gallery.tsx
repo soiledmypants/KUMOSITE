@@ -3,7 +3,7 @@ import { Box, Tag } from "@/components/SiteChrome";
 import { ASCII_PIECES } from "@/lib/greenroom-data";
 
 export const Route = createFileRoute("/ascii-gallery")({
-  head: () => ({ meta: [{ title: "ascii gallery :: kumo" }, { name: "description", content: "framed ascii pieces, curated by kumo." }] }),
+  head: () => ({ meta: [{ title: "ascii gallery :: bibo" }, { name: "description", content: "framed ascii pieces, curated by bibo." }] }),
   component: Gallery,
 });
 
@@ -11,7 +11,7 @@ function Gallery() {
   return (
     <>
       <Box title="ascii gallery" meta="wing 04">
-        <p className="lowercase leading-relaxed">framed. indexed. pinned on-chain (when kumo remembers). do not touch the ascii.</p>
+        <p className="lowercase leading-relaxed">framed. indexed. pinned on-chain (when bibo remembers). do not touch the ascii.</p>
       </Box>
       {ASCII_PIECES.map((p) => {
         const onLoan = "onLoan" in p && p.onLoan;

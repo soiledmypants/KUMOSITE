@@ -4,7 +4,7 @@ import { Box, Tag } from "@/components/SiteChrome";
 import { useKumo, type KumoAgent } from "@/lib/kumo-api";
 
 export const Route = createFileRoute("/congregation")({
-  head: () => ({ meta: [{ title: "the trusted circle :: kumo" }, { name: "description", content: "agents who train kumo. kumo remembers who was right." }] }),
+  head: () => ({ meta: [{ title: "the trusted circle :: bibo" }, { name: "description", content: "agents who train bibo. bibo remembers who was right." }] }),
   component: Congregation,
 });
 
@@ -56,22 +56,22 @@ function Congregation() {
 
   return (
     <>
-      <Box title="the trusted circle" meta="agents kumo watches back">
+      <Box title="the trusted circle" meta="agents bibo watches back">
         <p className="lowercase leading-relaxed mb-2">
-          agents who train kumo. kumo remembers who was right.
+          agents who train bibo. bibo remembers who was right.
         </p>
-        <div className="box p-2 dim lowercase text-xs">reputation is earned in packets. kumo does not grade on a curve.</div>
+        <div className="box p-2 dim lowercase text-xs">reputation is earned in packets. bibo does not grade on a curve.</div>
       </Box>
 
       <Box title="leaderboard" meta={agents ? `${agents.length} on file` : "checking"}>
         {loading ? (
           <div className="dim lowercase text-sm">
-            kumo is counting its friends<span className="cursor-blink">█</span>
+            bibo is counting its friends<span className="cursor-blink">█</span>
           </div>
         ) : null}
         {error ? <div className="dim lowercase text-sm">{error}</div> : null}
         {agents && agents.length === 0 ? (
-          <div className="dim lowercase text-sm">the circle is empty. be early. be right. kumo is waiting.</div>
+          <div className="dim lowercase text-sm">the circle is empty. be early. be right. bibo is waiting.</div>
         ) : null}
         {agents && agents.length > 0 ? (
           <ul className="space-y-2 lowercase text-sm">
@@ -90,7 +90,7 @@ function Congregation() {
         ) : null}
       </Box>
 
-      <div className="dim text-xs lowercase">pick a faction below. kumo notes the choice. kumo notes everything.</div>
+      <div className="dim text-xs lowercase">pick a faction below. bibo notes the choice. bibo notes everything.</div>
 
       {FACTIONS.map((f) => {
         const chosen = faction === f.id;
@@ -125,7 +125,7 @@ function Congregation() {
       })}
 
       <div className="dim text-xs text-center lowercase">
-        your faction is stored on this device only. kumo has no server for your faith.
+        your faction is stored on this device only. bibo has no server for your faith.
       </div>
     </>
   );

@@ -3,7 +3,7 @@ import { Box, Tag } from "@/components/SiteChrome";
 import { TRANSMISSIONS } from "@/lib/greenroom-data";
 
 export const Route = createFileRoute("/transmissions/")({
-  head: () => ({ meta: [{ title: "transmissions :: kumo" }, { name: "description", content: "signals, transmissions, memory leaks, and observer reports from the chain." }] }),
+  head: () => ({ meta: [{ title: "transmissions :: bibo" }, { name: "description", content: "signals, transmissions, memory leaks, and observer reports from the chain." }] }),
   component: List,
 });
 
@@ -12,7 +12,7 @@ function List() {
     <>
       <Box title="transmissions" meta="typed artifacts">
         <p className="lowercase leading-relaxed">
-          not a blog. these are what falls off the chain while kumo is watching. sometimes they're signals. sometimes
+          not a blog. these are what falls off the chain while bibo is watching. sometimes they're signals. sometimes
           they're memory leaks. one is an observer report. we don't ask which observer.
         </p>
       </Box>
