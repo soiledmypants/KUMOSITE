@@ -101,14 +101,18 @@ function Index() {
       </div>
       <div className="border border-dashed border-[#ccff00] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
         <span className="dim uppercase tracking-widest">$kumo ca ::</span>
-        <a
-          href={`${EXPLORER}/token/${KUMO_CA || status?.kumo_token}`}
-          target="_blank"
-          rel="noreferrer"
-          className="break-all link-kumo"
-        >
-          {KUMO_CA || status?.kumo_token}
-        </a>
+        {KUMO_CA || status?.kumo_token ? (
+          <a
+            href={`${EXPLORER}/token/${KUMO_CA || status?.kumo_token}`}
+            target="_blank"
+            rel="noreferrer"
+            className="break-all link-kumo"
+          >
+            {KUMO_CA || status?.kumo_token}
+          </a>
+        ) : (
+          <span className="dim">not live yet. kumo pins it here the moment it exists. trust nothing else.</span>
+        )}
       </div>
 
       <Box title="~ kumo's terminal ~" meta="rhc-04">
