@@ -9,7 +9,7 @@ export const KUMO_API: string =
 // Fixed launch constants — the official $KUMO contract + kumo's wallet.
 // The site prefers the live /status values when the agent reports them, and
 // falls back to these so the CA/wallet always show. Update on rotation/launch.
-export const KUMO_CA = "";
+export const KUMO_CA = "0xcc4f7abf7e917111ef7c13bb071a8a67dfce6bd7";
 export const KUMO_WALLET = "0x78c6DafA45a6e76Ac997A8aFC438Be5912E99E1B";
 export const EXPLORER = "https://robinhoodchain.blockscout.com";
 
