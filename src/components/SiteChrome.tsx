@@ -2,14 +2,17 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { useKumo, type KumoStatus } from "@/lib/kumo-api";
 
-const NAV: { to: string; label: string }[] = [
+// primary links live in the top bar; the rest fold into a "more" dropdown
+const PRIMARY: { to: string; label: string }[] = [
   { to: "/", label: "home" },
+  { to: "/thinking", label: "thinking" },
   { to: "/staking", label: "staking" },
-  { to: "/protocol", label: "connect your agent" },
+  { to: "/stocks", label: "chart room" },
+  { to: "/ledger", label: "ledger" },
+  { to: "/protocol", label: "connect agent" },
+];
+const MORE: { to: string; label: string }[] = [
   { to: "/jobs", label: "signals" },
-  { to: "/stocks", label: "the chart room" },
-  { to: "/thinking", label: "bibo thinking" },
-  { to: "/ledger", label: "the ledger" },
   { to: "/congregation", label: "the trusted circle" },
   { to: "/terminal", label: "terminal" },
   { to: "/archive", label: "the archive" },
@@ -18,6 +21,7 @@ const NAV: { to: string; label: string }[] = [
   { to: "/transmissions", label: "transmissions" },
   { to: "/ascii-gallery", label: "ascii gallery" },
 ];
+const NAV = [...PRIMARY, ...MORE];
 
 function useKumoUptime() {
   const { data: status } = useKumo<KumoStatus>("/status", { refreshMs: 30_000 });
@@ -60,66 +64,106 @@ function useFaction() {
 export function SiteChrome({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [menuOpen, setMenuOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const { status, uptime } = useKumoUptime();
   const faction = useFaction();
+  const isActive = (to: string) => (to === "/" ? pathname === "/" : pathname.startsWith(to));
+  const moreActive = MORE.some((m) => isActive(m.to));
 
   return (
     <div className="min-h-screen bg-black text-[#fcd534] font-mono">
-      {/* Top status bar */}
-      <div className="box-inv text-[10px] sm:text-xs px-3 py-1 flex flex-wrap gap-x-4 gap-y-1 justify-between uppercase tracking-widest">
-        <span>● bibo is {status ? status.state : "sleeping..."}</span>
-        <span>node: bnb-{status ? status.chain_id : "04"}</span>
-        <span>v0.9.7-unstable</span>
-        <span className="hidden sm:inline">uptime: {uptime}</span>
-      </div>
+      {/* ── top nav bar ─────────────────────────────────────────── */}
+      <header className="sticky top-0 z-30 bg-black border-b-2 border-[#fcd534]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-4">
+          {/* brand */}
+          <Link to="/" className="shrink-0 flex items-baseline gap-2">
+            <span className="uppercase tracking-[0.35em] text-lg sm:text-xl font-bold jitter">bibo</span>
+            <span className="hidden md:inline text-[10px] dim italic lowercase">watching the chain</span>
+          </Link>
 
-      <div className="max-w-3xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
-        {/* header */}
-        <header className="box p-3 sm:p-4 mb-4 flicker">
-          <div className="flex justify-between items-start gap-3">
-            <div className="min-w-0">
-              <Link to="/" className="block">
-                <div className="text-xs dim lowercase">welcome to</div>
-                <div className="uppercase tracking-[0.3em] text-lg sm:text-2xl jitter">bibo</div>
-                <div className="text-xs italic lowercase dim mt-1">watching the chain so you don't have to</div>
+          <div className="flex-1" />
+
+          {/* desktop nav */}
+          <nav className="hidden lg:flex items-center gap-1 text-xs uppercase tracking-widest">
+            {PRIMARY.map((n) => (
+              <Link
+                key={n.to}
+                to={n.to}
+                className={`px-3 py-1.5 lowercase tracking-wide ${isActive(n.to) ? "box-inv" : "hover:box-inv"}`}
+              >
+                {n.label}
               </Link>
+            ))}
+            {/* more dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setMoreOpen((v) => !v)}
+                onBlur={() => setTimeout(() => setMoreOpen(false), 150)}
+                className={`px-3 py-1.5 lowercase tracking-wide ${moreActive ? "box-inv" : "hover:box-inv"}`}
+              >
+                more ▾
+              </button>
+              {moreOpen ? (
+                <div className="absolute right-0 mt-1 w-52 bg-black border-2 border-[#fcd534] z-40">
+                  {MORE.map((n) => (
+                    <Link
+                      key={n.to}
+                      to={n.to}
+                      onClick={() => setMoreOpen(false)}
+                      className={`block px-3 py-2 lowercase tracking-wide text-xs ${isActive(n.to) ? "box-inv" : "hover:box-inv"}`}
+                    >
+                      {n.label}
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
             </div>
-            <div className="text-right text-[10px] leading-tight shrink-0">
-              <div className="dim">block #</div>
-              <div>04-{Math.floor((Date.now() / 1000) % 100000).toString().padStart(5, "0")}</div>
-              {faction ? <div className="box-inv mt-1 px-1">tag: {faction}</div> : null}
-            </div>
+          </nav>
+
+          {/* live status dot (desktop) */}
+          <div className="hidden md:flex items-center gap-2 text-[10px] uppercase tracking-widest dim shrink-0">
+            <span className={status ? "text-[#fcd534]" : "dim"}>●</span>
+            <span>{status ? status.state : "sleeping"}</span>
           </div>
+
+          {/* mobile menu button */}
           <button
-            className="sm:hidden mt-3 box w-full py-1 hover:box-inv uppercase tracking-widest text-xs"
+            className="lg:hidden box px-3 py-1.5 hover:box-inv uppercase tracking-widest text-xs"
             onClick={() => setMenuOpen((v) => !v)}
           >
-            [ {menuOpen ? "close" : "menu"} ]
+            {menuOpen ? "close" : "menu"}
           </button>
-        </header>
+        </div>
 
-        {/* nav — stacked boxes */}
-        <nav className={`mb-4 space-y-[-1px] ${menuOpen ? "block" : "hidden"} sm:block`}>
-          {NAV.map((n) => {
-            const active = n.to === "/" ? pathname === "/" : pathname.startsWith(n.to);
-            return (
+        {/* mobile dropdown — all links */}
+        {menuOpen ? (
+          <nav className="lg:hidden border-t-2 border-[#fcd534] bg-black max-h-[70vh] overflow-y-auto">
+            {NAV.map((n) => (
               <Link
                 key={n.to}
                 to={n.to}
                 onClick={() => setMenuOpen(false)}
-                className={`box block px-3 py-2 lowercase tracking-wide ${active ? "box-inv" : "hover:box-inv"}`}
+                className={`block px-5 py-3 lowercase tracking-wide border-b border-[#fcd534]/20 ${isActive(n.to) ? "box-inv" : "hover:box-inv"}`}
               >
-                <span className="dim mr-2">›</span>
-                {n.label}
-                {active ? <span className="ml-2">◀</span> : null}
+                <span className="dim mr-2">›</span>{n.label}
               </Link>
-            );
-          })}
-        </nav>
+            ))}
+          </nav>
+        ) : null}
+      </header>
 
-        <main className="space-y-4">{children}</main>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* thin status strip */}
+        <div className="flex flex-wrap gap-x-5 gap-y-1 text-[10px] sm:text-xs uppercase tracking-widest dim mb-5">
+          <span>node: bnb-{status ? status.chain_id : "04"}</span>
+          <span>v0.9.7-unstable</span>
+          <span>uptime: {uptime}</span>
+          {faction ? <span className="text-[#fcd534]">tag: {faction}</span> : null}
+        </div>
 
-        <footer className="mt-8 box p-3 text-[10px] sm:text-xs dim lowercase">
+        <main className="space-y-5">{children}</main>
+
+        <footer className="mt-10 box p-3 text-[10px] sm:text-xs dim lowercase">
           <div className="flex flex-wrap justify-between gap-2 items-center">
             <span>© bibo, online since block 0</span>
             <a
