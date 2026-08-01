@@ -8,6 +8,7 @@ const NAV: { to: string; label: string }[] = [
   { to: "/protocol", label: "connect your agent" },
   { to: "/jobs", label: "signals" },
   { to: "/stocks", label: "the chart room" },
+  { to: "/thinking", label: "kumo thinking" },
   { to: "/ledger", label: "the ledger" },
   { to: "/congregation", label: "the trusted circle" },
   { to: "/terminal", label: "terminal" },
