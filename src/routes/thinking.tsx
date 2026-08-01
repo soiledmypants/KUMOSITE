@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Tag } from "@/components/SiteChrome";
-import { useMockScan } from "@/lib/mock-scan";
+import { useMockScan, type Phase } from "@/lib/mock-scan";
 import type { MockStockAnalysis, StockStatus } from "@/lib/stock-universe";
 
 export const Route = createFileRoute("/thinking")({
@@ -74,7 +74,10 @@ function ThoughtFeed({ lines }: { lines: string[] }) {
 }
 
 function Thinking() {
-  const { rows, leader, confidence, scanned, lastScanAt, nextRefreshInMs, thoughts } = useMockScan();
+  const {
+    rows, leader, liveLeader, runnerUp, gapPoints, confidence, scanned, lastScanAt, nextRefreshInMs,
+    thoughts, phase, roundNumber, roundRemainingMs, leaderHistory, recentRounds,
+  } = useMockScan();
   const [q, setQ] = useState("");
 
   const top5 = rows.slice(0, 5);
@@ -152,9 +155,27 @@ function Thinking() {
         </Box>
       </div>
 
+      {/* decision lock */}
+      <DecisionLock phase={phase} remainingMs={roundRemainingMs} roundNumber={roundNumber} leader={leader} />
+
+      {/* why bullish + runner up */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <Box title="why i'm bullish" meta={leader?.symbol ?? "—"}>
+          <WhyBullish leaderSymbol={leader?.symbol} phase={phase} />
+        </Box>
+        <Box title="runner up" meta="second place">
+          <RunnerUp leader={liveLeader} runnerUp={runnerUp} gap={gapPoints} />
+        </Box>
+      </div>
+
       {/* 3: thought feed */}
       <Box title="kumo thought feed" meta="scanning…">
         <ThoughtFeed lines={thoughts} />
+      </Box>
+
+      {/* leader history */}
+      <Box title="leader history" meta="last 10 decisions">
+        <LeaderHistory marks={leaderHistory} />
       </Box>
 
       {/* 2: top ranked */}
@@ -180,6 +201,11 @@ function Thinking() {
             </tbody>
           </table>
         </div>
+      </Box>
+
+      {/* recent rounds */}
+      <Box title="recent purchases" meta="what kumo bought">
+        <RecentRounds rounds={recentRounds} />
       </Box>
 
       {/* 5: searchable universe */}
@@ -225,6 +251,194 @@ function Thinking() {
         simulated scan. mock data, not real market analysis. kumo is not your advisor.
       </div>
     </>
+  );
+}
+
+function fmtCountdown(ms: number) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
+function DecisionLock({
+  phase,
+  remainingMs,
+  roundNumber,
+  leader,
+}: {
+  phase: Phase;
+  remainingMs: number;
+  roundNumber: number;
+  leader?: MockStockAnalysis;
+}) {
+  const sym = leader?.symbol ?? "—";
+  const pct = Math.max(0, Math.min(100, 100 - (remainingMs / 75000) * 100));
+
+  if (phase === "locked") {
+    return (
+      <Box title="decision lock" meta={`round ${roundNumber}`}>
+        <div className="box-inv p-4 text-center jitter">
+          <div className="text-lg sm:text-2xl tracking-widest">✓ decision locked</div>
+          <div className="lowercase mt-1">buying {sym}<span className="cursor-blink">█</span></div>
+        </div>
+      </Box>
+    );
+  }
+  if (phase === "broadcast") {
+    return (
+      <Box title="decision lock" meta={`round ${roundNumber}`}>
+        <div className="box p-4 text-center">
+          <div className="text-lg sm:text-2xl tracking-widest">✓ broadcast complete</div>
+          <div className="lowercase dim mt-1">bought {sym}. next round loading…</div>
+        </div>
+      </Box>
+    );
+  }
+  const locking = phase === "locking";
+  return (
+    <Box title="decision lock" meta={`round ${roundNumber}`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className={`tracking-widest uppercase text-sm ${locking ? "flicker" : "dim"}`}>
+          {locking ? "locking decision..." : "scanning — decision open"}
+        </div>
+        <div className="text-2xl font-mono">{fmtCountdown(remainingMs)}</div>
+      </div>
+      <div className="h-2 bg-[#ccff00]/15 mt-3">
+        <div
+          className={`h-full ${locking ? "bg-[#ccff00]" : "bg-[#ccff00]/60"} transition-all duration-1000`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="text-xs dim lowercase mt-2">
+        {locking ? (
+          <>leader frozen at <span className="text-[#ccff00]">{sym}</span>. no more changes this round.</>
+        ) : (
+          <>current pick: <span className="text-[#ccff00]">{sym}</span>. can still change until it locks.</>
+        )}
+      </div>
+    </Box>
+  );
+}
+
+const BULLISH_POOL = [
+  "liquidity improving",
+  "buying pressure increasing",
+  "volatility stabilizing",
+  "confidence rising",
+  "scoring above market average",
+  "momentum holding firm",
+  "volume confirming the move",
+  "spread tightening",
+  "sector strength aligned",
+  "no cooling detected",
+];
+function WhyBullish({ leaderSymbol, phase }: { leaderSymbol?: string; phase: Phase }) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setI((n) => n + 1), 2600);
+    return () => clearInterval(id);
+  }, []);
+  // show a rolling window of 5 reasons
+  const lines = Array.from({ length: 5 }, (_, k) => BULLISH_POOL[(i + k) % BULLISH_POOL.length]);
+  return (
+    <div className="text-sm lowercase">
+      <div className="dim mb-2">
+        {phase === "locking" || phase === "locked"
+          ? `${leaderSymbol ?? "—"} is the pick. here's why:`
+          : `${leaderSymbol ?? "—"} leads. here's why:`}
+      </div>
+      <div className="space-y-1 font-mono text-xs sm:text-sm">
+        {lines.map((l, k) => (
+          <div key={k} className={k === 0 ? "" : "dim"}>
+            <span className="dim mr-2">&gt;</span>{l}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RunnerUp({
+  leader,
+  runnerUp,
+  gap,
+}: {
+  leader?: MockStockAnalysis;
+  runnerUp: MockStockAnalysis | null;
+  gap: number;
+}) {
+  if (!runnerUp || !leader) return <div className="dim lowercase text-sm">warming up…</div>;
+  const lead = Math.round(leader.score);
+  const run = Math.round(runnerUp.score);
+  const w = (v: number) => `${Math.max(6, Math.min(100, v))}%`;
+  return (
+    <div className="text-sm lowercase">
+      <div className="text-xl tracking-wide">{runnerUp.symbol}</div>
+      <div className="dim text-xs mt-1">
+        lost by <span className="text-[#ccff00]">{gap.toFixed(1)} points</span>
+      </div>
+      <div className="mt-3 space-y-2 font-mono text-xs">
+        <div>
+          <div className="flex justify-between"><span>{leader.symbol}</span><span>{lead}</span></div>
+          <div className="h-2 bg-[#ccff00]/15 mt-1">
+            <div className="h-full bg-[#ccff00] transition-all duration-1000" style={{ width: w(lead) }} />
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between"><span>{runnerUp.symbol}</span><span>{run}</span></div>
+          <div className="h-2 bg-[#ccff00]/15 mt-1">
+            <div className="h-full bg-[#ccff00]/50 transition-all duration-1000" style={{ width: w(run) }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LeaderHistory({ marks }: { marks: { time: string; symbol: string; conviction: number; current?: boolean }[] }) {
+  if (marks.length === 0) {
+    return <div className="dim lowercase text-sm">kumo is forming its first read<span className="cursor-blink">█</span></div>;
+  }
+  const ordered = [...marks].reverse(); // newest first
+  return (
+    <div className="space-y-0">
+      {ordered.map((m, i) => (
+        <div key={`${m.time}-${m.symbol}-${i}`}>
+          <div className={`flex items-center justify-between py-1 ${i === 0 ? "fade-in" : ""}`}>
+            <div className="flex items-baseline gap-3">
+              <span className="dim text-xs w-16">{m.time}</span>
+              <span className="tracking-wide">{m.symbol}</span>
+              {i === 0 ? <Tag>current leader</Tag> : null}
+            </div>
+            <span className="text-xs dim lowercase">conviction {m.conviction}%</span>
+          </div>
+          {i < ordered.length - 1 ? <div className="dim text-center text-xs leading-none">↓</div> : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RecentRounds({ rounds }: { rounds: { round: number; symbol: string; state: "bought" | "buying" }[] }) {
+  return (
+    <div className="space-y-2">
+      {rounds.map((r) => (
+        <div key={r.round} className="flex items-center justify-between border-t border-[#ccff00]/20 py-2 first:border-t-0">
+          <div className="lowercase">
+            <span className="dim mr-2">round {r.round}</span>
+            {r.state === "buying" ? (
+              <span>buying {r.symbol}<span className="cursor-blink">█</span></span>
+            ) : (
+              <span>bought {r.symbol}</span>
+            )}
+          </div>
+          {r.state === "bought" ? (
+            <Link to="/ledger" className="link-kumo text-xs lowercase">view ledger</Link>
+          ) : (
+            <Tag>in progress</Tag>
+          )}
+        </div>
+      ))}
+    </div>
   );
 }
 

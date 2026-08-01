@@ -147,6 +147,14 @@
   animation: kumo-flicker 7s infinite;
 }
 
+@keyframes kumo-fade-in {
+  0% { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@utility fade-in {
+  animation: kumo-fade-in 0.5s ease-out;
+}
+
 @keyframes kumo-jitter {
   0%, 96%, 100% { transform: translate(0,0); }
   97% { transform: translate(-1px, 1px); }
