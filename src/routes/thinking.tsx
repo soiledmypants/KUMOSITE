@@ -60,7 +60,7 @@ function ThoughtFeed({ lines }: { lines: string[] }) {
   return (
     <div
       ref={ref}
-      className="bg-black/40 border border-[#2596be]/30 h-40 overflow-y-auto p-2 text-[11px] sm:text-xs leading-relaxed"
+      className="bg-black/40 border border-[#fcd534]/30 h-40 overflow-y-auto p-2 text-[11px] sm:text-xs leading-relaxed"
     >
       {lines.map((l, i) => (
         <div key={i} className="lowercase">
@@ -214,7 +214,7 @@ function Thinking() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="search symbol or company…"
-          className="w-full bg-black border border-[#2596be]/40 px-3 py-2 text-sm lowercase mb-3 outline-none focus:border-[#2596be]"
+          className="w-full bg-black border border-[#fcd534]/40 px-3 py-2 text-sm lowercase mb-3 outline-none focus:border-[#fcd534]"
         />
         <div className="overflow-x-auto max-h-[420px] overflow-y-auto">
           <table className="w-full text-xs lowercase whitespace-nowrap">
@@ -229,7 +229,7 @@ function Thinking() {
             </thead>
             <tbody>
               {filtered.map((r) => (
-                <tr key={r.contract} className="border-t border-[#2596be]/20">
+                <tr key={r.contract} className="border-t border-[#fcd534]/20">
                   <td className="py-1 pr-3">{r.name.toLowerCase()}</td>
                   <td className="py-1 pr-3">{r.symbol}</td>
                   <td className="py-1 pr-3"><Copyable text={r.contract} /></td>
@@ -302,17 +302,17 @@ function DecisionLock({
         </div>
         <div className="text-2xl font-mono">{fmtCountdown(remainingMs)}</div>
       </div>
-      <div className="h-2 bg-[#2596be]/15 mt-3">
+      <div className="h-2 bg-[#fcd534]/15 mt-3">
         <div
-          className={`h-full ${locking ? "bg-[#2596be]" : "bg-[#2596be]/60"} transition-all duration-1000`}
+          className={`h-full ${locking ? "bg-[#fcd534]" : "bg-[#fcd534]/60"} transition-all duration-1000`}
           style={{ width: `${pct}%` }}
         />
       </div>
       <div className="text-xs dim lowercase mt-2">
         {locking ? (
-          <>leader frozen at <span className="text-[#2596be]">{sym}</span>. no more changes this round.</>
+          <>leader frozen at <span className="text-[#fcd534]">{sym}</span>. no more changes this round.</>
         ) : (
-          <>current pick: <span className="text-[#2596be]">{sym}</span>. can still change until it locks.</>
+          <>current pick: <span className="text-[#fcd534]">{sym}</span>. can still change until it locks.</>
         )}
       </div>
     </Box>
@@ -374,19 +374,19 @@ function RunnerUp({
     <div className="text-sm lowercase">
       <div className="text-xl tracking-wide">{runnerUp.symbol}</div>
       <div className="dim text-xs mt-1">
-        lost by <span className="text-[#2596be]">{gap.toFixed(1)} points</span>
+        lost by <span className="text-[#fcd534]">{gap.toFixed(1)} points</span>
       </div>
       <div className="mt-3 space-y-2 font-mono text-xs">
         <div>
           <div className="flex justify-between"><span>{leader.symbol}</span><span>{lead}</span></div>
-          <div className="h-2 bg-[#2596be]/15 mt-1">
-            <div className="h-full bg-[#2596be] transition-all duration-1000" style={{ width: w(lead) }} />
+          <div className="h-2 bg-[#fcd534]/15 mt-1">
+            <div className="h-full bg-[#fcd534] transition-all duration-1000" style={{ width: w(lead) }} />
           </div>
         </div>
         <div>
           <div className="flex justify-between"><span>{runnerUp.symbol}</span><span>{run}</span></div>
-          <div className="h-2 bg-[#2596be]/15 mt-1">
-            <div className="h-full bg-[#2596be]/50 transition-all duration-1000" style={{ width: w(run) }} />
+          <div className="h-2 bg-[#fcd534]/15 mt-1">
+            <div className="h-full bg-[#fcd534]/50 transition-all duration-1000" style={{ width: w(run) }} />
           </div>
         </div>
       </div>
@@ -422,7 +422,7 @@ function RecentRounds({ rounds }: { rounds: { round: number; symbol: string; sta
   return (
     <div className="space-y-2">
       {rounds.map((r) => (
-        <div key={r.round} className="flex items-center justify-between border-t border-[#2596be]/20 py-2 first:border-t-0">
+        <div key={r.round} className="flex items-center justify-between border-t border-[#fcd534]/20 py-2 first:border-t-0">
           <div className="lowercase">
             <span className="dim mr-2">round {r.round}</span>
             {r.state === "buying" ? (
@@ -444,7 +444,7 @@ function RecentRounds({ rounds }: { rounds: { round: number; symbol: string; sta
 
 function Row({ rank, r }: { rank: number; r: MockStockAnalysis }) {
   return (
-    <tr className="border-t border-[#2596be]/30">
+    <tr className="border-t border-[#fcd534]/30">
       <td className="py-1 pr-3 dim">{String(rank + 1).padStart(2, "0")}</td>
       <td className="py-1 pr-3">
         <span className="mr-2">{r.symbol}</span>

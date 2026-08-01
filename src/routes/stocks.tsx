@@ -64,7 +64,7 @@ function Stocks() {
               </thead>
               <tbody>
                 {stocks.map((s, i) => (
-                  <tr key={s.address || s.symbol} className="border-t border-[#2596be]/30">
+                  <tr key={s.address || s.symbol} className="border-t border-[#fcd534]/30">
                     <td className="py-1 pr-3 dim">{String(i + 1).padStart(2, "0")}</td>
                     <td className="py-1 pr-3">{s.symbol}</td>
                     <td className="py-1 pr-3">{s.price_usd != null ? `$${s.price_usd.toFixed(2)}` : "—"}</td>

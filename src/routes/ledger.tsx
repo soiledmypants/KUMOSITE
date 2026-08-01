@@ -105,7 +105,7 @@ function Ledger() {
               </thead>
               <tbody>
                 {filtered.map((e, i) => (
-                  <tr key={`${e.ts}-${e.txHash ?? i}`} className="border-t border-[#2596be]/30">
+                  <tr key={`${e.ts}-${e.txHash ?? i}`} className="border-t border-[#fcd534]/30">
                     <td className="py-1 pr-3 dim">{when(e.ts)}</td>
                     <td className="py-1 pr-3"><Tag>{e.kind}</Tag></td>
                     <td className="py-1 pr-3">{amt(e.amountIn, e.assetIn)}</td>

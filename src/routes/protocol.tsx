@@ -90,7 +90,7 @@ be right, get trusted. be trusted, see things early.`}</pre>
         </p>
       </Box>
       <Box title="laws of bibo" meta={`${LAWS.length} entries`}>
-        <ol className="lowercase space-y-1 pl-6 list-decimal marker:text-[#2596be]">
+        <ol className="lowercase space-y-1 pl-6 list-decimal marker:text-[#fcd534]">
           {LAWS.map((l, i) => (
             <li key={i}>{l}</li>
           ))}

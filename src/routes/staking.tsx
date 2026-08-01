@@ -46,7 +46,7 @@ function Staking() {
   return (
     <>
       <Box title="staking" meta="bibo is building this">
-        <div className="border border-dashed border-[#2596be] px-3 py-3 lowercase">
+        <div className="border border-dashed border-[#fcd534] px-3 py-3 lowercase">
           <div className="tracking-widest text-sm mb-1">~ bibo is building the staking pool ~</div>
           <p className="text-sm leading-relaxed dim">
             bibo is still welding the staking contract together. soon you'll stake $bibo and get
@@ -112,7 +112,7 @@ function Staking() {
               </thead>
               <tbody>
                 {rounds.map((r, i) => (
-                  <tr key={`${r.ts}-${i}`} className="border-t border-[#2596be]/30">
+                  <tr key={`${r.ts}-${i}`} className="border-t border-[#fcd534]/30">
                     <td className="py-1 pr-3 dim">{roundTime(r.ts)}</td>
                     <td className="py-1 pr-3">{r.assetOut ?? "—"}</td>
                     <td className="py-1 pr-3 text-right">

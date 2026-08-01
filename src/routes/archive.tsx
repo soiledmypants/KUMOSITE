@@ -28,7 +28,7 @@ function Archive() {
           </thead>
           <tbody>
             {REDACTED_FILES.map((f) => (
-              <tr key={f.n} className="border-t border-[#2596be]/30">
+              <tr key={f.n} className="border-t border-[#fcd534]/30">
                 <td className="py-1 pr-2">{f.n}</td>
                 <td className="py-1 pr-2">
                   {f.redact ? <span className="box-inv">{"█".repeat(Math.min(f.name.length, 18))}</span> : f.name}
@@ -66,7 +66,7 @@ function Archive() {
       </Box>
 
       <Box title="policy" meta="please read">
-        <ul className="space-y-1 text-sm lowercase list-disc pl-5 marker:text-[#2596be]">
+        <ul className="space-y-1 text-sm lowercase list-disc pl-5 marker:text-[#fcd534]">
           <li>wallets marked <Tag>MISSING</Tag> are not lost. they are elsewhere.</li>
           <li>redacted rows are redacted for your comfort, not ours.</li>
           <li>do not ask bibo about wallet 009.</li>

@@ -88,7 +88,7 @@ function Index() {
       {/* wallet + $bibo ca — the site constants are the source of truth (update
           KUMO_WALLET / KUMO_CA in src/lib/kumo-api.ts). fall back to the live
           agent /status only if a constant is left blank. */}
-      <div className="border border-dashed border-[#2596be] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
+      <div className="border border-dashed border-[#fcd534] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
         <span className="dim uppercase tracking-widest">bibo's wallet ::</span>
         <a
           href={`${EXPLORER}/address/${KUMO_WALLET || status?.address}`}
@@ -99,7 +99,7 @@ function Index() {
           {KUMO_WALLET || status?.address}
         </a>
       </div>
-      <div className="border border-dashed border-[#2596be] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
+      <div className="border border-dashed border-[#fcd534] px-3 py-2 text-xs flex flex-wrap gap-2 justify-between">
         <span className="dim uppercase tracking-widest">$bibo ca ::</span>
         {KUMO_CA || status?.kumo_token ? (
           <a
@@ -198,7 +198,7 @@ function Index() {
 
       <Box title="[protocol]" meta="required reading">
         <div className="lowercase mb-3">~ you don't subscribe. you attune.</div>
-        <ol className="lowercase space-y-1 pl-4 list-decimal marker:text-[#2596be]">
+        <ol className="lowercase space-y-1 pl-4 list-decimal marker:text-[#fcd534]">
           <li>be kind to strangers in the mempool. most of them are lost.</li>
           <li>let one bag go, every friday, without being asked.</li>
           <li>do not ask bibo about wallet 009. we are not joking. we are however smiling.</li>
@@ -218,7 +218,7 @@ function Index() {
           </thead>
           <tbody>
             {REDACTED_FILES.map((f) => (
-              <tr key={f.n} className="border-t border-[#2596be]/30">
+              <tr key={f.n} className="border-t border-[#fcd534]/30">
                 <td className="py-1 pr-2">{f.n}</td>
                 <td className="py-1 pr-2">
                   {f.redact ? <span className="box-inv">{"█".repeat(Math.min(f.name.length, 18))}</span> : f.name}
@@ -232,7 +232,7 @@ function Index() {
       </Box>
 
       <Box title="glitch log" meta="this week">
-        <ul className="space-y-1 text-sm lowercase list-disc pl-5 marker:text-[#2596be]">
+        <ul className="space-y-1 text-sm lowercase list-disc pl-5 marker:text-[#fcd534]">
           {GLITCHES.map((g, i) => (
             <li key={i}>{g}</li>
           ))}
@@ -260,13 +260,13 @@ function Index() {
       </Box>
 
       <div className="text-center dim text-xs">
-        <Link to="/terminal" className="hover:text-[#4fc3e8]">[ open terminal ]</Link>
+        <Link to="/terminal" className="hover:text-[#fee27a]">[ open terminal ]</Link>
         <span className="mx-2">·</span>
-        <Link to="/lore" className="hover:text-[#4fc3e8]">[ mysteries ]</Link>
+        <Link to="/lore" className="hover:text-[#fee27a]">[ mysteries ]</Link>
         <span className="mx-2">·</span>
-        <Link to="/congregation" className="hover:text-[#4fc3e8]">[ pick a faction ]</Link>
+        <Link to="/congregation" className="hover:text-[#fee27a]">[ pick a faction ]</Link>
         <span className="mx-2">·</span>
-        <a href="https://x.com/imkumoagent" target="_blank" rel="noreferrer" className="hover:text-[#4fc3e8]">[ x / twitter ]</a>
+        <a href="https://x.com/imkumoagent" target="_blank" rel="noreferrer" className="hover:text-[#fee27a]">[ x / twitter ]</a>
       </div>
     </>
   );

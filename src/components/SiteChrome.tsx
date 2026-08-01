@@ -64,7 +64,7 @@ export function SiteChrome({ children }: { children: ReactNode }) {
   const faction = useFaction();
 
   return (
-    <div className="min-h-screen bg-black text-[#2596be] font-mono">
+    <div className="min-h-screen bg-black text-[#fcd534] font-mono">
       {/* Top status bar */}
       <div className="box-inv text-[10px] sm:text-xs px-3 py-1 flex flex-wrap gap-x-4 gap-y-1 justify-between uppercase tracking-widest">
         <span>● bibo is {status ? status.state : "sleeping..."}</span>
