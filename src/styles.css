@@ -79,7 +79,7 @@
   --secondary: #000000;
   --secondary-foreground: #fcd534;
   --muted: #000000;
-  --muted-foreground: rgba(204, 255, 0, 0.55);
+  --muted-foreground: rgba(252, 213, 52, 0.55);
   --accent: #fcd534;
   --accent-foreground: #000000;
   --destructive: #fcd534;
@@ -175,7 +175,7 @@
 }
 
 @utility dim {
-  color: rgba(204, 255, 0, 0.6);
+  color: rgba(252, 213, 52, 0.6);
 }
 
 @utility link-kumo {
